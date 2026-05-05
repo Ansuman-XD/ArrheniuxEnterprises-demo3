@@ -16,12 +16,26 @@ const mainLinks = [
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const handleHashClick = (e: React.MouseEvent, hash: string) => {
+    e.preventDefault();
+    setOpen(false);
+    if (location.pathname !== "/") {
+      navigate(`/${hash}`);
+      return;
+    }
+    const el = document.querySelector(hash);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    history.replaceState(null, "", hash);
+  };
 
   return (
     <header
@@ -34,18 +48,25 @@ export const Navbar = () => {
 
         <nav className="hidden lg:flex items-center gap-8">
           {mainLinks.map((l) => (
-            <NavLink
-              key={l.to}
-              to={l.to}
-              className={({ isActive }) =>
-                `text-sm font-medium uppercase tracking-wide transition hover:text-primary ${
-                  isActive ? "text-primary" : "text-ink"
-                }`
-              }
+            <a
+              key={l.hash}
+              href={l.hash}
+              onClick={(e) => handleHashClick(e, l.hash)}
+              className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink"
             >
               {l.label}
-            </NavLink>
+            </a>
           ))}
+          <NavLink
+            to="/contact"
+            className={({ isActive }) =>
+              `text-sm font-medium uppercase tracking-wide transition hover:text-primary ${
+                isActive ? "text-primary" : "text-ink"
+              }`
+            }
+          >
+            Contact
+          </NavLink>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -72,15 +93,18 @@ export const Navbar = () => {
         <div className="lg:hidden border-t border-border bg-cream">
           <div className="container-x py-4 flex flex-col gap-3">
             {mainLinks.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                onClick={() => setOpen(false)}
+              <a
+                key={l.hash}
+                href={l.hash}
+                onClick={(e) => handleHashClick(e, l.hash)}
                 className="py-2 font-medium uppercase text-sm tracking-wide"
               >
                 {l.label}
-              </Link>
+              </a>
             ))}
+            <Link to="/contact" onClick={() => setOpen(false)} className="py-2 font-medium uppercase text-sm tracking-wide">
+              Contact
+            </Link>
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
               {categories.slice(0, 8).map((c) => (
                 <Link
