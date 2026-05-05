@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, MessageCircle } from "lucide-react";
 import { Logo } from "./Logo";
 import { categories, waLink } from "@/data/site";
 
 const mainLinks = [
-  { to: "/", label: "Home" },
-  { to: "/category/t-shirts", label: "T-Shirts" },
-  { to: "/category/hoodies", label: "Hoodies" },
-  { to: "/category/polos", label: "Polos" },
-  { to: "/category/uniforms", label: "Uniforms" },
-  { to: "/contact", label: "Contact" },
+  { hash: "#home", label: "Home" },
+  { hash: "#categories", label: "Categories" },
+  { hash: "#releases", label: "New" },
+  { hash: "#process", label: "Process" },
+  { hash: "#factory", label: "Factory" },
+  { hash: "#reactions", label: "Reactions" },
 ];
 
 export const Navbar = () => {
