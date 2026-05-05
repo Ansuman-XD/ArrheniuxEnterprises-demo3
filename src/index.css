@@ -78,6 +78,8 @@
 
 @layer base {
   * { @apply border-border; }
+  html { scroll-behavior: smooth; }
+  section[id] { scroll-margin-top: 96px; }
   body {
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
