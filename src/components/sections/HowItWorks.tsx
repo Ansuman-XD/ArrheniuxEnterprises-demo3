@@ -1,0 +1,29 @@
+import { Shirt, Palette, CheckCircle2, Truck } from "lucide-react";
+
+const steps = [
+  { icon: Shirt, title: "Choose", desc: "Pick your style, fabric and GSM from our catalog." },
+  { icon: Palette, title: "Customize", desc: "Add print, embroidery, tags and packaging." },
+  { icon: CheckCircle2, title: "Confirm", desc: "Approve mockup, pay 50% and lock production." },
+  { icon: Truck, title: "Deliver", desc: "Pan-India shipping in 7–14 days, tracked." },
+];
+
+export const HowItWorks = () => (
+  <section className="container-x py-20">
+    <div className="text-center max-w-2xl mx-auto mb-14">
+      <span className="text-xs font-bold uppercase tracking-widest text-primary">04 — Process</span>
+      <h2 className="font-display text-5xl md:text-6xl mt-2">HOW IT WORKS</h2>
+    </div>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border">
+      {steps.map((s, i) => (
+        <div key={s.title} className="bg-background p-8 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <s.icon className="h-8 w-8 text-primary" />
+            <span className="font-display text-4xl text-muted-foreground/40">0{i + 1}</span>
+          </div>
+          <h3 className="font-display text-2xl mt-2">{s.title.toUpperCase()}</h3>
+          <p className="text-sm text-muted-foreground">{s.desc}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+);

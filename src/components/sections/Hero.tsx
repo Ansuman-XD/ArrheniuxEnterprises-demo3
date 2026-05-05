@@ -1,0 +1,54 @@
+import { Link } from "react-router-dom";
+import { ArrowRight, MessageCircle, Truck, Factory, Package } from "lucide-react";
+import heroModel from "@/assets/hero-model.jpg";
+import { waLink } from "@/data/site";
+
+export const Hero = () => (
+  <section className="relative bg-primary text-primary-foreground overflow-hidden">
+    <div className="container-x grid lg:grid-cols-2 gap-8 py-12 md:py-20 relative">
+      <div className="flex flex-col justify-center z-10 order-2 lg:order-1">
+        <span className="inline-flex items-center gap-2 bg-cream text-ink text-xs font-bold uppercase tracking-widest px-3 py-1.5 w-fit">
+          <Package className="h-3.5 w-3.5" /> Min order 20 pieces
+        </span>
+        <h1 className="font-display text-[14vw] sm:text-[10vw] lg:text-[7.5vw] leading-[0.9] mt-6 tracking-tighter">
+          CUSTOM<br />APPAREL<br />FOR YOUR<br /><span className="text-cream/60">BRAND.</span>
+        </h1>
+        <p className="mt-6 max-w-md text-cream/80 text-base md:text-lg">
+          Factory-direct t-shirts, hoodies, uniforms & merch — printed, embroidered and shipped from our Bhubaneswar facility.
+        </p>
+        <div className="flex flex-wrap gap-3 mt-8">
+          <Link to="/category/t-shirts" className="btn-bold !bg-cream !text-ink hover:!bg-accent hover:!text-cream">
+            Browse Catalog <ArrowRight className="h-4 w-4" />
+          </Link>
+          <a href={waLink()} target="_blank" rel="noreferrer" className="btn-wa">
+            <MessageCircle className="h-4 w-4" /> Order on WhatsApp
+          </a>
+        </div>
+        <div className="flex flex-wrap gap-6 mt-10 text-xs text-cream/70 uppercase tracking-wider">
+          <span className="flex items-center gap-2"><Truck className="h-4 w-4" /> Pan India Delivery</span>
+          <span className="flex items-center gap-2"><Factory className="h-4 w-4" /> Factory Direct</span>
+          <span className="flex items-center gap-2"><Package className="h-4 w-4" /> 7–14 Day TAT</span>
+        </div>
+      </div>
+      <div className="relative order-1 lg:order-2 min-h-[300px] lg:min-h-[600px]">
+        <img
+          src={heroModel}
+          alt="Model wearing Arrhenix custom hoodie"
+          width={1024}
+          height={1024}
+          className="absolute inset-0 w-full h-full object-cover object-top"
+        />
+      </div>
+    </div>
+    {/* marquee */}
+    <div className="border-t border-cream/10 bg-ink overflow-hidden py-3">
+      <div className="flex animate-marquee whitespace-nowrap font-condensed text-2xl tracking-widest text-cream/80">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <span key={i} className="mx-8 flex items-center gap-8">
+            T-SHIRTS <span className="text-accent">★</span> HOODIES <span className="text-accent">★</span> UNIFORMS <span className="text-accent">★</span> CAPS <span className="text-accent">★</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  </section>
+);
