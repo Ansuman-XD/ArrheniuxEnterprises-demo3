@@ -53,8 +53,8 @@ const CategoryPage = () => {
           ))}
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filtered.map((p) => (
-            <ProductCard key={p.id + Math.random()} p={p} />
+          {filtered.map((p, i) => (
+            <ProductCard key={p.id + "-" + i} p={p} />
           ))}
         </div>
       </section>
