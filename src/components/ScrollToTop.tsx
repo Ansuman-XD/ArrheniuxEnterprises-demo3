@@ -24,10 +24,14 @@ const ScrollToTop = () => {
     forceTop();
     const frame = window.requestAnimationFrame(forceTop);
     const timeout = window.setTimeout(forceTop, 120);
+    const restoreTimeout = window.setTimeout(() => {
+      root.style.scrollBehavior = previousScrollBehavior;
+    }, 160);
 
     return () => {
       window.cancelAnimationFrame(frame);
       window.clearTimeout(timeout);
+      window.clearTimeout(restoreTimeout);
       root.style.scrollBehavior = previousScrollBehavior;
     };
   }, [pathname, search, hash]);
