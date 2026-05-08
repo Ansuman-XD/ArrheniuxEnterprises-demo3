@@ -9,6 +9,7 @@ import Category from "./pages/Category.tsx";
 import ProductDetail from "./pages/ProductDetail.tsx";
 import Contact from "./pages/Contact.tsx";
 import ScrollToTop from "./components/ScrollToTop";
+import AdminApp from "./admin/AdminApp";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/category/:slug" element={<Category />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/admin/*" element={<AdminApp />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
