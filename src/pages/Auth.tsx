@@ -24,17 +24,20 @@ const Auth = () => {
     e.preventDefault();
     setError("");
     const r = login(email, password);
-    if (!r.ok) return setError(r.error);
-    afterAuth(r.user.role);
+    if (r.ok) afterAuth(r.user.role);
+    else setError(r.error);
   };
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!s.name || !s.email || !s.password) return setError("Name, email and password required");
+    if (!s.name || !s.email || !s.password) {
+      setError("Name, email and password required");
+      return;
+    }
     const r = signup(s);
-    if (!r.ok) return setError(r.error);
-    afterAuth(r.user.role);
+    if (r.ok) afterAuth(r.user.role);
+    else setError(r.error);
   };
 
   const handleSocial = (provider: "google" | "facebook") => {
