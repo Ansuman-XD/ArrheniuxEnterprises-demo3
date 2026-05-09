@@ -73,7 +73,7 @@ export const getUsers = (): User[] => {
 
 export const saveUsers = (users: User[]) => write(USERS_KEY, users);
 
-export type AuthResult = { ok: true; user: User } | { ok: false; error: string };
+export type AuthResult = { ok: boolean; user?: User; error?: string };
 
 export const signup = (data: Omit<User, "id" | "role" | "createdAt" | "provider"> & { provider?: User["provider"] }): AuthResult => {
   const users = getUsers();

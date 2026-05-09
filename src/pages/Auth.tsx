@@ -24,8 +24,8 @@ const Auth = () => {
     e.preventDefault();
     setError("");
     const r = login(email, password);
-    if (r.ok) afterAuth(r.user.role);
-    else setError(r.error);
+    if (r.ok && r.user) afterAuth(r.user.role);
+    else setError(r.error || "Login failed");
   };
 
   const handleSignup = (e: React.FormEvent) => {
@@ -36,8 +36,8 @@ const Auth = () => {
       return;
     }
     const r = signup(s);
-    if (r.ok) afterAuth(r.user.role);
-    else setError(r.error);
+    if (r.ok && r.user) afterAuth(r.user.role);
+    else setError(r.error || "Signup failed");
   };
 
   const handleSocial = (provider: "google" | "facebook") => {

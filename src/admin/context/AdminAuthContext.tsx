@@ -20,7 +20,7 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = (email: string, password: string) => {
     const r = storeLogin(email, password);
-    if (!r.ok) return { ok: false, error: r.error };
+    if (!r.ok || !r.user) return { ok: false, error: r.error || "Login failed" };
     if (r.user.role !== "admin") return { ok: false, error: "This account is not an admin" };
     setUser(r.user);
     return { ok: true };
