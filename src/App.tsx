@@ -9,6 +9,8 @@ import Category from "./pages/Category.tsx";
 import ProductDetail from "./pages/ProductDetail.tsx";
 import Contact from "./pages/Contact.tsx";
 import ScrollToTop from "./components/ScrollToTop";
+import { VisitTracker } from "./components/VisitTracker";
+import Auth from "./pages/Auth";
 import AdminApp from "./admin/AdminApp";
 
 const queryClient = new QueryClient();
@@ -20,8 +22,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ScrollToTop />
+        <VisitTracker />
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/category/:slug" element={<Category />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/contact" element={<Contact />} />

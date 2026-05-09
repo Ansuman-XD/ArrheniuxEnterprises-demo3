@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, MessageCircle } from "lucide-react";
+import { Menu, X, MessageCircle, User as UserIcon, LogOut } from "lucide-react";
 import { Logo } from "./Logo";
 import { categories, waLink } from "@/data/site";
+import { getSession, clearSession } from "@/lib/authStore";
 
 const mainLinks = [
   { hash: "#home", label: "Home" },
@@ -16,6 +17,7 @@ const mainLinks = [
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState(getSession());
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -24,6 +26,16 @@ export const Navbar = () => {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    setUser(getSession());
+  }, [location.pathname]);
+
+  const handleLogout = () => {
+    clearSession();
+    setUser(null);
+    navigate("/");
+  };
 
   const handleHashClick = (e: React.MouseEvent, hash: string) => {
     e.preventDefault();
@@ -69,7 +81,24 @@ export const Navbar = () => {
           </NavLink>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {user ? (
+            <>
+              {user.role === "admin" && (
+                <Link to="/admin" className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide bg-ink text-cream px-3 py-2 rounded-md hover:bg-ink/90">
+                  Admin
+                </Link>
+              )}
+              <span className="hidden md:inline text-xs text-muted-foreground max-w-[120px] truncate">{user.name}</span>
+              <button onClick={handleLogout} className="hidden md:inline-flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-md hover:bg-muted" aria-label="Logout">
+                <LogOut className="h-3.5 w-3.5" /> Log out
+              </button>
+            </>
+          ) : (
+            <Link to="/auth" className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide border border-ink text-ink px-3 py-2 rounded-md hover:bg-ink hover:text-cream transition">
+              <UserIcon className="h-3.5 w-3.5" /> Log In
+            </Link>
+          )}
           <a
             href={waLink()}
             target="_blank"
@@ -92,6 +121,23 @@ export const Navbar = () => {
       {open && (
         <div className="lg:hidden border-t border-border bg-cream">
           <div className="container-x py-4 flex flex-col gap-3">
+            {!user ? (
+              <Link to="/auth" onClick={() => setOpen(false)} className="py-2 font-semibold uppercase text-sm tracking-wide flex items-center gap-2">
+                <UserIcon className="h-4 w-4" /> Log In / Sign Up
+              </Link>
+            ) : (
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm">{user.name}</span>
+                <button onClick={() => { handleLogout(); setOpen(false); }} className="text-xs font-medium flex items-center gap-1">
+                  <LogOut className="h-3 w-3" /> Log out
+                </button>
+              </div>
+            )}
+            {user?.role === "admin" && (
+              <Link to="/admin" onClick={() => setOpen(false)} className="py-2 font-semibold uppercase text-sm tracking-wide text-primary">
+                Admin Panel →
+              </Link>
+            )}
             {mainLinks.map((l) => (
               <a
                 key={l.hash}
