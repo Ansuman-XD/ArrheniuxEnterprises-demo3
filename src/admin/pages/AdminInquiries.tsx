@@ -5,26 +5,28 @@ const inquiries = [
 ];
 
 const AdminInquiries = () => (
-  <div>
-    <h1 className="text-2xl font-bold mb-1">Inquiries</h1>
-    <p className="text-slate-500 mb-6">Customer messages from your website</p>
+  <div className="space-y-6">
+    <div>
+      <h1 className="text-3xl font-bold text-zinc-100">Inquiries</h1>
+      <p className="text-zinc-500 mt-1">Customer messages from your website</p>
+    </div>
 
     <div className="space-y-3">
       {inquiries.map((i) => (
-        <div key={i.id} className="bg-white border border-slate-200 rounded-lg p-5">
+        <div key={i.id} className="bg-zinc-950/60 border border-zinc-800 rounded-xl p-5">
           <div className="flex justify-between items-start mb-2">
             <div>
-              <p className="font-semibold">{i.name}</p>
-              <p className="text-sm text-slate-500">{i.company}</p>
+              <p className="font-semibold text-zinc-100">{i.name}</p>
+              <p className="text-sm text-zinc-500">{i.company}</p>
             </div>
-            <span className="text-xs text-slate-400">{i.date}</span>
+            <span className="text-xs text-zinc-500">{i.date}</span>
           </div>
-          <p className="text-sm text-slate-700">{i.message}</p>
+          <p className="text-sm text-zinc-300">{i.message}</p>
           <div className="mt-3 flex gap-2">
-            <button className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-md hover:bg-emerald-700">
+            <button className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-md hover:bg-emerald-500">
               Reply on WhatsApp
             </button>
-            <button className="text-xs bg-slate-100 text-slate-700 px-3 py-1.5 rounded-md hover:bg-slate-200">
+            <button className="text-xs bg-zinc-800 text-zinc-300 px-3 py-1.5 rounded-md hover:bg-zinc-700">
               Mark Resolved
             </button>
           </div>

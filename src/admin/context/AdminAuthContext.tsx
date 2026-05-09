@@ -1,41 +1,38 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { getSession, clearSession, login as storeLogin, User } from "@/lib/authStore";
 
 type AdminAuthContextType = {
+  user: User | null;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => boolean;
+  login: (email: string, password: string) => { ok: boolean; error?: string };
   logout: () => void;
 };
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
 
-const STORAGE_KEY = "arrhenius_admin_auth";
-// Demo-only credentials. Replace with real backend auth when wiring Lovable Cloud.
-const DEMO_USER = "admin";
-const DEMO_PASS = "admin123";
-
 export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    setIsAuthenticated(localStorage.getItem(STORAGE_KEY) === "1");
+    const s = getSession();
+    if (s && s.role === "admin") setUser(s);
   }, []);
 
-  const login = (username: string, password: string) => {
-    if (username === DEMO_USER && password === DEMO_PASS) {
-      localStorage.setItem(STORAGE_KEY, "1");
-      setIsAuthenticated(true);
-      return true;
-    }
-    return false;
+  const login = (email: string, password: string) => {
+    const r = storeLogin(email, password);
+    if (!r.ok) return { ok: false, error: r.error };
+    if (r.user.role !== "admin") return { ok: false, error: "This account is not an admin" };
+    setUser(r.user);
+    return { ok: true };
   };
 
   const logout = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    setIsAuthenticated(false);
+    clearSession();
+    setUser(null);
   };
 
   return (
-    <AdminAuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AdminAuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
       {children}
     </AdminAuthContext.Provider>
   );
