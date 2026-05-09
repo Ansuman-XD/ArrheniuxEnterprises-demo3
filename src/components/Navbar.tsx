@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, MessageCircle } from "lucide-react";
+import { Menu, X, MessageCircle, User as UserIcon, LogOut } from "lucide-react";
 import { Logo } from "./Logo";
 import { categories, waLink } from "@/data/site";
+import { getSession, clearSession } from "@/lib/authStore";
 
 const mainLinks = [
   { hash: "#home", label: "Home" },
@@ -16,6 +17,7 @@ const mainLinks = [
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [user, setUser] = useState(getSession());
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -24,6 +26,16 @@ export const Navbar = () => {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    setUser(getSession());
+  }, [location.pathname]);
+
+  const handleLogout = () => {
+    clearSession();
+    setUser(null);
+    navigate("/");
+  };
 
   const handleHashClick = (e: React.MouseEvent, hash: string) => {
     e.preventDefault();
