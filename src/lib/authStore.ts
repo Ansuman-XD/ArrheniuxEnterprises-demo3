@@ -73,9 +73,9 @@ export const getUsers = (): User[] => {
 
 export const saveUsers = (users: User[]) => write(USERS_KEY, users);
 
-export const signup = (data: Omit<User, "id" | "role" | "createdAt" | "provider"> & { provider?: User["provider"] }):
-  | { ok: true; user: User }
-  | { ok: false; error: string } => {
+export type AuthResult = { ok: true; user: User } | { ok: false; error: string };
+
+export const signup = (data: Omit<User, "id" | "role" | "createdAt" | "provider"> & { provider?: User["provider"] }): AuthResult => {
   const users = getUsers();
   if (users.find((u) => u.email.toLowerCase() === data.email.toLowerCase()))
     return { ok: false, error: "Email already registered" };
@@ -97,9 +97,7 @@ export const signup = (data: Omit<User, "id" | "role" | "createdAt" | "provider"
   return { ok: true, user };
 };
 
-export const login = (email: string, password: string):
-  | { ok: true; user: User }
-  | { ok: false; error: string } => {
+export const login = (email: string, password: string): AuthResult => {
   const users = getUsers();
   const settings = getSettings();
   const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
