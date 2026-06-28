@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Youtube, Mail, Phone, MapPin, MessageCircle } from "lucide-react";
-import { categories, ADDRESS, EMAIL, WHATSAPP_DISPLAY, waLink } from "@/data/site";
+import { ADDRESS, EMAIL, WHATSAPP_DISPLAY, waLink } from "@/data/site";
+import { catalog } from "@/data/catalog";
 
 export const Footer = () => (
   <footer className="bg-ink text-cream mt-24">
@@ -21,7 +22,7 @@ export const Footer = () => (
         <div>
           <h4 className="font-condensed text-xl mb-4">CATALOG</h4>
           <ul className="space-y-2 text-sm text-cream/70">
-            {categories.slice(0, 8).map((c) => (
+            {catalog.slice(0, 8).map((c) => (
               <li key={c.slug}>
                 <Link to={`/category/${c.slug}`} className="hover:text-cream">{c.name}</Link>
               </li>
