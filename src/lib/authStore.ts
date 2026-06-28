@@ -1,4 +1,4 @@
-// Lightweight client-side auth + analytics + product store (localStorage).
+// Lightweight client-side auth + analytics + product + reviews store (localStorage).
 // Demo only — swap with Lovable Cloud later.
 
 export type User = {
@@ -21,11 +21,21 @@ export type Product = {
   price: number;
 };
 
+export type Review = {
+  id: string;
+  name: string;
+  subject: "Company" | "Product Quality" | "Service";
+  rating: number;
+  text: string;
+  createdAt: string;
+};
+
 const USERS_KEY = "arr_users";
 const SESSION_KEY = "arr_session";
 const VISITS_KEY = "arr_visits";
 const PRODUCTS_KEY = "arr_products";
 const SETTINGS_KEY = "arr_settings";
+const REVIEWS_KEY = "arr_reviews";
 
 export const DEFAULT_ADMIN_EMAIL = "admin@arrhenius.com";
 export const DEFAULT_ADMIN_PASSWORD = "admin123";
@@ -54,7 +64,6 @@ export const saveSettings = (s: Settings) => write(SETTINGS_KEY, s);
 // ---------- Users ----------
 export const getUsers = (): User[] => {
   const users = read<User[]>(USERS_KEY, []);
-  // Seed default admin once
   if (!users.find((u) => u.email === DEFAULT_ADMIN_EMAIL)) {
     const admin: User = {
       id: "admin-seed",
@@ -102,7 +111,6 @@ export const login = (email: string, password: string): AuthResult => {
   const settings = getSettings();
   const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
   if (!user || user.password !== password) return { ok: false, error: "Invalid email or password" };
-  // Promote to admin if email matches current admin email
   if (user.email.toLowerCase() === settings.adminEmail.toLowerCase() && user.role !== "admin") {
     user.role = "admin";
     saveUsers(users);
@@ -113,7 +121,6 @@ export const login = (email: string, password: string): AuthResult => {
 
 export const socialLogin = (provider: "google" | "facebook"):
   { ok: true; user: User } => {
-  // DEMO ONLY — creates / reuses a fake account for the provider
   const fakeEmail = `${provider}.demo@arrhenius.local`;
   const users = getUsers();
   let user = users.find((u) => u.email === fakeEmail);
@@ -142,13 +149,14 @@ export const getSession = (): User | null => {
   return getUsers().find((u) => u.id === s.id) ?? null;
 };
 
+export const isLoggedIn = () => !!getSession();
+
 // ---------- Visits ----------
 export type Visit = { path: string; at: string; userId?: string };
 export const trackVisit = (path: string) => {
   const visits = read<Visit[]>(VISITS_KEY, []);
   const session = read<{ id: string } | null>(SESSION_KEY, null);
   visits.push({ path, at: new Date().toISOString(), userId: session?.id });
-  // Cap at 5000 to prevent runaway
   if (visits.length > 5000) visits.splice(0, visits.length - 5000);
   write(VISITS_KEY, visits);
 };
@@ -158,11 +166,6 @@ export const getVisits = (): Visit[] => read<Visit[]>(VISITS_KEY, []);
 const SEED_PRODUCTS: Product[] = [
   { id: "p1", name: "Classic Cotton T-Shirt", category: "T-Shirts", minQty: 20, price: 220 },
   { id: "p2", name: "Premium Pullover Hoodie", category: "Hoodies", minQty: 20, price: 650 },
-  { id: "p3", name: "Pique Polo Shirt", category: "Polos", minQty: 20, price: 380 },
-  { id: "p4", name: "Bomber Jacket", category: "Jackets", minQty: 20, price: 890 },
-  { id: "p5", name: "Slim Fit Joggers", category: "Joggers", minQty: 20, price: 470 },
-  { id: "p6", name: "Embroidered Cap", category: "Caps", minQty: 20, price: 180 },
-  { id: "p7", name: "Corporate Uniform Set", category: "Uniforms", minQty: 20, price: 1200 },
 ];
 export const getProducts = (): Product[] => {
   const p = read<Product[]>(PRODUCTS_KEY, []);
@@ -173,3 +176,13 @@ export const getProducts = (): Product[] => {
   return p;
 };
 export const saveProducts = (p: Product[]) => write(PRODUCTS_KEY, p);
+
+// ---------- Reviews ----------
+export const getReviews = (): Review[] => read<Review[]>(REVIEWS_KEY, []);
+export const addReview = (r: Omit<Review, "id" | "createdAt">): Review => {
+  const list = getReviews();
+  const review: Review = { ...r, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
+  list.unshift(review);
+  write(REVIEWS_KEY, list);
+  return review;
+};
