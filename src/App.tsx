@@ -5,7 +5,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
-import Category from "./pages/Category.tsx";
+import CategoryTiers from "./pages/CategoryTiers.tsx";
+import SubcategoryList from "./pages/SubcategoryList.tsx";
+import ProductList from "./pages/ProductList.tsx";
 import ProductDetail from "./pages/ProductDetail.tsx";
 import Contact from "./pages/Contact.tsx";
 import ScrollToTop from "./components/ScrollToTop";
@@ -26,7 +28,12 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/category/:slug" element={<Category />} />
+          {/* Category navigation: /category/:cat → tier picker (or subcat list when no tiers) */}
+          <Route path="/category/:cat" element={<CategoryTiers />} />
+          {/* /category/:cat/:tier → subcategories for that tier (regular|premium) */}
+          <Route path="/category/:cat/:tier" element={<SubcategoryList />} />
+          {/* /category/:cat/:tier/:sub → product listing */}
+          <Route path="/category/:cat/:tier/:sub" element={<ProductList />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin/*" element={<AdminApp />} />
