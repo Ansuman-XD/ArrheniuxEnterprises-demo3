@@ -1,22 +1,24 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, MessageCircle, User as UserIcon, LogOut } from "lucide-react";
+import { Menu, X, MessageCircle, User as UserIcon, LogOut, ChevronDown } from "lucide-react";
 import { Logo } from "./Logo";
-import { categories, waLink } from "@/data/site";
+import { MegaMenu } from "./MegaMenu";
+import { catalog } from "@/data/catalog";
+import { waLink } from "@/data/site";
 import { getSession, clearSession } from "@/lib/authStore";
 
 const mainLinks = [
   { hash: "#home", label: "Home" },
-  { hash: "#categories", label: "Categories" },
-  { hash: "#releases", label: "New" },
+  { hash: "#collection", label: "Latest" },
   { hash: "#process", label: "Process" },
   { hash: "#factory", label: "Factory" },
-  { hash: "#reactions", label: "Reactions" },
+  { hash: "#reviews", label: "Reactions" },
 ];
 
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [mobileCatOpen, setMobileCatOpen] = useState(false);
   const [user, setUser] = useState(getSession());
   const location = useLocation();
   const navigate = useNavigate();
@@ -59,7 +61,15 @@ export const Navbar = () => {
         <Logo />
 
         <nav className="hidden lg:flex items-center gap-8">
-          {mainLinks.map((l) => (
+          <a
+            href="#home"
+            onClick={(e) => handleHashClick(e, "#home")}
+            className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink"
+          >
+            Home
+          </a>
+          <MegaMenu />
+          {mainLinks.slice(1).map((l) => (
             <a
               key={l.hash}
               href={l.hash}
@@ -138,6 +148,26 @@ export const Navbar = () => {
                 Admin Panel →
               </Link>
             )}
+            <button
+              onClick={() => setMobileCatOpen((v) => !v)}
+              className="py-2 font-medium uppercase text-sm tracking-wide flex items-center justify-between"
+            >
+              Categories <ChevronDown className={`h-4 w-4 transition ${mobileCatOpen ? "rotate-180" : ""}`} />
+            </button>
+            {mobileCatOpen && (
+              <div className="pl-3 border-l border-border flex flex-col gap-1 mb-2">
+                {catalog.map((c) => (
+                  <Link
+                    key={c.slug}
+                    to={`/category/${c.slug}`}
+                    onClick={() => setOpen(false)}
+                    className="py-1.5 text-xs uppercase tracking-wide text-muted-foreground hover:text-ink"
+                  >
+                    {c.name}
+                  </Link>
+                ))}
+              </div>
+            )}
             {mainLinks.map((l) => (
               <a
                 key={l.hash}
@@ -151,18 +181,6 @@ export const Navbar = () => {
             <Link to="/contact" onClick={() => setOpen(false)} className="py-2 font-medium uppercase text-sm tracking-wide">
               Contact
             </Link>
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
-              {categories.slice(0, 8).map((c) => (
-                <Link
-                  key={c.slug}
-                  to={`/category/${c.slug}`}
-                  onClick={() => setOpen(false)}
-                  className="py-1 text-xs uppercase text-muted-foreground"
-                >
-                  {c.name}
-                </Link>
-              ))}
-            </div>
             <a href={waLink()} target="_blank" rel="noreferrer" className="btn-wa mt-2 justify-center">
               <MessageCircle className="h-4 w-4" /> WhatsApp Us
             </a>

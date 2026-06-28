@@ -1,0 +1,69 @@
+import { Factory, Scissors, Truck, ShieldCheck, BadgeIndianRupee, Headphones, Sparkles, Boxes } from "lucide-react";
+
+export const WhyWhatWho = () => (
+  <>
+    <section className="container-x py-20">
+      <div className="grid lg:grid-cols-2 gap-10 items-start">
+        <div>
+          <span className="text-xs font-bold uppercase tracking-widest text-primary">Who We Are</span>
+          <h2 className="font-display text-5xl md:text-6xl mt-2 leading-none">
+            BUILT FOR <span className="text-primary">BULK.</span><br/>OBSESSED WITH FIT.
+          </h2>
+        </div>
+        <p className="text-muted-foreground text-base leading-relaxed">
+          Arrhenix is a Bhubaneswar-based apparel manufacturing house serving brands, corporates, institutions and event organizers across India. Our vision is simple — replace the inconsistent middleman supply chain with a single, transparent factory that delivers premium custom apparel on time, every time.
+        </p>
+      </div>
+    </section>
+
+    <section className="bg-secondary py-20">
+      <div className="container-x">
+        <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-widest text-primary">What We Do</span>
+            <h2 className="font-display text-5xl md:text-6xl mt-2">END-TO-END APPAREL.</h2>
+          </div>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { icon: Factory, title: "Manufacturing", text: "In-house cut, stitch, finish across 12 product lines." },
+            { icon: Sparkles, title: "Customization", text: "Pick fabric, GSM, colour, fit and finish — built to spec." },
+            { icon: Scissors, title: "Branding & Print", text: "Screen, DTF, sublimation, embroidery and neck labels." },
+            { icon: Boxes, title: "Bulk Production", text: "20 to 50,000 pcs — same QC, same timeline discipline." },
+          ].map((s) => (
+            <div key={s.title} className="bg-background border border-border p-6 hover:border-ink hover:-translate-y-0.5 transition">
+              <s.icon className="h-7 w-7 text-primary" />
+              <h3 className="font-condensed text-2xl mt-4 tracking-wide">{s.title.toUpperCase()}</h3>
+              <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{s.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section className="container-x py-20">
+      <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
+        <div>
+          <span className="text-xs font-bold uppercase tracking-widest text-primary">Why We Are Different</span>
+          <h2 className="font-display text-5xl md:text-6xl mt-2">OUR ADVANTAGE.</h2>
+        </div>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {[
+          { icon: Sparkles, title: "Premium Quality", text: "Hand-picked fabrics, double-stitched seams, retail-grade finishing." },
+          { icon: Boxes, title: "Bulk Manufacturing", text: "Capacity for 50K+ pcs/month without compromising fit." },
+          { icon: Truck, title: "Fast Delivery", text: "7–14 day turnaround on most orders — pan-India dispatch." },
+          { icon: BadgeIndianRupee, title: "Affordable Pricing", text: "Factory-direct rates — no middlemen, no markups." },
+          { icon: ShieldCheck, title: "Quality Inspection", text: "Multi-stage QC on every piece before it ships." },
+          { icon: Headphones, title: "Dedicated Support", text: "One account manager from sample to delivery." },
+        ].map((s) => (
+          <div key={s.title} className="border border-border p-6 bg-card hover:border-primary hover:-translate-y-0.5 transition">
+            <s.icon className="h-7 w-7 text-primary" />
+            <h3 className="font-condensed text-2xl mt-4 tracking-wide">{s.title.toUpperCase()}</h3>
+            <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{s.text}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  </>
+);

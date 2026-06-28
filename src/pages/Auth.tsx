@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { signup, login, socialLogin } from "@/lib/authStore";
 
 const Auth = () => {
   const [tab, setTab] = useState<"login" | "signup">("login");
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const next = params.get("next");
   const [error, setError] = useState("");
 
   // login fields
@@ -17,6 +19,7 @@ const Auth = () => {
 
   const afterAuth = (role: "admin" | "customer") => {
     if (role === "admin") navigate("/admin");
+    else if (next) navigate(next);
     else navigate("/");
   };
 

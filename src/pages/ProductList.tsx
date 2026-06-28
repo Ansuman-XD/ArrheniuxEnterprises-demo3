@@ -1,0 +1,46 @@
+import { useParams, Link, Navigate } from "react-router-dom";
+import { Layout } from "@/components/Layout";
+import { ProductCard } from "@/components/ProductCard";
+import { findCategory, findSubcategory } from "@/data/catalog";
+
+const ProductList = () => {
+  const { cat: catSlug, tier, sub } = useParams();
+  const cat = findCategory(catSlug);
+  if (!cat) return <Navigate to="/" replace />;
+  const subSlug = sub;
+  const subcat = findSubcategory(cat, tier, subSlug);
+  if (!subcat) return <Navigate to={`/category/${cat.slug}`} replace />;
+
+  const items = subcat.products;
+
+  return (
+    <Layout>
+      <section className="bg-secondary">
+        <div className="container-x py-12 md:py-16">
+          <div className="text-xs uppercase text-muted-foreground tracking-wide mb-3">
+            <Link to="/" className="hover:text-ink">Home</Link> /{" "}
+            <Link to={`/category/${cat.slug}`} className="hover:text-ink">{cat.name}</Link>
+            {tier && <> / <Link to={`/category/${cat.slug}/${tier}`} className="hover:text-ink">{tier}</Link></>}
+            {" "}/ <span className="text-ink">{subcat.name}</span>
+          </div>
+          <h1 className="font-display text-5xl md:text-7xl leading-none">{subcat.name.toUpperCase()}</h1>
+          <p className="mt-3 text-muted-foreground">MOQ 20 pcs · Fully customizable · 7–14 day delivery</p>
+        </div>
+      </section>
+
+      <section className="container-x py-12">
+        {items.length === 0 ? (
+          <p className="text-muted-foreground">No products yet in this subcategory.</p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {items.map((p) => (
+              <ProductCard key={p.id} p={p as any} />
+            ))}
+          </div>
+        )}
+      </section>
+    </Layout>
+  );
+};
+
+export default ProductList;

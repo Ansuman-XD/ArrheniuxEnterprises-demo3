@@ -1,152 +1,243 @@
-import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
-import { Minus, Plus, MessageCircle, Check } from "lucide-react";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
+import { useState, useMemo } from "react";
+import { Minus, Plus, MessageCircle, Share2, Link2, Check } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
-import { products, waLink } from "@/data/site";
+import { findProduct, allProducts } from "@/data/catalog";
+import { waLink, WHATSAPP_NUMBER } from "@/data/site";
+import { isLoggedIn } from "@/lib/authStore";
+import { toast } from "@/hooks/use-toast";
 
-const customizationOptions = [
-  "Custom logo print (front)",
-  "Embroidered logo (chest)",
-  "Back print / graphic",
-  "Sleeve branding",
-  "Custom neck label",
-  "Branded packaging",
-];
-
-const sizes = ["S", "M", "L", "XL", "XXL"];
+const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"] as const;
+type Size = typeof SIZES[number];
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const product = products.find((p) => p.id === id) || products[0];
-  const [color, setColor] = useState(product.colors[0]);
-  const [size, setSize] = useState("M");
-  const [qty, setQty] = useState(20);
-  const [opts, setOpts] = useState<string[]>([customizationOptions[0]]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const product = findProduct(id);
 
-  const toggle = (o: string) =>
-    setOpts((prev) => (prev.includes(o) ? prev.filter((x) => x !== o) : [...prev, o]));
+  const [activeImg, setActiveImg] = useState(0);
+  const [color, setColor] = useState<string | null>(null);
+  const [qty, setQty] = useState<Record<Size, number>>({
+    XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0,
+  });
 
-  const message = `Hi Arrhenix, I'd like to order:
+  const total = useMemo(() => Object.values(qty).reduce((a, b) => a + b, 0), [qty]);
+  const moq = product?.moq ?? 20;
+  const canOrder = total >= moq;
+
+  if (!product) {
+    return (
+      <Layout>
+        <div className="container-x py-32 text-center">
+          <h1 className="font-display text-4xl">Product not found</h1>
+          <Link to="/" className="btn-bold mt-6 inline-flex">Back home</Link>
+        </div>
+      </Layout>
+    );
+  }
+
+  const bump = (s: Size, d: number) =>
+    setQty((q) => ({ ...q, [s]: Math.max(0, (q[s] || 0) + d) }));
+
+  const selectedColor = color ?? product.colors[0];
+
+  const orderMessage = () => {
+    const lines = SIZES.filter((s) => qty[s] > 0).map((s) => `• ${s}: ${qty[s]} pcs`);
+    return `Hi Arrhenix, I'd like to place an order:
+
 • Product: ${product.name}
-• Fabric: ${product.fabric} (${product.gsm})
-• Color: ${color}
-• Size: ${size}
-• Quantity: ${qty} pcs
-• Customization: ${opts.join(", ") || "None"}
+• Material: ${product.material}
+• Color: ${selectedColor}
 
-Please share quote and timeline.`;
+Sizes:
+${lines.join("\n")}
 
-  const related = products.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
-  const fallback = products.filter((p) => p.id !== product.id).slice(0, 4);
+Total Quantity: ${total} pcs
+
+I'll send my custom logo / artwork in the next message.`;
+  };
+
+  const handleOrder = () => {
+    if (!canOrder) return;
+    if (!isLoggedIn()) {
+      navigate(`/auth?next=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
+    window.open(waLink(orderMessage()), "_blank", "noreferrer");
+  };
+
+  const productUrl = typeof window !== "undefined" ? window.location.href : "";
+  const handleShareWa = () => {
+    const msg = `Check out this product from Arrhenix: ${product.name} — ${productUrl}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank", "noreferrer");
+  };
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(productUrl);
+      toast({ title: "Link copied", description: "Product link copied to clipboard." });
+    } catch {
+      toast({ title: "Copy failed", description: "Please copy the URL manually." });
+    }
+  };
+
+  const related = allProducts()
+    .filter((p) => p.categorySlug === product.categorySlug && p.id !== product.id)
+    .slice(0, 4);
 
   return (
     <Layout>
       <section className="container-x py-10">
         <div className="text-xs uppercase text-muted-foreground tracking-wide mb-6">
           <Link to="/" className="hover:text-ink">Home</Link> /{" "}
-          <Link to={`/category/${product.category}`} className="hover:text-ink">{product.category}</Link> / {product.name}
+          <Link to={`/category/${product.categorySlug}`} className="hover:text-ink">{product.categorySlug}</Link>
+          {" "}/ {product.name}
         </div>
 
         <div className="grid lg:grid-cols-2 gap-10">
-          <div className="bg-secondary aspect-square overflow-hidden">
-            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-          </div>
-
-          <div>
-            <span className="inline-block bg-ink text-cream text-[10px] uppercase tracking-widest px-2 py-1">MOQ {product.moq}</span>
-            <h1 className="font-display text-5xl md:text-7xl leading-none mt-4">{product.name.toUpperCase()}</h1>
-            <p className="mt-4 text-muted-foreground">
-              {product.fabric} · <strong className="text-ink">{product.gsm}</strong> · Pre-shrunk · Bio-washed
-            </p>
-            <div className="mt-6 font-display text-3xl">{product.price}<span className="text-sm font-sans text-muted-foreground">/piece</span></div>
-
-            {/* Color */}
-            <div className="mt-8">
-              <h4 className="text-xs uppercase tracking-widest font-bold mb-3">Color</h4>
-              <div className="flex gap-2">
-                {product.colors.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setColor(c)}
-                    className={`h-10 w-10 rounded-full border-2 transition ${color === c ? "border-ink scale-110" : "border-border"}`}
-                    style={{ backgroundColor: c }}
-                    aria-label={c}
-                  />
-                ))}
-              </div>
+          {/* Gallery */}
+          <div className="flex gap-3">
+            <div className="hidden md:flex flex-col gap-2 w-20">
+              {product.gallery.slice(0, 6).map((src, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveImg(i)}
+                  className={`bg-secondary aspect-square overflow-hidden border-2 transition ${activeImg === i ? "border-ink" : "border-transparent hover:border-border"}`}
+                >
+                  <img src={src} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
             </div>
-
-            {/* Size */}
-            <div className="mt-6">
-              <h4 className="text-xs uppercase tracking-widest font-bold mb-3">Size</h4>
-              <div className="flex gap-2">
-                {sizes.map((s) => (
+            <div className="flex-1">
+              <div className="bg-secondary aspect-square overflow-hidden">
+                <img src={product.gallery[activeImg] || product.image} alt={product.name} className="w-full h-full object-cover" />
+              </div>
+              <div className="md:hidden flex gap-2 mt-2 overflow-x-auto">
+                {product.gallery.slice(0, 6).map((src, i) => (
                   <button
-                    key={s}
-                    onClick={() => setSize(s)}
-                    className={`h-12 w-12 border-2 font-bold transition ${size === s ? "border-ink bg-ink text-cream" : "border-border hover:border-ink"}`}
+                    key={i}
+                    onClick={() => setActiveImg(i)}
+                    className={`bg-secondary w-16 h-16 shrink-0 overflow-hidden border-2 ${activeImg === i ? "border-ink" : "border-transparent"}`}
                   >
-                    {s}
+                    <img src={src} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
             </div>
+          </div>
 
-            {/* Quantity */}
-            <div className="mt-6">
-              <h4 className="text-xs uppercase tracking-widest font-bold mb-3">Quantity (min 20)</h4>
-              <div className="inline-flex items-center border-2 border-ink">
-                <button onClick={() => setQty((q) => Math.max(20, q - 5))} className="px-4 py-3"><Minus className="h-4 w-4" /></button>
-                <input
-                  type="number"
-                  value={qty}
-                  min={20}
-                  onChange={(e) => setQty(Math.max(20, Number(e.target.value) || 20))}
-                  className="w-20 text-center font-bold bg-transparent border-x-2 border-ink py-3"
-                />
-                <button onClick={() => setQty((q) => q + 5)} className="px-4 py-3"><Plus className="h-4 w-4" /></button>
+          {/* Info */}
+          <div>
+            <span className="inline-block bg-ink text-cream text-[10px] uppercase tracking-widest px-2 py-1">MOQ {moq}</span>
+            {product.tier && (
+              <span className="inline-block ml-2 bg-primary text-cream text-[10px] uppercase tracking-widest px-2 py-1">{product.tier}</span>
+            )}
+            <h1 className="font-display text-4xl md:text-6xl leading-none mt-4">{product.name.toUpperCase()}</h1>
+            <p className="mt-4 text-muted-foreground">{product.description}</p>
+
+            <div className="mt-5 grid grid-cols-2 gap-px bg-border">
+              <div className="bg-background p-3">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Material</div>
+                <div className="font-medium mt-1 text-sm">{product.material}</div>
+              </div>
+              <div className="bg-background p-3">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Price</div>
+                <div className="font-display text-xl mt-1">{product.price}<span className="text-xs font-sans text-muted-foreground">/pc</span></div>
               </div>
             </div>
 
-            {/* Customization */}
-            <div className="mt-6">
-              <h4 className="text-xs uppercase tracking-widest font-bold mb-3">Customization</h4>
-              <div className="grid sm:grid-cols-2 gap-2">
-                {customizationOptions.map((o) => {
-                  const on = opts.includes(o);
-                  return (
+            {/* Color */}
+            {product.colors.length > 0 && (
+              <div className="mt-6">
+                <h4 className="text-xs uppercase tracking-widest font-bold mb-3">Color</h4>
+                <div className="flex gap-2">
+                  {product.colors.map((c) => (
                     <button
-                      key={o}
-                      onClick={() => toggle(o)}
-                      className={`flex items-center gap-2 text-left text-sm px-3 py-2 border transition ${on ? "border-ink bg-ink/5" : "border-border hover:border-ink"}`}
-                    >
-                      <span className={`h-4 w-4 border flex items-center justify-center ${on ? "bg-ink border-ink" : "border-border"}`}>
-                        {on && <Check className="h-3 w-3 text-cream" />}
-                      </span>
-                      {o}
-                    </button>
-                  );
-                })}
+                      key={c}
+                      onClick={() => setColor(c)}
+                      className={`h-10 w-10 rounded-full border-2 transition ${selectedColor === c ? "border-ink scale-110" : "border-border"}`}
+                      style={{ backgroundColor: c }}
+                      aria-label={c}
+                    />
+                  ))}
+                </div>
               </div>
+            )}
+
+            {/* Size matrix */}
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-xs uppercase tracking-widest font-bold">Sizes & Quantity</h4>
+                <span className="text-[10px] uppercase tracking-widest text-muted-foreground">Minimum Order: {moq} pcs</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {SIZES.map((s) => (
+                  <div key={s} className="flex items-center justify-between border border-border px-3 py-2">
+                    <span className="font-condensed text-xl w-10">{s}</span>
+                    <div className="inline-flex items-center border border-ink">
+                      <button type="button" onClick={() => bump(s, -1)} className="px-2.5 py-1.5" aria-label={`Decrease ${s}`}>
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                      <input
+                        type="number"
+                        min={0}
+                        value={qty[s]}
+                        onChange={(e) => setQty((q) => ({ ...q, [s]: Math.max(0, Number(e.target.value) || 0) }))}
+                        className="w-14 text-center text-sm bg-transparent border-x border-ink py-1.5 font-bold"
+                      />
+                      <button type="button" onClick={() => bump(s, 1)} className="px-2.5 py-1.5" aria-label={`Increase ${s}`}>
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center justify-between mt-4 px-3 py-3 bg-secondary border border-border">
+                <span className="text-xs uppercase tracking-widest font-bold">Total Quantity</span>
+                <span className="font-display text-2xl">{total} <span className="text-xs font-sans text-muted-foreground">/ {moq} min</span></span>
+              </div>
+              {!canOrder && (
+                <p className="text-xs text-destructive mt-2 font-medium">
+                  Minimum order quantity is {moq} pieces. Add {moq - total} more to enable ordering.
+                </p>
+              )}
             </div>
 
-            <a href={waLink(message)} target="_blank" rel="noreferrer" className="btn-wa mt-8 w-full justify-center text-base !py-4">
-              <MessageCircle className="h-5 w-5" /> Order on WhatsApp
-            </a>
-            <p className="text-xs text-muted-foreground mt-2 text-center">Pre-filled message · 50% advance · 7–14 day delivery</p>
+            <button
+              onClick={handleOrder}
+              disabled={!canOrder}
+              className={`btn-wa mt-6 w-full justify-center text-base !py-4 ${!canOrder ? "opacity-40 cursor-not-allowed" : ""}`}
+            >
+              <MessageCircle className="h-5 w-5" /> Order via WhatsApp
+            </button>
+            <p className="text-xs text-muted-foreground mt-2 text-center">
+              You can send your custom logo as the next message on WhatsApp · {WHATSAPP_NUMBER ? "Live chat with our team" : ""}
+            </p>
+
+            {/* Share */}
+            <div className="mt-6 flex gap-2">
+              <button onClick={handleShareWa} className="flex-1 inline-flex items-center justify-center gap-2 border border-border py-2.5 text-xs uppercase tracking-wide hover:border-ink transition">
+                <Share2 className="h-4 w-4" /> Share via WhatsApp
+              </button>
+              <button onClick={handleCopy} className="flex-1 inline-flex items-center justify-center gap-2 border border-border py-2.5 text-xs uppercase tracking-wide hover:border-ink transition">
+                <Link2 className="h-4 w-4" /> Copy Product Link
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="container-x py-16">
-        <h2 className="font-display text-4xl md:text-5xl mb-8">RELATED PRODUCTS</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {(related.length ? related : fallback).map((p) => (
-            <ProductCard key={p.id} p={p} />
-          ))}
-        </div>
-      </section>
+      {related.length > 0 && (
+        <section className="container-x py-16">
+          <h2 className="font-display text-4xl md:text-5xl mb-8">RELATED PRODUCTS</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {related.map((p) => (
+              <ProductCard key={p.id} p={p as any} />
+            ))}
+          </div>
+        </section>
+      )}
     </Layout>
   );
 };
