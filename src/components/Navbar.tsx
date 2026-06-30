@@ -80,6 +80,16 @@ export const Navbar = () => {
             </a>
           ))}
           <NavLink
+            to="/bulk-order"
+            className={({ isActive }) =>
+              `text-sm font-medium uppercase tracking-wide transition hover:text-primary ${
+                isActive ? "text-primary" : "text-ink"
+              }`
+            }
+          >
+            Bulk Order
+          </NavLink>
+          <NavLink
             to="/contact"
             className={({ isActive }) =>
               `text-sm font-medium uppercase tracking-wide transition hover:text-primary ${
@@ -178,6 +188,9 @@ export const Navbar = () => {
                 {l.label}
               </a>
             ))}
+            <Link to="/bulk-order" onClick={() => setOpen(false)} className="py-2 font-medium uppercase text-sm tracking-wide">
+              Bulk Order
+            </Link>
             <Link to="/contact" onClick={() => setOpen(false)} className="py-2 font-medium uppercase text-sm tracking-wide">
               Contact
             </Link>

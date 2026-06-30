@@ -9,6 +9,7 @@ import CategoryTiers from "./pages/CategoryTiers.tsx";
 import SubcategoryList from "./pages/SubcategoryList.tsx";
 import ProductList from "./pages/ProductList.tsx";
 import ProductDetail from "./pages/ProductDetail.tsx";
+import BulkOrder from "./pages/BulkOrder.tsx";
 import Contact from "./pages/Contact.tsx";
 import ScrollToTop from "./components/ScrollToTop";
 import { VisitTracker } from "./components/VisitTracker";
@@ -35,6 +36,7 @@ const App = () => (
           {/* /category/:cat/:tier/:sub → product listing */}
           <Route path="/category/:cat/:tier/:sub" element={<ProductList />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/bulk-order" element={<BulkOrder />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin/*" element={<AdminApp />} />
           <Route path="*" element={<NotFound />} />
