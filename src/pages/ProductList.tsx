@@ -4,11 +4,13 @@ import { ProductCard } from "@/components/ProductCard";
 import { findCategory, findSubcategory } from "@/data/catalog";
 
 const ProductList = () => {
-  const { cat: catSlug, tier, sub } = useParams();
+  const { cat: catSlug, tier: tierParam, sub } = useParams();
   const cat = findCategory(catSlug);
   if (!cat) return <Navigate to="/" replace />;
-  const subSlug = sub;
-  const subcat = findSubcategory(cat, tier, subSlug);
+
+  // "_" is the placeholder we use for non-tiered categories.
+  const tier = tierParam === "_" ? undefined : tierParam;
+  const subcat = findSubcategory(cat, tier, sub);
   if (!subcat) return <Navigate to={`/category/${cat.slug}`} replace />;
 
   const items = subcat.products;
@@ -24,7 +26,7 @@ const ProductList = () => {
             {" "}/ <span className="text-ink">{subcat.name}</span>
           </div>
           <h1 className="font-display text-5xl md:text-7xl leading-none">{subcat.name.toUpperCase()}</h1>
-          <p className="mt-3 text-muted-foreground">MOQ 20 pcs · Fully customizable · 7–14 day delivery</p>
+          <p className="mt-3 text-muted-foreground">Order from 1–99 pcs · Auto bulk discounts · 7–14 day delivery</p>
         </div>
       </section>
 

@@ -6,7 +6,10 @@ const SubcategoryList = () => {
   const { cat: catSlug, tier } = useParams();
   const cat = findCategory(catSlug);
   if (!cat) return <Navigate to="/" replace />;
-  if (cat.hasTiers && tier !== "regular" && tier !== "premium")
+  // Non-tiered cats: the second URL segment is actually a subcategory slug
+  // (or "_") — bounce back to the category landing.
+  if (!cat.hasTiers) return <Navigate to={`/category/${cat.slug}`} replace />;
+  if (tier !== "regular" && tier !== "premium")
     return <Navigate to={`/category/${cat.slug}`} replace />;
 
   const subs = getSubsForTier(cat, tier);
