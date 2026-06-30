@@ -342,5 +342,26 @@ export const latestProducts = (n = 9): CatalogProduct[] =>
 
 export const productHref = (p: CatalogProduct) => `/product/${p.id}`;
 
+// Non-tiered categories use "_" as the tier slot so the URL never collides
+// with the tier route (/category/:cat/:tier).
 export const listingHref = (catSlug: string, tier: string | undefined, subSlug: string) =>
-  tier ? `/category/${catSlug}/${tier}/${subSlug}` : `/category/${catSlug}/${subSlug}`;
+  `/category/${catSlug}/${tier ?? "_"}/${subSlug}`;
+
+// ---------- Garment vs non-garment ----------
+const NON_GARMENT = new Set(["custom-accessories", "corporate-joining-kits"]);
+export const isNonGarmentCategory = (slug: string) => NON_GARMENT.has(slug);
+
+// ---------- Pricing helpers ----------
+export const priceValue = (p: Pick<CatalogProduct, "price">) =>
+  Number(String(p.price).replace(/[^\d.]/g, "")) || 0;
+
+export const COURIER_FEE = 30;
+
+export const getDiscountPct = (qty: number) => {
+  if (qty >= 50) return 30;
+  if (qty >= 25) return 20;
+  if (qty >= 10) return 10;
+  return 0;
+};
+
+export const BULK_THRESHOLD = 100;
