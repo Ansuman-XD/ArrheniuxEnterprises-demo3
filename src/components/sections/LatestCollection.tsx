@@ -9,7 +9,7 @@ export const LatestCollection = () => {
         <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-primary">02 — Featured</span>
-            <h2 className="font-display text-5xl md:text-6xl mt-2">LATEST COLLECTION</h2>
+            <h2 className="font-display text-5xl md:text-6xl mt-2">NEW COLLECTION</h2>
           </div>
           <p className="max-w-sm text-muted-foreground text-sm">
             The latest 9 styles added to our catalog — engineered for bulk and ready to customize.
