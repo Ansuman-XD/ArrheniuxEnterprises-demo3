@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, MessageCircle, User as UserIcon, LogOut, ChevronDown } from "lucide-react";
+import { Menu, X, MessageCircle, User as UserIcon, ChevronDown } from "lucide-react";
 import { Logo } from "./Logo";
 import { MegaMenu } from "./MegaMenu";
+import { UserMenu } from "./UserMenu";
 import { catalog } from "@/data/catalog";
 import { waLink } from "@/data/site";
 import { getSession, clearSession } from "@/lib/authStore";
 
-const mainLinks = [
-  { hash: "#home", label: "Home" },
-  { hash: "#collection", label: "Latest" },
+// Reordered per spec: Home → Categories → New Collection → Process → Factory → Bulk Order → B2B Shop → Contact → Reactions
+const hashLinks = [
+  { hash: "#collection", label: "New Collection" },
   { hash: "#process", label: "Process" },
   { hash: "#factory", label: "Factory" },
-  { hash: "#reviews", label: "Reactions" },
 ];
 
 export const Navbar = () => {
@@ -33,12 +33,6 @@ export const Navbar = () => {
     setUser(getSession());
   }, [location.pathname]);
 
-  const handleLogout = () => {
-    clearSession();
-    setUser(null);
-    navigate("/");
-  };
-
   const handleHashClick = (e: React.MouseEvent, hash: string) => {
     e.preventDefault();
     setOpen(false);
@@ -51,16 +45,22 @@ export const Navbar = () => {
     history.replaceState(null, "", hash);
   };
 
+  const handleLogout = () => {
+    clearSession();
+    setUser(null);
+    navigate("/");
+  };
+
   return (
     <header
       className={`sticky top-0 z-50 w-full transition-all ${
         scrolled ? "bg-cream/95 backdrop-blur shadow-sm" : "bg-cream"
       }`}
     >
-      <div className="container-x flex items-center justify-between py-4">
+      <div className="container-x flex items-center justify-between py-4 gap-4">
         <Logo />
 
-        <nav className="hidden lg:flex items-center gap-8">
+        <nav className="hidden lg:flex items-center gap-6">
           <a
             href="#home"
             onClick={(e) => handleHashClick(e, "#home")}
@@ -69,7 +69,7 @@ export const Navbar = () => {
             Home
           </a>
           <MegaMenu />
-          {mainLinks.slice(1).map((l) => (
+          {hashLinks.map((l) => (
             <a
               key={l.hash}
               href={l.hash}
@@ -90,6 +90,16 @@ export const Navbar = () => {
             Bulk Order
           </NavLink>
           <NavLink
+            to="/b2b-shop"
+            className={({ isActive }) =>
+              `text-sm font-medium uppercase tracking-wide transition hover:text-primary ${
+                isActive ? "text-primary" : "text-ink"
+              }`
+            }
+          >
+            B2B Shop
+          </NavLink>
+          <NavLink
             to="/contact"
             className={({ isActive }) =>
               `text-sm font-medium uppercase tracking-wide transition hover:text-primary ${
@@ -99,21 +109,20 @@ export const Navbar = () => {
           >
             Contact
           </NavLink>
+          <a
+            href="#reviews"
+            onClick={(e) => handleHashClick(e, "#reviews")}
+            className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink"
+          >
+            Reactions
+          </a>
         </nav>
 
         <div className="flex items-center gap-2">
           {user ? (
-            <>
-              {user.role === "admin" && (
-                <Link to="/admin" className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide bg-ink text-cream px-3 py-2 rounded-md hover:bg-ink/90">
-                  Admin
-                </Link>
-              )}
-              <span className="hidden md:inline text-xs text-muted-foreground max-w-[120px] truncate">{user.name}</span>
-              <button onClick={handleLogout} className="hidden md:inline-flex items-center gap-1 text-xs font-medium px-3 py-2 rounded-md hover:bg-muted" aria-label="Logout">
-                <LogOut className="h-3.5 w-3.5" /> Log out
-              </button>
-            </>
+            <div className="hidden md:block">
+              <UserMenu user={user} onChange={() => setUser(getSession())} />
+            </div>
           ) : (
             <Link to="/auth" className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide border border-ink text-ink px-3 py-2 rounded-md hover:bg-ink hover:text-cream transition">
               <UserIcon className="h-3.5 w-3.5" /> Log In
@@ -146,18 +155,27 @@ export const Navbar = () => {
                 <UserIcon className="h-4 w-4" /> Log In / Sign Up
               </Link>
             ) : (
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm">{user.name}</span>
-                <button onClick={() => { handleLogout(); setOpen(false); }} className="text-xs font-medium flex items-center gap-1">
-                  <LogOut className="h-3 w-3" /> Log out
+              <div className="flex items-center justify-between py-2 gap-2">
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold truncate">{user.name}</div>
+                  <div className="text-[10px] uppercase text-muted-foreground truncate">{user.email}</div>
+                </div>
+                <button onClick={() => { handleLogout(); setOpen(false); }} className="text-xs font-medium underline shrink-0">
+                  Log out
                 </button>
               </div>
+            )}
+            {user && (
+              <Link to="/my-orders" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium">
+                My Orders
+              </Link>
             )}
             {user?.role === "admin" && (
               <Link to="/admin" onClick={() => setOpen(false)} className="py-2 font-semibold uppercase text-sm tracking-wide text-primary">
                 Admin Panel →
               </Link>
             )}
+            <a href="#home" onClick={(e) => handleHashClick(e, "#home")} className="py-2 uppercase text-sm tracking-wide font-medium">Home</a>
             <button
               onClick={() => setMobileCatOpen((v) => !v)}
               className="py-2 font-medium uppercase text-sm tracking-wide flex items-center justify-between"
@@ -178,22 +196,15 @@ export const Navbar = () => {
                 ))}
               </div>
             )}
-            {mainLinks.map((l) => (
-              <a
-                key={l.hash}
-                href={l.hash}
-                onClick={(e) => handleHashClick(e, l.hash)}
-                className="py-2 font-medium uppercase text-sm tracking-wide"
-              >
+            {hashLinks.map((l) => (
+              <a key={l.hash} href={l.hash} onClick={(e) => handleHashClick(e, l.hash)} className="py-2 uppercase text-sm tracking-wide font-medium">
                 {l.label}
               </a>
             ))}
-            <Link to="/bulk-order" onClick={() => setOpen(false)} className="py-2 font-medium uppercase text-sm tracking-wide">
-              Bulk Order
-            </Link>
-            <Link to="/contact" onClick={() => setOpen(false)} className="py-2 font-medium uppercase text-sm tracking-wide">
-              Contact
-            </Link>
+            <Link to="/bulk-order" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium">Bulk Order</Link>
+            <Link to="/b2b-shop" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium">B2B Shop</Link>
+            <Link to="/contact" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium">Contact</Link>
+            <a href="#reviews" onClick={(e) => handleHashClick(e, "#reviews")} className="py-2 uppercase text-sm tracking-wide font-medium">Reactions</a>
             <a href={waLink()} target="_blank" rel="noreferrer" className="btn-wa mt-2 justify-center">
               <MessageCircle className="h-4 w-4" /> WhatsApp Us
             </a>
