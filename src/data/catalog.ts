@@ -304,6 +304,9 @@ export const catalog: CatalogCategory[] = [
       "ARRHENIUX Cotton Collar Neck T-Shirt",
       "ARRHENIUX Blend Collar Neck T-Shirt",
       "ARRHENIUX Dryfit Collar Neck T-Shirt",
+      "ARRHENIUX Oversized T-Shirt",
+      "ARRHENIUX Hoodie",
+      "ARRHENIUX Polo T-Shirt",
     ], 2),
   },
 ];
@@ -342,21 +345,29 @@ export const latestProducts = (n = 9): CatalogProduct[] =>
 
 export const productHref = (p: CatalogProduct) => `/product/${p.id}`;
 
-// Non-tiered categories use "_" as the tier slot so the URL never collides
-// with the tier route (/category/:cat/:tier).
 export const listingHref = (catSlug: string, tier: string | undefined, subSlug: string) =>
   `/category/${catSlug}/${tier ?? "_"}/${subSlug}`;
 
 // ---------- Garment vs non-garment ----------
 const NON_GARMENT = new Set(["custom-accessories", "corporate-joining-kits"]);
 export const isNonGarmentCategory = (slug: string) => NON_GARMENT.has(slug);
+export const isArrheniuxCategory = (slug: string) => slug === "arrheniux-t-shirts";
 
 // ---------- Pricing helpers ----------
 export const priceValue = (p: Pick<CatalogProduct, "price">) =>
   Number(String(p.price).replace(/[^\d.]/g, "")) || 0;
 
-export const COURIER_FEE = 30;
+// Per-piece courier
+export const COURIER_PER_PC = 30;
+export const GST_RATE = 0.05; // 5%
+export const BULK_DISCOUNT_PCT = 40;
+export const BULK_THRESHOLD = 80;
 
+// Per-product MOQ: ARRHENIUX = 1, everything else = 5
+export const getMOQ = (p: Pick<CatalogProduct, "categorySlug">) =>
+  isArrheniuxCategory(p.categorySlug) ? 1 : 5;
+
+// Retail-tier % discount (below bulk threshold)
 export const getDiscountPct = (qty: number) => {
   if (qty >= 50) return 30;
   if (qty >= 25) return 20;
@@ -364,4 +375,28 @@ export const getDiscountPct = (qty: number) => {
   return 0;
 };
 
-export const BULK_THRESHOLD = 100;
+// Print Types with per-piece surcharge
+export type PrintType = {
+  id: string;
+  label: string;
+  pricePerPc: number;
+};
+export const PRINT_TYPES: PrintType[] = [
+  { id: "none", label: "No Print", pricePerPc: 0 },
+  { id: "dtf", label: "DTF Print", pricePerPc: 40 },
+  { id: "screen", label: "Screen Print", pricePerPc: 25 },
+  { id: "embroidery", label: "Embroidery", pricePerPc: 60 },
+  { id: "sublimation", label: "Sublimation", pricePerPc: 35 },
+];
+export const findPrintType = (id: string) =>
+  PRINT_TYPES.find((p) => p.id === id) || PRINT_TYPES[0];
+
+// Human-friendly product code
+export const productCode = (p: Pick<CatalogProduct, "id" | "categorySlug">) => {
+  const catInitials = p.categorySlug
+    .split("-")
+    .map((w) => w[0]?.toUpperCase() || "")
+    .join("")
+    .slice(0, 3);
+  return `ARR-${catInitials}-${p.id.toUpperCase()}`;
+};

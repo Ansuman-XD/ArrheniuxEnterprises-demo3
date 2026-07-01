@@ -1,4 +1,4 @@
-// Lightweight client-side auth + analytics + product + reviews store (localStorage).
+// Lightweight client-side auth + analytics + product + reviews + orders store (localStorage).
 // Demo only — swap with Lovable Cloud later.
 
 export type User = {
@@ -28,6 +28,50 @@ export type Review = {
   rating: number;
   text: string;
   createdAt: string;
+  productId?: string;
+  userId?: string;
+};
+
+export type OrderStatus =
+  | "Placed"
+  | "Confirmed"
+  | "In Production"
+  | "Shipped"
+  | "Delivered";
+
+export const ORDER_STATUSES: OrderStatus[] = [
+  "Placed",
+  "Confirmed",
+  "In Production",
+  "Shipped",
+  "Delivered",
+];
+
+export type Order = {
+  id: string;
+  userId: string;
+  productId: string;
+  productName: string;
+  productCode?: string;
+  qty: number;
+  unitPrice: number;
+  subtotal: number;
+  discountPct: number;
+  discountAmt: number;
+  printType?: string;
+  printCharge?: number;
+  courier: number;
+  gst: number;
+  total: number;
+  paid: number;             // amount actually paid via demo Razorpay
+  paymentMode: "full" | "advance-50" | "cod";
+  paymentRef?: string;      // demo razorpay ref
+  status: OrderStatus;
+  createdAt: string;
+  updatedAt: string;
+  kind: "retail" | "bulk";
+  customer?: Record<string, string>;
+  sizes?: Record<string, number>;
 };
 
 const USERS_KEY = "arr_users";
@@ -36,6 +80,7 @@ const VISITS_KEY = "arr_visits";
 const PRODUCTS_KEY = "arr_products";
 const SETTINGS_KEY = "arr_settings";
 const REVIEWS_KEY = "arr_reviews";
+const ORDERS_KEY = "arr_orders";
 
 export const DEFAULT_ADMIN_EMAIL = "admin@arrhenius.com";
 export const DEFAULT_ADMIN_PASSWORD = "admin123";
@@ -179,6 +224,8 @@ export const saveProducts = (p: Product[]) => write(PRODUCTS_KEY, p);
 
 // ---------- Reviews ----------
 export const getReviews = (): Review[] => read<Review[]>(REVIEWS_KEY, []);
+export const getReviewsForProduct = (productId: string) =>
+  getReviews().filter((r) => r.productId === productId);
 export const addReview = (r: Omit<Review, "id" | "createdAt">): Review => {
   const list = getReviews();
   const review: Review = { ...r, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
@@ -186,3 +233,38 @@ export const addReview = (r: Omit<Review, "id" | "createdAt">): Review => {
   write(REVIEWS_KEY, list);
   return review;
 };
+
+// ---------- Orders ----------
+export const getOrders = (): Order[] => read<Order[]>(ORDERS_KEY, []);
+export const saveOrders = (o: Order[]) => write(ORDERS_KEY, o);
+export const getUserOrders = (userId: string) =>
+  getOrders().filter((o) => o.userId === userId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+export const findOrder = (id: string) => getOrders().find((o) => o.id === id);
+
+export const createOrder = (o: Omit<Order, "id" | "createdAt" | "updatedAt" | "status"> & { status?: OrderStatus }): Order => {
+  const list = getOrders();
+  const now = new Date().toISOString();
+  const order: Order = {
+    ...o,
+    id: crypto.randomUUID(),
+    status: o.status ?? "Placed",
+    createdAt: now,
+    updatedAt: now,
+  };
+  list.unshift(order);
+  saveOrders(list);
+  return order;
+};
+
+export const advanceOrder = (id: string) => {
+  const list = getOrders();
+  const o = list.find((x) => x.id === id);
+  if (!o) return;
+  const idx = ORDER_STATUSES.indexOf(o.status);
+  o.status = ORDER_STATUSES[Math.min(ORDER_STATUSES.length - 1, idx + 1)];
+  o.updatedAt = new Date().toISOString();
+  saveOrders(list);
+};
+
+export const hasPurchased = (userId: string, productId: string) =>
+  getOrders().some((o) => o.userId === userId && o.productId === productId);
