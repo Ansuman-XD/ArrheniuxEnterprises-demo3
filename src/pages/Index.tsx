@@ -25,10 +25,11 @@ const Index = () => {
       <section id="home"><Hero /></section>
       <section id="categories"><CategoriesGrid /></section>
       <section id="collection"><LatestCollection /></section>
-      <section id="process"><HowItWorks /></section>
       <section id="clients"><Gallery /></section>
-      <section id="factory">
+      {/* About Us section merges former "Factory" + "Process" content */}
+      <section id="about-us">
         <FactorySection />
+        <HowItWorks />
         <WhyWhatWho />
         <StoreLocations />
       </section>
