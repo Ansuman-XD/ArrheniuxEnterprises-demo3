@@ -349,29 +349,20 @@ const ProductDetail = () => {
             )}
 
             {isBulk ? (
-              <button onClick={handleWa} className="btn-bold mt-6 w-full justify-center text-base !py-4">
+              <button onClick={handlePay} className="btn-bold mt-6 w-full justify-center text-base !py-4">
                 <PackageOpen className="h-5 w-5" /> Continue on Bulk Order page ({BULK_THRESHOLD}+ pcs)
               </button>
             ) : (
-              <div className="mt-6 grid sm:grid-cols-2 gap-3">
-                <button
-                  onClick={handleWa}
-                  disabled={!canOrder}
-                  className={`btn-wa justify-center text-sm !py-3.5 ${!canOrder ? "opacity-40 cursor-not-allowed" : ""}`}
-                >
-                  <MessageCircle className="h-4 w-4" /> Order via WhatsApp
-                </button>
-                <button
-                  onClick={handlePay}
-                  disabled={!canOrder}
-                  className={`btn-bold justify-center text-sm !py-3.5 ${!canOrder ? "opacity-40 cursor-not-allowed" : ""}`}
-                >
-                  <CreditCard className="h-4 w-4" /> Pay Now (Razorpay)
-                </button>
-              </div>
+              <button
+                onClick={handlePay}
+                disabled={!canOrder}
+                className={`btn-bold mt-6 w-full justify-center text-sm !py-3.5 ${!canOrder ? "opacity-40 cursor-not-allowed" : ""}`}
+              >
+                <CreditCard className="h-4 w-4" /> Pay Now (Razorpay)
+              </button>
             )}
             <p className="text-xs text-muted-foreground mt-2 text-center">
-              You can send your custom logo as the next message on WhatsApp · {WHATSAPP_NUMBER ? "Live chat with our team" : ""}
+              Complete payment first. WhatsApp will auto-open with your order — attach logo, artwork or instructions there.
             </p>
 
             {/* Share */}
