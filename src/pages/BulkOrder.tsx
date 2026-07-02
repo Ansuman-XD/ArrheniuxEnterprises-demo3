@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Minus, Plus, MessageCircle, CreditCard } from "lucide-react";
+import { Minus, Plus, CreditCard } from "lucide-react";
 import { Layout } from "@/components/Layout";
+import { PrintPicker } from "@/components/PrintPicker";
 import {
   catalog,
   findCategory,
   getSubsForTier,
   findProduct,
   isNonGarmentCategory,
+  isArrheniuxCategory,
+  supportsPrint,
   priceValue,
   productCode,
-  PRINT_TYPES,
-  findPrintType,
   COURIER_PER_PC,
   GST_RATE,
   BULK_DISCOUNT_PCT,
@@ -19,6 +20,7 @@ import {
   type Tier,
   type CatalogProduct,
 } from "@/data/catalog";
+import { emptyPrint, printPricePerPc, printLabel, type PrintSelection } from "@/data/printOptions";
 import { waLink } from "@/data/site";
 import { getSession, createOrder } from "@/lib/authStore";
 import { openRazorpay } from "@/lib/razorpay";
@@ -26,7 +28,7 @@ import { toast } from "@/hooks/use-toast";
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"] as const;
 type Size = typeof SIZES[number];
-const SIZE_STEP = 2; // B2B/Bulk size step of 2
+const SIZE_STEP = 2;
 
 type DraftCustomer = {
   fullName: string;
@@ -41,18 +43,6 @@ type DraftCustomer = {
   notes: string;
 };
 
-type Draft = {
-  catSlug: string;
-  tier: Tier | "";
-  subSlug: string;
-  productId: string;
-  color: string;
-  unitQty: number;
-  sizeQty: Record<Size, number>;
-  customer: DraftCustomer;
-  printTypeId: string;
-};
-
 const EMPTY_CUSTOMER: DraftCustomer = {
   fullName: "", company: "", gst: "", phone: "", email: "",
   address: "", city: "", state: "", pincode: "", notes: "",
@@ -60,19 +50,21 @@ const EMPTY_CUSTOMER: DraftCustomer = {
 const EMPTY_SIZES: Record<Size, number> = { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0 };
 const DRAFT_KEY = "arr_bulk_draft";
 
-const loadDraft = (): Partial<Draft> => {
+const loadDraft = () => {
   try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || "{}"); } catch { return {}; }
 };
-const saveDraft = (d: Partial<Draft>) => localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+const saveDraft = (d: unknown) => localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
 
 const BulkOrder = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
 
-  const initial = useMemo<Partial<Draft>>(() => {
+  const initial = useMemo(() => {
     const urlPid = params.get("product");
     const urlQty = Number(params.get("qty")) || 0;
-    const urlPrint = params.get("print") || "";
+    const urlCat = params.get("cat");
+    const urlTier = params.get("tier");
+    const urlSub = params.get("sub");
     const draft = loadDraft();
     if (urlPid) {
       const p = findProduct(urlPid);
@@ -86,23 +78,36 @@ const BulkOrder = () => {
           color: p.colors[0] || "",
           unitQty: seedQty,
           sizeQty: { ...EMPTY_SIZES },
-          customer: (draft.customer as DraftCustomer) || EMPTY_CUSTOMER,
-          printTypeId: urlPrint || draft.printTypeId || "none",
+          customer: draft.customer || EMPTY_CUSTOMER,
+          print: emptyPrint(),
         };
       }
+    }
+    if (urlCat) {
+      return {
+        catSlug: urlCat,
+        tier: (urlTier as Tier) || "",
+        subSlug: urlSub || "",
+        productId: "",
+        color: "",
+        unitQty: BULK_THRESHOLD,
+        sizeQty: { ...EMPTY_SIZES },
+        customer: draft.customer || EMPTY_CUSTOMER,
+        print: emptyPrint(),
+      };
     }
     return draft;
   }, [params]);
 
-  const [catSlug, setCatSlug] = useState(initial.catSlug || catalog[0].slug);
+  const [catSlug, setCatSlug] = useState<string>(initial.catSlug || catalog[0].slug);
   const [tier, setTier] = useState<Tier | "">(initial.tier ?? "");
-  const [subSlug, setSubSlug] = useState(initial.subSlug || "");
-  const [productId, setProductId] = useState(initial.productId || "");
-  const [color, setColor] = useState(initial.color || "");
+  const [subSlug, setSubSlug] = useState<string>(initial.subSlug || "");
+  const [productId, setProductId] = useState<string>(initial.productId || "");
+  const [color, setColor] = useState<string>(initial.color || "");
   const [unitQty, setUnitQty] = useState<number>(initial.unitQty ?? BULK_THRESHOLD);
   const [sizeQty, setSizeQty] = useState<Record<Size, number>>(initial.sizeQty || { ...EMPTY_SIZES });
   const [customer, setCustomer] = useState<DraftCustomer>(initial.customer || EMPTY_CUSTOMER);
-  const [printTypeId, setPrintTypeId] = useState<string>(initial.printTypeId || "none");
+  const [printSel, setPrintSel] = useState<PrintSelection>(initial.print || emptyPrint());
   const [error, setError] = useState("");
 
   const cat = findCategory(catSlug)!;
@@ -112,7 +117,7 @@ const BulkOrder = () => {
   const products: CatalogProduct[] = subcat?.products ?? [];
   const product = products.find((p) => p.id === productId);
   const isGarment = product ? !isNonGarmentCategory(product.categorySlug) : !isNonGarmentCategory(catSlug);
-  const printType = findPrintType(printTypeId);
+  const canPrint = supportsPrint(catSlug) && !isArrheniuxCategory(catSlug);
 
   useEffect(() => {
     if (!cat.hasTiers) setTier("");
@@ -131,12 +136,14 @@ const BulkOrder = () => {
   }, [productId]);
 
   useEffect(() => {
-    saveDraft({ catSlug, tier, subSlug, productId, color, unitQty, sizeQty, customer, printTypeId });
-  }, [catSlug, tier, subSlug, productId, color, unitQty, sizeQty, customer, printTypeId]);
+    saveDraft({ catSlug, tier, subSlug, productId, color, unitQty, sizeQty, customer, print: printSel });
+  }, [catSlug, tier, subSlug, productId, color, unitQty, sizeQty, customer, printSel]);
 
   const total = isGarment ? Object.values(sizeQty).reduce((a, b) => a + b, 0) : unitQty;
   const unitPrice = product ? priceValue(product) : 0;
-  const printCharge = printType.pricePerPc * total;
+  const perPcPrint = canPrint ? printPricePerPc(printSel) : 0;
+  const printCharge = perPcPrint * total;
+  const printText = canPrint ? printLabel(printSel) : "N/A";
   const subtotal = unitPrice * total + printCharge;
   const discountAmt = Math.round((subtotal * BULK_DISCOUNT_PCT) / 100);
   const afterDiscount = Math.max(0, subtotal - discountAmt);
@@ -153,9 +160,9 @@ const BulkOrder = () => {
     return null;
   };
 
-  const buildMessage = () => {
+  const buildMessage = (mode: "full" | "advance-50", paid: number) => {
     const lines: string[] = [];
-    lines.push("Hi Arrhenix, I'd like to place a *BULK ORDER*:");
+    lines.push(`Hi Arrhenix, my payment (${mode === "full" ? "100% full" : "50% advance"}) is complete for a *BULK ORDER*:`);
     lines.push("");
     lines.push("*Product Details*");
     lines.push(`• Category: ${cat.name}`);
@@ -167,7 +174,7 @@ const BulkOrder = () => {
       lines.push(`• Material: ${product.material}`);
       lines.push(`• Color: ${color || product.colors[0]}`);
     }
-    lines.push(`• Print Type: ${printType.label}${printType.pricePerPc ? ` (+₹${printType.pricePerPc}/pc)` : ""}`);
+    if (canPrint) lines.push(`• Print: ${printText}`);
     if (isGarment) {
       lines.push("• Sizes:");
       SIZES.filter((s) => sizeQty[s] > 0).forEach((s) => lines.push(`   - ${s}: ${sizeQty[s]} pcs`));
@@ -182,6 +189,8 @@ const BulkOrder = () => {
     lines.push(`• Courier (₹${COURIER_PER_PC}×${total}): ₹${courier}`);
     lines.push(`• GST 5%: ₹${gst}`);
     lines.push(`• *Grand Total: ₹${grandTotal}*`);
+    lines.push(`• *Amount Paid: ₹${paid}*`);
+    if (mode === "advance-50") lines.push(`• Balance Due: ₹${grandTotal - paid}`);
     lines.push("");
     lines.push("*Customer Details*");
     lines.push(`• Name: ${customer.fullName}`);
@@ -194,6 +203,8 @@ const BulkOrder = () => {
       lines.push("");
       lines.push(`*Notes*: ${customer.notes}`);
     }
+    lines.push("");
+    lines.push("Sharing logo / artwork / printing design / reference images in the next messages.");
     return lines.join("\n");
   };
 
@@ -205,12 +216,13 @@ const BulkOrder = () => {
       productId: product.id,
       productName: product.name,
       productCode: productCode(product),
+      productImage: product.image,
       qty: total,
       unitPrice,
       subtotal,
       discountPct: BULK_DISCOUNT_PCT,
       discountAmt,
-      printType: printType.label,
+      printType: printText,
       printCharge,
       courier,
       gst,
@@ -222,18 +234,6 @@ const BulkOrder = () => {
       customer: customer as unknown as Record<string, string>,
       sizes: isGarment ? sizeQty : undefined,
     });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const err = validate();
-    if (err) { setError(err); return; }
-    setError("");
-    if (!getSession()) {
-      navigate(`/auth?next=${encodeURIComponent("/bulk-order")}`);
-      return;
-    }
-    window.open(waLink(buildMessage()), "_blank", "noreferrer");
   };
 
   const handlePay = (mode: "full" | "advance-50") => {
@@ -255,6 +255,7 @@ const BulkOrder = () => {
         const o = persistOrder(mode, amount, paymentId);
         if (o) {
           toast({ title: "Payment received", description: `Order #${o.id.slice(0, 8).toUpperCase()} placed.` });
+          window.open(waLink(buildMessage(mode, amount)), "_blank", "noreferrer");
           navigate("/my-orders");
         }
       },
@@ -271,12 +272,12 @@ const BulkOrder = () => {
           <span className="text-xs font-bold uppercase tracking-widest text-primary">{BULK_THRESHOLD}+ pcs</span>
           <h1 className="font-display text-5xl md:text-7xl leading-none mt-3">BULK ORDER</h1>
           <p className="mt-3 text-muted-foreground max-w-2xl">
-            For corporate, institutional and event orders of {BULK_THRESHOLD} pieces and above. Auto {BULK_DISCOUNT_PCT}% bulk discount, ₹{COURIER_PER_PC}/pc courier, 5% GST. Pay in full or 50% advance.
+            For corporate, institutional and event orders of {BULK_THRESHOLD} pieces and above. Auto {BULK_DISCOUNT_PCT}% bulk discount, ₹{COURIER_PER_PC}/pc courier, 5% GST. Pay 100% or 50% advance — WhatsApp opens after payment for artwork.
           </p>
         </div>
       </section>
 
-      <form onSubmit={handleSubmit} className="container-x py-12 grid lg:grid-cols-[1.1fr_1fr] gap-10">
+      <form onSubmit={(e) => e.preventDefault()} className="container-x py-12 grid lg:grid-cols-[1.1fr_1fr] gap-10">
         <div className="space-y-8">
           <div className="border border-border p-5 bg-card">
             <h2 className="font-condensed text-2xl tracking-wide mb-4">SELECT PRODUCT</h2>
@@ -293,11 +294,6 @@ const BulkOrder = () => {
               )}
               <Select label="Subcategory" value={subSlug} onChange={setSubSlug}
                 options={[{ value: "", label: "Choose subcategory…" }, ...subs.map((s) => ({ value: s.slug, label: s.name }))]} />
-              <Select label="Print Type" value={printTypeId} onChange={setPrintTypeId}
-                options={PRINT_TYPES.map((pt) => ({
-                  value: pt.id,
-                  label: pt.pricePerPc ? `${pt.label} (+₹${pt.pricePerPc}/pc)` : pt.label,
-                }))} />
             </div>
           </div>
 
@@ -343,7 +339,7 @@ const BulkOrder = () => {
                 </div>
               </div>
 
-              {product.colors.length > 0 && (
+              {isGarment && product.colors.length > 0 && (
                 <div className="mt-5">
                   <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Color</h4>
                   <div className="flex gap-2">
@@ -353,6 +349,12 @@ const BulkOrder = () => {
                         style={{ backgroundColor: c }} aria-label={c} />
                     ))}
                   </div>
+                </div>
+              )}
+
+              {canPrint && (
+                <div className="mt-5">
+                  <PrintPicker value={printSel} onChange={setPrintSel} qty={total} />
                 </div>
               )}
 
@@ -376,12 +378,12 @@ const BulkOrder = () => {
                 </div>
               ) : (
                 <div className="mt-5">
-                  <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Quantity (step of {SIZE_STEP})</h4>
+                  <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Quantity (min {BULK_THRESHOLD})</h4>
                   <div className="flex items-center justify-between border border-border px-3 py-3">
                     <span className="font-condensed text-lg">Units</span>
                     <div className="inline-flex items-center border border-ink">
                       <button type="button" onClick={() => setUnitQty((q) => Math.max(SIZE_STEP, q - SIZE_STEP))} className="px-3 py-1.5"><Minus className="h-3.5 w-3.5" /></button>
-                      <input type="number" min={SIZE_STEP} step={SIZE_STEP} value={unitQty}
+                      <input type="number" min={BULK_THRESHOLD} step={SIZE_STEP} value={unitQty}
                         onChange={(e) => setUnitQty(Math.max(0, Number(e.target.value) || 0))}
                         className="w-16 text-center text-sm bg-transparent border-x border-ink py-1.5 font-bold" />
                       <button type="button" onClick={() => setUnitQty((q) => q + SIZE_STEP)} className="px-3 py-1.5"><Plus className="h-3.5 w-3.5" /></button>
@@ -393,7 +395,7 @@ const BulkOrder = () => {
               <div className="mt-5 border border-border bg-secondary">
                 <Row label="Unit Price" value={`₹${unitPrice}`} />
                 <Row label="Total Quantity" value={`${total} pcs`} />
-                {printCharge > 0 && <Row label={`Print (${printType.label})`} value={`+₹${printCharge}`} />}
+                {printCharge > 0 && <Row label={`Print (${printText})`} value={`+₹${printCharge}`} />}
                 <Row label="Subtotal" value={`₹${subtotal.toLocaleString("en-IN")}`} />
                 <Row label={`Bulk Discount ${BULK_DISCOUNT_PCT}%`} value={`−₹${discountAmt.toLocaleString("en-IN")}`} />
                 <Row label={`Courier (₹${COURIER_PER_PC}×${total})`} value={`₹${courier.toLocaleString("en-IN")}`} />
@@ -404,7 +406,7 @@ const BulkOrder = () => {
                 </div>
               </div>
               <p className="text-[11px] text-muted-foreground mt-2">
-                Pay full or 50% advance. Final artwork proofing on WhatsApp.
+                Pay 100% or 50% advance. After payment, WhatsApp opens automatically with your order — attach logo / artwork / instructions there.
               </p>
             </div>
           )}
@@ -456,10 +458,7 @@ const BulkOrder = () => {
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <div className="grid sm:grid-cols-3 gap-2">
-            <button type="submit" className="btn-wa justify-center !py-3.5 text-sm">
-              <MessageCircle className="h-4 w-4" /> WhatsApp Quote
-            </button>
+          <div className="grid sm:grid-cols-2 gap-2">
             <button type="button" onClick={() => handlePay("advance-50")} className="btn-bold justify-center !py-3.5 text-sm">
               <CreditCard className="h-4 w-4" /> Pay 50% Advance
             </button>
@@ -468,7 +467,7 @@ const BulkOrder = () => {
             </button>
           </div>
           <p className="text-xs text-muted-foreground text-center">
-            Login required before payment. Draft selections are saved automatically.
+            Login required before payment. WhatsApp will open with your order after successful payment.
           </p>
         </div>
       </form>
