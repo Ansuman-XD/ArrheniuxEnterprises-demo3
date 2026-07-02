@@ -266,20 +266,11 @@ const ProductDetail = () => {
             )}
 
             {/* Print type */}
-            <div className="mt-6">
-              <h4 className="text-xs uppercase tracking-widest font-bold mb-3">Print Type</h4>
-              <select
-                value={printTypeId}
-                onChange={(e) => setPrintTypeId(e.target.value)}
-                className="w-full border border-border px-3 py-2.5 text-sm bg-background focus:outline-none focus:border-ink"
-              >
-                {PRINT_TYPES.map((pt) => (
-                  <option key={pt.id} value={pt.id}>
-                    {pt.label}{pt.pricePerPc ? ` (+₹${pt.pricePerPc}/pc)` : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {canPrint && (
+              <div className="mt-6">
+                <PrintPicker value={printSel} onChange={setPrintSel} qty={total} />
+              </div>
+            )}
 
             {/* Quantity */}
             {isGarment ? (
