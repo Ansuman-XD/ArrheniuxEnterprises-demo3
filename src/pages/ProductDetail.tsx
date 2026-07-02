@@ -333,7 +333,7 @@ const ProductDetail = () => {
             <div className="mt-5 border border-border bg-secondary">
               <Row label="Product Price" value={`₹${unitPrice} / pc`} />
               <Row label="Quantity" value={`${total} pcs`} />
-              {printCharge > 0 && <Row label={`Print (${printType.label})`} value={`+₹${printCharge}`} />}
+              {printCharge > 0 && <Row label={`Print (${printTypeText})`} value={`+₹${printCharge}`} />}
               <Row label="Subtotal" value={`₹${subtotal}`} />
               <Row label="Discount" value={discountPct > 0 ? `${discountPct}% (−₹${discountAmt})` : "—"} />
               <Row label={`Courier (₹${COURIER_PER_PC}×${total})`} value={`₹${courier}`} />
