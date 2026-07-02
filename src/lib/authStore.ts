@@ -53,6 +53,7 @@ export type Order = {
   productId: string;
   productName: string;
   productCode?: string;
+  productImage?: string;
   qty: number;
   unitPrice: number;
   subtotal: number;
@@ -63,15 +64,17 @@ export type Order = {
   courier: number;
   gst: number;
   total: number;
-  paid: number;             // amount actually paid via demo Razorpay
+  paid: number;
   paymentMode: "full" | "advance-50" | "cod";
-  paymentRef?: string;      // demo razorpay ref
+  paymentRef?: string;
   status: OrderStatus;
   createdAt: string;
   updatedAt: string;
-  kind: "retail" | "bulk";
+  expectedDelivery?: string;
+  kind: "retail" | "bulk" | "b2b";
   customer?: Record<string, string>;
   sizes?: Record<string, number>;
+  reviewedAt?: string;
 };
 
 const USERS_KEY = "arr_users";
