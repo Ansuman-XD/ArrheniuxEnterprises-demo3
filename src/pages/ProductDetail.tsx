@@ -1,9 +1,10 @@
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useMemo } from "react";
-import { Minus, Plus, MessageCircle, Share2, Link2, PackageOpen, CreditCard } from "lucide-react";
+import { Minus, Plus, Share2, Link2, PackageOpen, CreditCard } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductReviews } from "@/components/ProductReviews";
+import { PrintPicker } from "@/components/PrintPicker";
 import {
   findProduct,
   findCategory,
@@ -16,11 +17,11 @@ import {
   COURIER_PER_PC,
   GST_RATE,
   BULK_THRESHOLD,
-  PRINT_TYPES,
-  findPrintType,
   productCode,
+  supportsPrint,
 } from "@/data/catalog";
-import { waLink, WHATSAPP_NUMBER } from "@/data/site";
+import { emptyPrint, printPricePerPc, printLabel, type PrintSelection } from "@/data/printOptions";
+import { waLink } from "@/data/site";
 import { getSession, createOrder } from "@/lib/authStore";
 import { openRazorpay } from "@/lib/razorpay";
 import { toast } from "@/hooks/use-toast";
@@ -40,7 +41,7 @@ const ProductDetail = () => {
     XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0,
   });
   const [unitQty, setUnitQty] = useState(1);
-  const [printTypeId, setPrintTypeId] = useState("none");
+  const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
 
   if (!product) {
     return (
