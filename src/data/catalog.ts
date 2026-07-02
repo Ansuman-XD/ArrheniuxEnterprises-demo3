@@ -353,6 +353,10 @@ const NON_GARMENT = new Set(["custom-accessories", "corporate-joining-kits"]);
 export const isNonGarmentCategory = (slug: string) => NON_GARMENT.has(slug);
 export const isArrheniuxCategory = (slug: string) => slug === "arrheniux-t-shirts";
 
+// Print type is offered on everything EXCEPT non-garment items and the ARRHENIUX line.
+export const supportsPrint = (catSlug: string) =>
+  !isNonGarmentCategory(catSlug) && !isArrheniuxCategory(catSlug);
+
 // ---------- Pricing helpers ----------
 export const priceValue = (p: Pick<CatalogProduct, "price">) =>
   Number(String(p.price).replace(/[^\d.]/g, "")) || 0;
@@ -362,6 +366,8 @@ export const COURIER_PER_PC = 30;
 export const GST_RATE = 0.05; // 5%
 export const BULK_DISCOUNT_PCT = 40;
 export const BULK_THRESHOLD = 80;
+export const B2B_MOQ = 100;
+export const B2B_STEP = 2;
 
 // Per-product MOQ: ARRHENIUX = 1, everything else = 5
 export const getMOQ = (p: Pick<CatalogProduct, "categorySlug">) =>
@@ -375,22 +381,6 @@ export const getDiscountPct = (qty: number) => {
   return 0;
 };
 
-// Print Types with per-piece surcharge
-export type PrintType = {
-  id: string;
-  label: string;
-  pricePerPc: number;
-};
-export const PRINT_TYPES: PrintType[] = [
-  { id: "none", label: "No Print", pricePerPc: 0 },
-  { id: "dtf", label: "DTF Print", pricePerPc: 40 },
-  { id: "screen", label: "Screen Print", pricePerPc: 25 },
-  { id: "embroidery", label: "Embroidery", pricePerPc: 60 },
-  { id: "sublimation", label: "Sublimation", pricePerPc: 35 },
-];
-export const findPrintType = (id: string) =>
-  PRINT_TYPES.find((p) => p.id === id) || PRINT_TYPES[0];
-
 // Human-friendly product code
 export const productCode = (p: Pick<CatalogProduct, "id" | "categorySlug">) => {
   const catInitials = p.categorySlug
@@ -400,3 +390,36 @@ export const productCode = (p: Pick<CatalogProduct, "id" | "categorySlug">) => {
     .slice(0, 3);
   return `ARR-${catInitials}-${p.id.toUpperCase()}`;
 };
+
+// ---------- B2B curated subcategories ----------
+// The B2B Shop displays only these 6 subcategories, mapped to real catalog subs.
+export type B2BSub = {
+  slug: string;
+  name: string;
+  catSlug: string;
+  tier?: Tier;
+  subName: string;
+};
+export const B2B_SUBCATEGORIES: B2BSub[] = [
+  { slug: "oversized-tshirt", name: "Oversized T-Shirt", catSlug: "oversized-t-shirts", tier: "premium", subName: "Cotton Oversized T-Shirts" },
+  { slug: "dryfit-collar", name: "Dry Fit Collar Neck T-Shirt", catSlug: "corporate-wear", tier: "premium", subName: "Drifit SAP Matty Collar Neck T-Shirts" },
+  { slug: "american-fleece", name: "American Fleece Hoodies", catSlug: "hoodies", tier: "premium", subName: "American Fleece Hoodies" },
+  { slug: "solid-collar", name: "Solid Collar Neck T-Shirt", catSlug: "corporate-wear", tier: "regular", subName: "Spun Collar Neck T-Shirt" },
+  { slug: "dryfit-solid-collar", name: "Dry Fit Solid Collar Neck T-Shirt", catSlug: "corporate-wear", tier: "premium", subName: "Drifit SAP Matty Collar Neck T-Shirts" },
+  { slug: "round-neck", name: "Round Neck T-Shirt", catSlug: "custom-round-neck-t-shirts", tier: "regular", subName: "Spun Round Neck T-Shirt" },
+];
+
+export const getB2BProducts = (b2bSlug: string): CatalogProduct[] => {
+  const b = B2B_SUBCATEGORIES.find((x) => x.slug === b2bSlug);
+  if (!b) return [];
+  const cat = findCategory(b.catSlug);
+  if (!cat) return [];
+  const subs = cat.hasTiers ? (b.tier === "regular" ? cat.regular : cat.premium) ?? [] : cat.items ?? [];
+  const sub = subs.find((s) => s.name === b.subName) || subs[0];
+  return sub?.products ?? [];
+};
+
+// Legacy print type placeholder — kept for backward compatibility; new UI uses PRINT_METHODS in data/printOptions.ts
+export type PrintType = { id: string; label: string; pricePerPc: number };
+export const PRINT_TYPES: PrintType[] = [{ id: "none", label: "No Print", pricePerPc: 0 }];
+export const findPrintType = (_id: string): PrintType => PRINT_TYPES[0];
