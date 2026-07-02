@@ -1,62 +1,141 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { Minus, Plus, MessageCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Minus, Plus, CreditCard, ChevronLeft } from "lucide-react";
 import { Layout } from "@/components/Layout";
+import { PrintPicker } from "@/components/PrintPicker";
 import {
-  catalog,
-  allProducts,
+  B2B_SUBCATEGORIES,
+  getB2BProducts,
   priceValue,
   productCode,
   COURIER_PER_PC,
   GST_RATE,
   BULK_DISCOUNT_PCT,
+  B2B_MOQ,
+  B2B_STEP,
+  supportsPrint,
   type CatalogProduct,
 } from "@/data/catalog";
+import { emptyPrint, printPricePerPc, printLabel, type PrintSelection } from "@/data/printOptions";
 import { waLink } from "@/data/site";
+import { getSession, createOrder } from "@/lib/authStore";
+import { openRazorpay } from "@/lib/razorpay";
+import { toast } from "@/hooks/use-toast";
 
-const STEP = 2; // B2B size step of 2
+const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"] as const;
+type Size = typeof SIZES[number];
+const EMPTY_SIZES: Record<Size, number> = { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0 };
+
+type View = { step: "subs" } | { step: "products"; subSlug: string } | { step: "detail"; subSlug: string; productId: string };
 
 const B2BShop = () => {
-  const [catSlug, setCatSlug] = useState<string>("all");
-  const [cart, setCart] = useState<Record<string, number>>({});
+  const navigate = useNavigate();
+  const [view, setView] = useState<View>({ step: "subs" });
+  const [sizeQty, setSizeQty] = useState<Record<Size, number>>({ ...EMPTY_SIZES });
+  const [color, setColor] = useState<string>("");
+  const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
 
-  const products: CatalogProduct[] = useMemo(() => {
-    const all = allProducts();
-    return catSlug === "all" ? all : all.filter((p) => p.categorySlug === catSlug);
-  }, [catSlug]);
+  const activeSub = view.step !== "subs" ? B2B_SUBCATEGORIES.find((s) => s.slug === view.subSlug) : null;
+  const products = view.step !== "subs" ? getB2BProducts(view.subSlug) : [];
+  const product: CatalogProduct | undefined = view.step === "detail" ? products.find((p) => p.id === view.productId) : undefined;
+  const canPrint = product ? supportsPrint(product.categorySlug) : false;
 
-  const bump = (id: string, dir: 1 | -1) =>
-    setCart((c) => ({ ...c, [id]: Math.max(0, (c[id] || 0) + dir * STEP) }));
+  const total = useMemo(() => Object.values(sizeQty).reduce((a, b) => a + b, 0), [sizeQty]);
+  const unitPrice = product ? priceValue(product) : 0;
+  const perPcPrint = canPrint ? printPricePerPc(printSel) : 0;
+  const printCharge = perPcPrint * total;
+  const printText = canPrint ? printLabel(printSel) : "N/A";
+  const subtotal = unitPrice * total + printCharge;
+  const discountAmt = Math.round((subtotal * BULK_DISCOUNT_PCT) / 100);
+  const afterDiscount = Math.max(0, subtotal - discountAmt);
+  const courier = total * COURIER_PER_PC;
+  const gst = Math.round((afterDiscount + courier) * GST_RATE);
+  const grandTotal = afterDiscount + courier + gst;
 
-  const items = Object.entries(cart)
-    .filter(([, q]) => q > 0)
-    .map(([id, qty]) => ({ product: allProducts().find((p) => p.id === id)!, qty }));
+  const bumpSize = (s: Size, d: number) =>
+    setSizeQty((q) => ({ ...q, [s]: Math.max(0, (q[s] || 0) + d * B2B_STEP) }));
 
-  const totalQty = items.reduce((a, b) => a + b.qty, 0);
-  const subtotal = items.reduce((a, i) => a + priceValue(i.product) * i.qty, 0);
-  const discount = Math.round((subtotal * BULK_DISCOUNT_PCT) / 100);
-  const afterDisc = subtotal - discount;
-  const courier = totalQty * COURIER_PER_PC;
-  const gst = Math.round((afterDisc + courier) * GST_RATE);
-  const grand = afterDisc + courier + gst;
+  const resetSelections = () => {
+    setSizeQty({ ...EMPTY_SIZES });
+    setColor("");
+    setPrintSel(emptyPrint());
+  };
 
-  const order = () => {
-    if (totalQty === 0) return;
-    const lines = [
-      "Hi Arrhenix, I'd like a B2B quote:",
-      "",
-      "*Cart*",
-      ...items.map(
-        (i) => `• ${i.product.name} [${productCode(i.product)}] — ${i.qty} pcs @ ${i.product.price}`
-      ),
-      "",
-      `Subtotal: ₹${subtotal}`,
-      `B2B Discount (${BULK_DISCOUNT_PCT}%): −₹${discount}`,
-      `Courier (₹${COURIER_PER_PC} × ${totalQty}): ₹${courier}`,
-      `GST (5%): ₹${gst}`,
-      `*Grand Total: ₹${grand}*`,
-    ];
-    window.open(waLink(lines.join("\n")), "_blank", "noreferrer");
+  const openProduct = (id: string) => {
+    resetSelections();
+    setView({ step: "detail", subSlug: (view as { subSlug: string }).subSlug, productId: id });
+  };
+
+  const buildMessage = () => {
+    if (!product) return "";
+    const lines: string[] = [];
+    lines.push("Hi Arrhenix, my payment is complete — *B2B ORDER*:");
+    lines.push("");
+    lines.push("*Product Details*");
+    lines.push(`• B2B Subcategory: ${activeSub?.name}`);
+    lines.push(`• Product: ${product.name}`);
+    lines.push(`• Code: ${productCode(product)}`);
+    lines.push(`• Color: ${color || product.colors[0]}`);
+    if (canPrint) lines.push(`• Print: ${printText}`);
+    lines.push("• Sizes:");
+    SIZES.filter((s) => sizeQty[s] > 0).forEach((s) => lines.push(`   - ${s}: ${sizeQty[s]} pcs`));
+    lines.push(`• Total: ${total} pcs`);
+    lines.push("");
+    lines.push("*Pricing*");
+    lines.push(`• Unit Price: ₹${unitPrice}`);
+    if (printCharge > 0) lines.push(`• Print Charge: ₹${printCharge}`);
+    lines.push(`• Subtotal: ₹${subtotal}`);
+    lines.push(`• B2B Discount ${BULK_DISCOUNT_PCT}%: −₹${discountAmt}`);
+    lines.push(`• Courier: ₹${courier}`);
+    lines.push(`• GST 5%: ₹${gst}`);
+    lines.push(`• *Paid: ₹${grandTotal}*`);
+    lines.push("");
+    lines.push("Sharing logo / artwork / printing instructions in the next messages.");
+    return lines.join("\n");
+  };
+
+  const handlePay = () => {
+    if (!product) return;
+    if (total < B2B_MOQ) return;
+    const user = getSession();
+    if (!user) {
+      navigate(`/auth?next=${encodeURIComponent("/b2b-shop")}`);
+      return;
+    }
+    openRazorpay({
+      amountInr: grandTotal,
+      name: "Arrhenix — B2B",
+      description: `${product.name} × ${total} pcs`,
+      prefill: { name: user.name, email: user.email, contact: user.phone },
+      onSuccess: (paymentId) => {
+        const o = createOrder({
+          userId: user.id,
+          productId: product.id,
+          productName: product.name,
+          productCode: productCode(product),
+          productImage: product.image,
+          qty: total,
+          unitPrice,
+          subtotal,
+          discountPct: BULK_DISCOUNT_PCT,
+          discountAmt,
+          printType: printText,
+          printCharge,
+          courier,
+          gst,
+          total: grandTotal,
+          paid: grandTotal,
+          paymentMode: "full",
+          paymentRef: paymentId,
+          kind: "b2b",
+          sizes: sizeQty,
+          customer: { fullName: user.name, email: user.email, phone: user.phone || "" },
+        });
+        toast({ title: "Payment successful", description: `B2B order #${o.id.slice(0, 8).toUpperCase()} placed.` });
+        window.open(waLink(buildMessage()), "_blank", "noreferrer");
+        navigate("/my-orders");
+      },
+    });
   };
 
   return (
@@ -66,101 +145,172 @@ const B2BShop = () => {
           <span className="text-xs font-bold uppercase tracking-widest text-primary">B2B</span>
           <h1 className="font-display text-5xl md:text-7xl leading-none mt-2">B2B SHOP</h1>
           <p className="mt-3 text-muted-foreground max-w-2xl">
-            Wholesale storefront for corporate buyers. Quantities update in steps of {STEP}.
-            Auto {BULK_DISCOUNT_PCT}% discount, ₹{COURIER_PER_PC}/pc courier, 5% GST.
+            Wholesale storefront for corporate buyers. Minimum order {B2B_MOQ} pieces per product · quantities in steps of {B2B_STEP} · auto {BULK_DISCOUNT_PCT}% bulk discount · ₹{COURIER_PER_PC}/pc courier · 5% GST.
           </p>
         </div>
       </section>
 
-      <section className="container-x py-10 grid lg:grid-cols-[1fr_360px] gap-8">
-        <div>
-          <div className="flex gap-2 flex-wrap mb-5">
-            <button
-              onClick={() => setCatSlug("all")}
-              className={`text-xs uppercase tracking-widest px-3 py-1.5 border ${
-                catSlug === "all" ? "bg-ink text-cream border-ink" : "border-border hover:border-ink"
-              }`}
-            >
-              All
-            </button>
-            {catalog.map((c) => (
-              <button
-                key={c.slug}
-                onClick={() => setCatSlug(c.slug)}
-                className={`text-xs uppercase tracking-widest px-3 py-1.5 border ${
-                  catSlug === c.slug ? "bg-ink text-cream border-ink" : "border-border hover:border-ink"
-                }`}
-              >
-                {c.name}
-              </button>
-            ))}
-          </div>
+      <section className="container-x py-10">
+        {view.step === "subs" && (
+          <>
+            <h2 className="font-condensed text-3xl tracking-wide mb-6">CHOOSE A SUBCATEGORY</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {B2B_SUBCATEGORIES.map((s) => {
+                const first = getB2BProducts(s.slug)[0];
+                return (
+                  <button
+                    key={s.slug}
+                    onClick={() => setView({ step: "products", subSlug: s.slug })}
+                    className="text-left border border-border bg-card overflow-hidden hover:border-ink transition group"
+                  >
+                    <div className="aspect-square overflow-hidden bg-secondary">
+                      {first && <img src={first.image} alt={s.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition" />}
+                    </div>
+                    <div className="p-3">
+                      <div className="font-condensed text-lg tracking-wide">{s.name.toUpperCase()}</div>
+                      <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">
+                        {getB2BProducts(s.slug).length} products
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {products.map((p) => {
-              const qty = cart[p.id] || 0;
-              return (
-                <div key={p.id} className="border border-border bg-card overflow-hidden">
-                  <Link to={`/product/${p.id}`} className="block aspect-square overflow-hidden bg-secondary">
-                    <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover hover:scale-105 transition" />
-                  </Link>
+        {view.step === "products" && (
+          <>
+            <button onClick={() => setView({ step: "subs" })} className="text-xs uppercase tracking-widest inline-flex items-center gap-1 mb-4 hover:text-primary">
+              <ChevronLeft className="h-3.5 w-3.5" /> All subcategories
+            </button>
+            <h2 className="font-condensed text-3xl tracking-wide mb-6">{activeSub?.name.toUpperCase()}</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {products.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => openProduct(p.id)}
+                  className="text-left border border-border bg-card overflow-hidden hover:border-ink transition group"
+                >
+                  <div className="aspect-square overflow-hidden bg-secondary">
+                    <img src={p.image} alt={p.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition" />
+                  </div>
                   <div className="p-3">
                     <div className="font-condensed text-sm tracking-wide leading-tight line-clamp-2">{p.name.toUpperCase()}</div>
                     <div className="text-[10px] font-mono text-muted-foreground mt-0.5">{productCode(p)}</div>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="font-display text-lg">{p.price}<span className="text-[10px] text-muted-foreground">/pc</span></span>
-                      <div className="inline-flex items-center border border-ink">
-                        <button onClick={() => bump(p.id, -1)} className="px-2 py-1"><Minus className="h-3 w-3" /></button>
-                        <span className="w-10 text-center text-xs font-bold border-x border-ink py-1">{qty}</span>
-                        <button onClick={() => bump(p.id, 1)} className="px-2 py-1"><Plus className="h-3 w-3" /></button>
-                      </div>
-                    </div>
+                    <div className="font-display text-lg mt-1">{p.price}<span className="text-[10px] text-muted-foreground">/pc</span></div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {view.step === "detail" && product && (
+          <>
+            <button onClick={() => setView({ step: "products", subSlug: view.subSlug })} className="text-xs uppercase tracking-widest inline-flex items-center gap-1 mb-4 hover:text-primary">
+              <ChevronLeft className="h-3.5 w-3.5" /> Back to {activeSub?.name}
+            </button>
+            <div className="grid lg:grid-cols-[1fr_1.1fr] gap-8">
+              <div className="bg-secondary aspect-square overflow-hidden">
+                <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+              </div>
+
+              <div>
+                <span className="inline-block bg-ink text-cream text-[10px] uppercase tracking-widest px-2 py-1">MOQ {B2B_MOQ}</span>
+                <h2 className="font-display text-3xl md:text-5xl leading-none mt-3">{product.name.toUpperCase()}</h2>
+                <div className="text-[11px] font-mono text-muted-foreground mt-1">Code: {productCode(product)}</div>
+                <p className="mt-3 text-muted-foreground text-sm">{product.description}</p>
+
+                <div className="mt-4 grid grid-cols-2 gap-px bg-border">
+                  <div className="bg-background p-3">
+                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Material</div>
+                    <div className="font-medium mt-1 text-sm">{product.material}</div>
+                  </div>
+                  <div className="bg-background p-3">
+                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Unit Price</div>
+                    <div className="font-display text-xl mt-1">{product.price}<span className="text-xs text-muted-foreground">/pc</span></div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
 
-        {/* Cart */}
-        <aside className="border border-border bg-card p-5 h-fit lg:sticky lg:top-24">
-          <h3 className="font-condensed text-2xl tracking-wide">CART</h3>
-          {items.length === 0 ? (
-            <p className="text-sm text-muted-foreground mt-3">Add products in steps of {STEP}.</p>
-          ) : (
-            <>
-              <ul className="mt-3 space-y-2 max-h-60 overflow-y-auto pr-1">
-                {items.map((i) => (
-                  <li key={i.product.id} className="flex justify-between text-xs border-b border-border pb-1.5">
-                    <span className="truncate pr-2">{i.product.name}</span>
-                    <span className="font-mono shrink-0">{i.qty}×{i.product.price}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-4 text-sm space-y-1">
-                <Row label="Subtotal" value={`₹${subtotal.toLocaleString("en-IN")}`} />
-                <Row label={`Discount ${BULK_DISCOUNT_PCT}%`} value={`−₹${discount.toLocaleString("en-IN")}`} />
-                <Row label={`Courier (₹${COURIER_PER_PC}×${totalQty})`} value={`₹${courier.toLocaleString("en-IN")}`} />
-                <Row label="GST 5%" value={`₹${gst.toLocaleString("en-IN")}`} />
-                <div className="flex justify-between font-display text-xl pt-2 border-t border-border">
-                  <span>Total</span><span>₹{grand.toLocaleString("en-IN")}</span>
+                {product.colors.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Color</h4>
+                    <div className="flex gap-2">
+                      {product.colors.map((c) => (
+                        <button key={c} onClick={() => setColor(c)}
+                          className={`h-9 w-9 rounded-full border-2 transition ${(color || product.colors[0]) === c ? "border-ink scale-110" : "border-border"}`}
+                          style={{ backgroundColor: c }} aria-label={c} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {canPrint && (
+                  <div className="mt-4">
+                    <PrintPicker value={printSel} onChange={setPrintSel} qty={total} />
+                  </div>
+                )}
+
+                <div className="mt-5">
+                  <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Sizes & Quantity (step of {B2B_STEP})</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {SIZES.map((s) => (
+                      <div key={s} className="flex items-center justify-between border border-border px-3 py-2">
+                        <span className="font-condensed text-lg w-10">{s}</span>
+                        <div className="inline-flex items-center border border-ink">
+                          <button onClick={() => bumpSize(s, -1)} className="px-2.5 py-1.5"><Minus className="h-3.5 w-3.5" /></button>
+                          <input type="number" min={0} step={B2B_STEP} value={sizeQty[s]}
+                            onChange={(e) => setSizeQty((q) => ({ ...q, [s]: Math.max(0, Number(e.target.value) || 0) }))}
+                            className="w-14 text-center text-sm bg-transparent border-x border-ink py-1.5 font-bold" />
+                          <button onClick={() => bumpSize(s, 1)} className="px-2.5 py-1.5"><Plus className="h-3.5 w-3.5" /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
+                <div className="mt-5 border border-border bg-secondary">
+                  <Row label="Unit Price" value={`₹${unitPrice}`} />
+                  <Row label="Quantity" value={`${total} pcs`} />
+                  {printCharge > 0 && <Row label={`Print (${printText})`} value={`+₹${printCharge}`} />}
+                  <Row label="Subtotal" value={`₹${subtotal.toLocaleString("en-IN")}`} />
+                  <Row label={`B2B Discount ${BULK_DISCOUNT_PCT}%`} value={`−₹${discountAmt.toLocaleString("en-IN")}`} />
+                  <Row label={`Courier (₹${COURIER_PER_PC}×${total})`} value={`₹${courier.toLocaleString("en-IN")}`} />
+                  <Row label="GST 5%" value={`₹${gst.toLocaleString("en-IN")}`} />
+                  <div className="flex justify-between px-4 py-3 bg-ink text-cream">
+                    <span className="text-xs uppercase tracking-widest font-bold">Total</span>
+                    <span className="font-display text-2xl">₹{grandTotal.toLocaleString("en-IN")}</span>
+                  </div>
+                </div>
+
+                {total > 0 && total < B2B_MOQ && (
+                  <p className="text-xs text-destructive mt-2">Minimum {B2B_MOQ} pcs required for B2B orders.</p>
+                )}
+
+                <button
+                  onClick={handlePay}
+                  disabled={total < B2B_MOQ}
+                  className={`btn-bold mt-5 w-full justify-center !py-3.5 ${total < B2B_MOQ ? "opacity-40 cursor-not-allowed" : ""}`}
+                >
+                  <CreditCard className="h-4 w-4" /> Pay Now (Razorpay)
+                </button>
+                <p className="text-[11px] text-muted-foreground mt-2 text-center">
+                  Payment first. WhatsApp will open automatically with your order summary — attach artwork there.
+                </p>
               </div>
-              <button onClick={order} className="btn-wa w-full justify-center mt-4">
-                <MessageCircle className="h-4 w-4" /> Quote via WhatsApp
-              </button>
-            </>
-          )}
-        </aside>
+            </div>
+          </>
+        )}
       </section>
     </Layout>
   );
 };
 
 const Row = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex justify-between text-xs">
-    <span className="text-muted-foreground">{label}</span>
-    <span className="font-medium">{value}</span>
+  <div className="flex justify-between px-4 py-2 border-b border-border last:border-b-0">
+    <span className="text-xs uppercase tracking-widest text-muted-foreground">{label}</span>
+    <span className="text-sm font-medium">{value}</span>
   </div>
 );
 

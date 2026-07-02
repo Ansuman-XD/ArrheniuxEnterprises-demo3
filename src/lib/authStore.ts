@@ -53,6 +53,7 @@ export type Order = {
   productId: string;
   productName: string;
   productCode?: string;
+  productImage?: string;
   qty: number;
   unitPrice: number;
   subtotal: number;
@@ -63,15 +64,17 @@ export type Order = {
   courier: number;
   gst: number;
   total: number;
-  paid: number;             // amount actually paid via demo Razorpay
+  paid: number;
   paymentMode: "full" | "advance-50" | "cod";
-  paymentRef?: string;      // demo razorpay ref
+  paymentRef?: string;
   status: OrderStatus;
   createdAt: string;
   updatedAt: string;
-  kind: "retail" | "bulk";
+  expectedDelivery?: string;
+  kind: "retail" | "bulk" | "b2b";
   customer?: Record<string, string>;
   sizes?: Record<string, number>;
+  reviewedAt?: string;
 };
 
 const USERS_KEY = "arr_users";
@@ -241,15 +244,17 @@ export const getUserOrders = (userId: string) =>
   getOrders().filter((o) => o.userId === userId).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 export const findOrder = (id: string) => getOrders().find((o) => o.id === id);
 
-export const createOrder = (o: Omit<Order, "id" | "createdAt" | "updatedAt" | "status"> & { status?: OrderStatus }): Order => {
+export const createOrder = (o: Omit<Order, "id" | "createdAt" | "updatedAt" | "status" | "expectedDelivery"> & { status?: OrderStatus }): Order => {
   const list = getOrders();
   const now = new Date().toISOString();
+  const expected = new Date(Date.now() + 10 * 86400000).toISOString();
   const order: Order = {
     ...o,
     id: crypto.randomUUID(),
     status: o.status ?? "Placed",
     createdAt: now,
     updatedAt: now,
+    expectedDelivery: expected,
   };
   list.unshift(order);
   saveOrders(list);
@@ -263,6 +268,25 @@ export const advanceOrder = (id: string) => {
   const idx = ORDER_STATUSES.indexOf(o.status);
   o.status = ORDER_STATUSES[Math.min(ORDER_STATUSES.length - 1, idx + 1)];
   o.updatedAt = new Date().toISOString();
+  saveOrders(list);
+};
+
+export const updateOrderPayment = (id: string, addPaid: number, ref?: string) => {
+  const list = getOrders();
+  const o = list.find((x) => x.id === id);
+  if (!o) return;
+  o.paid = Math.min(o.total, o.paid + addPaid);
+  if (ref) o.paymentRef = ref;
+  if (o.paid >= o.total) o.paymentMode = "full";
+  o.updatedAt = new Date().toISOString();
+  saveOrders(list);
+};
+
+export const markOrderReviewed = (id: string) => {
+  const list = getOrders();
+  const o = list.find((x) => x.id === id);
+  if (!o) return;
+  o.reviewedAt = new Date().toISOString();
   saveOrders(list);
 };
 

@@ -1,20 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, MessageCircle, User as UserIcon, ChevronDown } from "lucide-react";
+import { Menu, X, User as UserIcon, ChevronDown } from "lucide-react";
 import { Logo } from "./Logo";
 import { MegaMenu } from "./MegaMenu";
+import { BulkMegaMenu } from "./BulkMegaMenu";
 import { UserMenu } from "./UserMenu";
 import { catalog } from "@/data/catalog";
-import { waLink } from "@/data/site";
 import { getSession, clearSession } from "@/lib/authStore";
 
-// Reordered per spec: Home → Categories → New Collection → Process → Factory → Bulk Order → B2B Shop → Contact → Reactions
-const hashLinks = [
-  { hash: "#collection", label: "New Collection" },
-  { hash: "#process", label: "Process" },
-  { hash: "#factory", label: "Factory" },
-];
-
+// Final order: Home, Categories, New Collection, Bulk Order, B2B Shop, About Us, Client Reactions, Contact
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -51,6 +45,11 @@ export const Navbar = () => {
     navigate("/");
   };
 
+  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `text-sm font-medium uppercase tracking-wide transition hover:text-primary ${
+      isActive ? "text-primary" : "text-ink"
+    }`;
+
   return (
     <header
       className={`sticky top-0 z-50 w-full transition-all ${
@@ -58,9 +57,9 @@ export const Navbar = () => {
       }`}
     >
       <div className="container-x flex items-center justify-between py-4 gap-4">
-        <Logo />
+        <div className="shrink-0"><Logo /></div>
 
-        <nav className="hidden lg:flex items-center gap-6">
+        <nav className="hidden xl:flex items-center gap-5 flex-1 justify-center">
           <a
             href="#home"
             onClick={(e) => handleHashClick(e, "#home")}
@@ -69,56 +68,33 @@ export const Navbar = () => {
             Home
           </a>
           <MegaMenu />
-          {hashLinks.map((l) => (
-            <a
-              key={l.hash}
-              href={l.hash}
-              onClick={(e) => handleHashClick(e, l.hash)}
-              className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink"
-            >
-              {l.label}
-            </a>
-          ))}
-          <NavLink
-            to="/bulk-order"
-            className={({ isActive }) =>
-              `text-sm font-medium uppercase tracking-wide transition hover:text-primary ${
-                isActive ? "text-primary" : "text-ink"
-              }`
-            }
+          <a
+            href="#collection"
+            onClick={(e) => handleHashClick(e, "#collection")}
+            className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink"
           >
-            Bulk Order
-          </NavLink>
-          <NavLink
-            to="/b2b-shop"
-            className={({ isActive }) =>
-              `text-sm font-medium uppercase tracking-wide transition hover:text-primary ${
-                isActive ? "text-primary" : "text-ink"
-              }`
-            }
+            New Collection
+          </a>
+          <BulkMegaMenu />
+          <NavLink to="/b2b-shop" className={navLinkClass}>B2B Shop</NavLink>
+          <a
+            href="#about-us"
+            onClick={(e) => handleHashClick(e, "#about-us")}
+            className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink"
           >
-            B2B Shop
-          </NavLink>
-          <NavLink
-            to="/contact"
-            className={({ isActive }) =>
-              `text-sm font-medium uppercase tracking-wide transition hover:text-primary ${
-                isActive ? "text-primary" : "text-ink"
-              }`
-            }
-          >
-            Contact
-          </NavLink>
+            About Us
+          </a>
           <a
             href="#reviews"
             onClick={(e) => handleHashClick(e, "#reviews")}
             className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink"
           >
-            Reactions
+            Client Reactions
           </a>
+          <NavLink to="/contact" className={navLinkClass}>Contact</NavLink>
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {user ? (
             <div className="hidden md:block">
               <UserMenu user={user} onChange={() => setUser(getSession())} />
@@ -128,17 +104,8 @@ export const Navbar = () => {
               <UserIcon className="h-3.5 w-3.5" /> Log In
             </Link>
           )}
-          <a
-            href={waLink()}
-            target="_blank"
-            rel="noreferrer"
-            className="hidden md:inline-flex btn-wa !py-2 !px-4 text-xs"
-          >
-            <MessageCircle className="h-4 w-4" />
-            WhatsApp
-          </a>
           <button
-            className="lg:hidden p-2"
+            className="xl:hidden p-2"
             onClick={() => setOpen((v) => !v)}
             aria-label="Menu"
           >
@@ -148,7 +115,7 @@ export const Navbar = () => {
       </div>
 
       {open && (
-        <div className="lg:hidden border-t border-border bg-cream">
+        <div className="xl:hidden border-t border-border bg-cream">
           <div className="container-x py-4 flex flex-col gap-3">
             {!user ? (
               <Link to="/auth" onClick={() => setOpen(false)} className="py-2 font-semibold uppercase text-sm tracking-wide flex items-center gap-2">
@@ -196,18 +163,12 @@ export const Navbar = () => {
                 ))}
               </div>
             )}
-            {hashLinks.map((l) => (
-              <a key={l.hash} href={l.hash} onClick={(e) => handleHashClick(e, l.hash)} className="py-2 uppercase text-sm tracking-wide font-medium">
-                {l.label}
-              </a>
-            ))}
+            <a href="#collection" onClick={(e) => handleHashClick(e, "#collection")} className="py-2 uppercase text-sm tracking-wide font-medium">New Collection</a>
             <Link to="/bulk-order" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium">Bulk Order</Link>
             <Link to="/b2b-shop" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium">B2B Shop</Link>
+            <a href="#about-us" onClick={(e) => handleHashClick(e, "#about-us")} className="py-2 uppercase text-sm tracking-wide font-medium">About Us</a>
+            <a href="#reviews" onClick={(e) => handleHashClick(e, "#reviews")} className="py-2 uppercase text-sm tracking-wide font-medium">Client Reactions</a>
             <Link to="/contact" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium">Contact</Link>
-            <a href="#reviews" onClick={(e) => handleHashClick(e, "#reviews")} className="py-2 uppercase text-sm tracking-wide font-medium">Reactions</a>
-            <a href={waLink()} target="_blank" rel="noreferrer" className="btn-wa mt-2 justify-center">
-              <MessageCircle className="h-4 w-4" /> WhatsApp Us
-            </a>
           </div>
         </div>
       )}

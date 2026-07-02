@@ -1,9 +1,10 @@
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useMemo } from "react";
-import { Minus, Plus, MessageCircle, Share2, Link2, PackageOpen, CreditCard } from "lucide-react";
+import { Minus, Plus, Share2, Link2, PackageOpen, CreditCard } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductReviews } from "@/components/ProductReviews";
+import { PrintPicker } from "@/components/PrintPicker";
 import {
   findProduct,
   findCategory,
@@ -16,11 +17,11 @@ import {
   COURIER_PER_PC,
   GST_RATE,
   BULK_THRESHOLD,
-  PRINT_TYPES,
-  findPrintType,
   productCode,
+  supportsPrint,
 } from "@/data/catalog";
-import { waLink, WHATSAPP_NUMBER } from "@/data/site";
+import { emptyPrint, printPricePerPc, printLabel, type PrintSelection } from "@/data/printOptions";
+import { waLink } from "@/data/site";
 import { getSession, createOrder } from "@/lib/authStore";
 import { openRazorpay } from "@/lib/razorpay";
 import { toast } from "@/hooks/use-toast";
@@ -40,7 +41,7 @@ const ProductDetail = () => {
     XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0,
   });
   const [unitQty, setUnitQty] = useState(1);
-  const [printTypeId, setPrintTypeId] = useState("none");
+  const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
 
   if (!product) {
     return (
@@ -56,6 +57,7 @@ const ProductDetail = () => {
   const cat = findCategory(product.categorySlug);
   const subcat = cat ? findSubcategory(cat, product.tier, product.subSlug) : undefined;
   const isGarment = !isNonGarmentCategory(product.categorySlug);
+  const canPrint = supportsPrint(product.categorySlug);
   const moq = getMOQ(product);
   const code = productCode(product);
 
@@ -65,8 +67,9 @@ const ProductDetail = () => {
   );
 
   const unitPrice = priceValue(product);
-  const printType = findPrintType(printTypeId);
-  const printCharge = printType.pricePerPc * total;
+  const printPerPc = canPrint ? printPricePerPc(printSel) : 0;
+  const printCharge = printPerPc * total;
+  const printTypeText = canPrint ? printLabel(printSel) : "N/A";
   const subtotal = unitPrice * total + printCharge;
   const discountPct = getDiscountPct(total);
   const discountAmt = Math.round((subtotal * discountPct) / 100);
@@ -85,7 +88,7 @@ const ProductDetail = () => {
 
   const orderMessage = () => {
     const lines: string[] = [];
-    lines.push("Hi Arrhenix, I'd like to place an order:");
+    lines.push("Hi Arrhenix, my payment is complete — here is my order:");
     lines.push("");
     lines.push("*Product Details*");
     if (cat) lines.push(`• Category: ${cat.name}`);
@@ -95,7 +98,7 @@ const ProductDetail = () => {
     lines.push(`• Product Code: ${code}`);
     lines.push(`• Material: ${product.material}`);
     lines.push(`• Color: ${selectedColor}`);
-    lines.push(`• Print Type: ${printType.label}${printType.pricePerPc ? ` (+₹${printType.pricePerPc}/pc)` : ""}`);
+    if (canPrint) lines.push(`• Print: ${printTypeText}`);
     if (isGarment) {
       const sizeLines = SIZES.filter((s) => sizeQty[s] > 0).map((s) => `   - ${s}: ${sizeQty[s]} pcs`);
       lines.push("• Sizes:");
@@ -110,30 +113,16 @@ const ProductDetail = () => {
     lines.push(`• Discount: ${discountPct}% (−₹${discountAmt})`);
     lines.push(`• Courier (₹${COURIER_PER_PC} × ${total}): ₹${courier}`);
     lines.push(`• GST 5%: ₹${gst}`);
-    lines.push(`• *Final Payable: ₹${grandTotal}*`);
+    lines.push(`• *Paid: ₹${grandTotal}*`);
     lines.push("");
-    lines.push("I'll share my custom logo / artwork in the next message.");
+    lines.push("Sharing my logo / artwork / printing instructions in the next messages.");
     return lines.join("\n");
-  };
-
-  const handleWa = () => {
-    if (!canOrder) return;
-    if (isBulk) {
-      navigate(`/bulk-order?product=${product.id}&qty=${total}&print=${printTypeId}`);
-      return;
-    }
-    const user = getSession();
-    if (!user) {
-      navigate(`/auth?next=${encodeURIComponent(location.pathname)}`);
-      return;
-    }
-    window.open(waLink(orderMessage()), "_blank", "noreferrer");
   };
 
   const handlePay = () => {
     if (!canOrder) return;
     if (isBulk) {
-      navigate(`/bulk-order?product=${product.id}&qty=${total}&print=${printTypeId}`);
+      navigate(`/bulk-order?product=${product.id}&qty=${total}`);
       return;
     }
     const user = getSession();
@@ -152,12 +141,13 @@ const ProductDetail = () => {
           productId: product.id,
           productName: product.name,
           productCode: code,
+          productImage: product.image,
           qty: total,
           unitPrice,
           subtotal,
           discountPct,
           discountAmt,
-          printType: printType.label,
+          printType: printTypeText,
           printCharge,
           courier,
           gst,
@@ -167,8 +157,11 @@ const ProductDetail = () => {
           paymentRef: paymentId,
           kind: "retail",
           sizes: isGarment ? sizeQty : undefined,
+          customer: { fullName: user.name, email: user.email, phone: user.phone || "" },
         });
         toast({ title: "Payment successful", description: `Order #${o.id.slice(0, 8).toUpperCase()} placed.` });
+        // Auto-open WhatsApp with completed order summary
+        window.open(waLink(orderMessage()), "_blank", "noreferrer");
         navigate("/my-orders");
       },
     });
@@ -273,20 +266,11 @@ const ProductDetail = () => {
             )}
 
             {/* Print type */}
-            <div className="mt-6">
-              <h4 className="text-xs uppercase tracking-widest font-bold mb-3">Print Type</h4>
-              <select
-                value={printTypeId}
-                onChange={(e) => setPrintTypeId(e.target.value)}
-                className="w-full border border-border px-3 py-2.5 text-sm bg-background focus:outline-none focus:border-ink"
-              >
-                {PRINT_TYPES.map((pt) => (
-                  <option key={pt.id} value={pt.id}>
-                    {pt.label}{pt.pricePerPc ? ` (+₹${pt.pricePerPc}/pc)` : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {canPrint && (
+              <div className="mt-6">
+                <PrintPicker value={printSel} onChange={setPrintSel} qty={total} />
+              </div>
+            )}
 
             {/* Quantity */}
             {isGarment ? (
@@ -349,7 +333,7 @@ const ProductDetail = () => {
             <div className="mt-5 border border-border bg-secondary">
               <Row label="Product Price" value={`₹${unitPrice} / pc`} />
               <Row label="Quantity" value={`${total} pcs`} />
-              {printCharge > 0 && <Row label={`Print (${printType.label})`} value={`+₹${printCharge}`} />}
+              {printCharge > 0 && <Row label={`Print (${printTypeText})`} value={`+₹${printCharge}`} />}
               <Row label="Subtotal" value={`₹${subtotal}`} />
               <Row label="Discount" value={discountPct > 0 ? `${discountPct}% (−₹${discountAmt})` : "—"} />
               <Row label={`Courier (₹${COURIER_PER_PC}×${total})`} value={`₹${courier}`} />
@@ -365,29 +349,20 @@ const ProductDetail = () => {
             )}
 
             {isBulk ? (
-              <button onClick={handleWa} className="btn-bold mt-6 w-full justify-center text-base !py-4">
+              <button onClick={handlePay} className="btn-bold mt-6 w-full justify-center text-base !py-4">
                 <PackageOpen className="h-5 w-5" /> Continue on Bulk Order page ({BULK_THRESHOLD}+ pcs)
               </button>
             ) : (
-              <div className="mt-6 grid sm:grid-cols-2 gap-3">
-                <button
-                  onClick={handleWa}
-                  disabled={!canOrder}
-                  className={`btn-wa justify-center text-sm !py-3.5 ${!canOrder ? "opacity-40 cursor-not-allowed" : ""}`}
-                >
-                  <MessageCircle className="h-4 w-4" /> Order via WhatsApp
-                </button>
-                <button
-                  onClick={handlePay}
-                  disabled={!canOrder}
-                  className={`btn-bold justify-center text-sm !py-3.5 ${!canOrder ? "opacity-40 cursor-not-allowed" : ""}`}
-                >
-                  <CreditCard className="h-4 w-4" /> Pay Now (Razorpay)
-                </button>
-              </div>
+              <button
+                onClick={handlePay}
+                disabled={!canOrder}
+                className={`btn-bold mt-6 w-full justify-center text-sm !py-3.5 ${!canOrder ? "opacity-40 cursor-not-allowed" : ""}`}
+              >
+                <CreditCard className="h-4 w-4" /> Pay Now (Razorpay)
+              </button>
             )}
             <p className="text-xs text-muted-foreground mt-2 text-center">
-              You can send your custom logo as the next message on WhatsApp · {WHATSAPP_NUMBER ? "Live chat with our team" : ""}
+              Complete payment first. WhatsApp will auto-open with your order — attach logo, artwork or instructions there.
             </p>
 
             {/* Share */}
