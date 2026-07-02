@@ -67,9 +67,9 @@ export const downloadInvoice = (order: Order) => {
   doc.setFont("helvetica", "normal");
   doc.text(`${order.productName}`, 48, y);
   if (order.productCode) doc.text(`Code: ${order.productCode}`, 48, y + 12);
-  doc.text(`${order.qty}`, w - 220, y);
-  doc.text(`₹${order.unitPrice}`, w - 160, y);
-  doc.text(`₹${(order.unitPrice * order.qty).toLocaleString("en-IN")}`, w - 48, y, { align: "right" });
+  doc.text(String(order.qty), w - 220, y);
+  doc.text(`Rs ${order.unitPrice}`, w - 160, y);
+  doc.text(`Rs ${(order.unitPrice * order.qty).toLocaleString("en-IN")}`, w - 48, y, { align: "right" });
   y += 30;
 
   doc.setDrawColor(220);
