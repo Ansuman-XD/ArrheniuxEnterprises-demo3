@@ -57,6 +57,7 @@ const ProductDetail = () => {
   const cat = findCategory(product.categorySlug);
   const subcat = cat ? findSubcategory(cat, product.tier, product.subSlug) : undefined;
   const isGarment = !isNonGarmentCategory(product.categorySlug);
+  const canPrint = supportsPrint(product.categorySlug);
   const moq = getMOQ(product);
   const code = productCode(product);
 
@@ -66,8 +67,9 @@ const ProductDetail = () => {
   );
 
   const unitPrice = priceValue(product);
-  const printType = findPrintType(printTypeId);
-  const printCharge = printType.pricePerPc * total;
+  const printPerPc = canPrint ? printPricePerPc(printSel) : 0;
+  const printCharge = printPerPc * total;
+  const printTypeText = canPrint ? printLabel(printSel) : "N/A";
   const subtotal = unitPrice * total + printCharge;
   const discountPct = getDiscountPct(total);
   const discountAmt = Math.round((subtotal * discountPct) / 100);
@@ -86,7 +88,7 @@ const ProductDetail = () => {
 
   const orderMessage = () => {
     const lines: string[] = [];
-    lines.push("Hi Arrhenix, I'd like to place an order:");
+    lines.push("Hi Arrhenix, my payment is complete — here is my order:");
     lines.push("");
     lines.push("*Product Details*");
     if (cat) lines.push(`• Category: ${cat.name}`);
@@ -96,7 +98,7 @@ const ProductDetail = () => {
     lines.push(`• Product Code: ${code}`);
     lines.push(`• Material: ${product.material}`);
     lines.push(`• Color: ${selectedColor}`);
-    lines.push(`• Print Type: ${printType.label}${printType.pricePerPc ? ` (+₹${printType.pricePerPc}/pc)` : ""}`);
+    if (canPrint) lines.push(`• Print: ${printTypeText}`);
     if (isGarment) {
       const sizeLines = SIZES.filter((s) => sizeQty[s] > 0).map((s) => `   - ${s}: ${sizeQty[s]} pcs`);
       lines.push("• Sizes:");
@@ -111,30 +113,16 @@ const ProductDetail = () => {
     lines.push(`• Discount: ${discountPct}% (−₹${discountAmt})`);
     lines.push(`• Courier (₹${COURIER_PER_PC} × ${total}): ₹${courier}`);
     lines.push(`• GST 5%: ₹${gst}`);
-    lines.push(`• *Final Payable: ₹${grandTotal}*`);
+    lines.push(`• *Paid: ₹${grandTotal}*`);
     lines.push("");
-    lines.push("I'll share my custom logo / artwork in the next message.");
+    lines.push("Sharing my logo / artwork / printing instructions in the next messages.");
     return lines.join("\n");
-  };
-
-  const handleWa = () => {
-    if (!canOrder) return;
-    if (isBulk) {
-      navigate(`/bulk-order?product=${product.id}&qty=${total}&print=${printTypeId}`);
-      return;
-    }
-    const user = getSession();
-    if (!user) {
-      navigate(`/auth?next=${encodeURIComponent(location.pathname)}`);
-      return;
-    }
-    window.open(waLink(orderMessage()), "_blank", "noreferrer");
   };
 
   const handlePay = () => {
     if (!canOrder) return;
     if (isBulk) {
-      navigate(`/bulk-order?product=${product.id}&qty=${total}&print=${printTypeId}`);
+      navigate(`/bulk-order?product=${product.id}&qty=${total}`);
       return;
     }
     const user = getSession();
@@ -153,12 +141,13 @@ const ProductDetail = () => {
           productId: product.id,
           productName: product.name,
           productCode: code,
+          productImage: product.image,
           qty: total,
           unitPrice,
           subtotal,
           discountPct,
           discountAmt,
-          printType: printType.label,
+          printType: printTypeText,
           printCharge,
           courier,
           gst,
@@ -168,8 +157,11 @@ const ProductDetail = () => {
           paymentRef: paymentId,
           kind: "retail",
           sizes: isGarment ? sizeQty : undefined,
+          customer: { fullName: user.name, email: user.email, phone: user.phone || "" },
         });
         toast({ title: "Payment successful", description: `Order #${o.id.slice(0, 8).toUpperCase()} placed.` });
+        // Auto-open WhatsApp with completed order summary
+        window.open(waLink(orderMessage()), "_blank", "noreferrer");
         navigate("/my-orders");
       },
     });
