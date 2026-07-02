@@ -31,7 +31,7 @@ export const downloadInvoice = (order: Order) => {
   doc.text(`Expected Delivery: ${expected.toLocaleDateString()}`, w - 40, y + 38, { align: "right" });
 
   y += 70;
-  doc.setDrawColor(200);
+  doc.setDrawColor(200, 200, 200);
   doc.line(40, y, w - 40, y);
 
   y += 20;
@@ -53,9 +53,9 @@ export const downloadInvoice = (order: Order) => {
 
   y += 20;
   // Line item table
-  doc.setFillColor(20);
+  doc.setFillColor(20, 20, 20);
   doc.rect(40, y, w - 80, 22, "F");
-  doc.setTextColor(255);
+  doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.text("PRODUCT", 48, y + 14);
@@ -63,7 +63,7 @@ export const downloadInvoice = (order: Order) => {
   doc.text("UNIT", w - 160, y + 14);
   doc.text("AMOUNT", w - 48, y + 14, { align: "right" });
   y += 30;
-  doc.setTextColor(20);
+  doc.setTextColor(20, 20, 20);
   doc.setFont("helvetica", "normal");
   doc.text(`${order.productName}`, 48, y);
   if (order.productCode) doc.text(`Code: ${order.productCode}`, 48, y + 12);
@@ -72,7 +72,7 @@ export const downloadInvoice = (order: Order) => {
   doc.text(`Rs ${(order.unitPrice * order.qty).toLocaleString("en-IN")}`, w - 48, y, { align: "right" });
   y += 30;
 
-  doc.setDrawColor(220);
+  doc.setDrawColor(220, 220, 220);
   doc.line(40, y, w - 40, y);
   y += 16;
 
@@ -92,7 +92,7 @@ export const downloadInvoice = (order: Order) => {
   addRow("Courier", `₹${order.courier.toLocaleString("en-IN")}`);
   addRow("GST (5%)", `₹${order.gst.toLocaleString("en-IN")}`);
   y += 4;
-  doc.setDrawColor(20);
+  doc.setDrawColor(20, 20, 20);
   doc.line(w - 220, y, w - 40, y);
   y += 14;
   addRow("Total", `₹${order.total.toLocaleString("en-IN")}`, true);
@@ -103,7 +103,7 @@ export const downloadInvoice = (order: Order) => {
   y += 20;
   doc.setFontSize(9);
   doc.setFont("helvetica", "italic");
-  doc.setTextColor(120);
+  doc.setTextColor(120, 120, 120);
   doc.text("Thank you for your order.", 40, y);
   doc.text(`Payment Status: ${due === 0 ? "PAID" : "PENDING BALANCE"} · Ref: ${order.paymentRef || "—"}`, 40, y + 12);
 
