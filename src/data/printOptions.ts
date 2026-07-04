@@ -1,13 +1,14 @@
-// Print method system: Embroidery vs DTF with per-option pricing.
+// Print method system: Embroidery / DTF / Sublimation with per-option pricing.
 export type PrintOption = { id: string; label: string; pricePerPc: number };
-export type PrintMethod = { id: "embroidery" | "dtf"; label: string; options: PrintOption[] };
+export type PrintMethod = { id: "embroidery" | "dtf" | "sublimation"; label: string; options: PrintOption[]; note?: string };
 
 export const PRINT_METHODS: PrintMethod[] = [
   {
     id: "embroidery",
     label: "Embroidery Print",
+    note: "Supports 1–3 thread color embroidery.",
     options: [
-      { id: "chest-emb", label: "Chest Print (4×4 inch)", pricePerPc: 0 },
+      { id: "chest-emb", label: "Chest Logo (1–3 thread colors)", pricePerPc: 20 },
     ],
   },
   {
@@ -23,18 +24,28 @@ export const PRINT_METHODS: PrintMethod[] = [
       { id: "hand", label: "Hand Print (2×2 inch)", pricePerPc: 10 },
     ],
   },
+  {
+    id: "sublimation",
+    label: "Sublimation Print",
+    options: [
+      { id: "sub-a4", label: "Sublimation A4 Print", pricePerPc: 30 },
+      { id: "sub-back-name", label: "Sublimation Back Name", pricePerPc: 20 },
+      { id: "sub-logo", label: "Sublimation Logo", pricePerPc: 10 },
+    ],
+  },
 ];
 
 export type PrintSelection = {
-  method: "embroidery" | "dtf" | null;
-  options: string[]; // option ids under the chosen method
+  method: "embroidery" | "dtf" | "sublimation" | null;
+  options: string[];
 };
 
 export const emptyPrint = (): PrintSelection => ({ method: null, options: [] });
 
-export const printPricePerPc = (sel: PrintSelection): number => {
+// Optional override: caller can pass a custom methods list (e.g. accessory-specific).
+export const printPricePerPc = (sel: PrintSelection, methods: PrintMethod[] = PRINT_METHODS): number => {
   if (!sel.method) return 0;
-  const m = PRINT_METHODS.find((x) => x.id === sel.method);
+  const m = methods.find((x) => x.id === sel.method);
   if (!m) return 0;
   return sel.options.reduce(
     (sum, oid) => sum + (m.options.find((o) => o.id === oid)?.pricePerPc ?? 0),
@@ -42,12 +53,24 @@ export const printPricePerPc = (sel: PrintSelection): number => {
   );
 };
 
-export const printLabel = (sel: PrintSelection): string => {
+export const printLabel = (sel: PrintSelection, methods: PrintMethod[] = PRINT_METHODS): string => {
   if (!sel.method) return "No Print";
-  const m = PRINT_METHODS.find((x) => x.id === sel.method);
+  const m = methods.find((x) => x.id === sel.method);
   if (!m) return "No Print";
   const chosen = sel.options
     .map((id) => m.options.find((o) => o.id === id)?.label)
     .filter(Boolean);
   return chosen.length ? `${m.label} — ${chosen.join(", ")}` : m.label;
+};
+
+// Encode/decode PrintSelection for URL params (used to preserve state on redirect to Bulk Order).
+export const encodePrint = (sel: PrintSelection): string => {
+  if (!sel.method) return "";
+  return `${sel.method}:${sel.options.join(",")}`;
+};
+export const decodePrint = (raw: string | null): PrintSelection => {
+  if (!raw) return emptyPrint();
+  const [method, opts] = raw.split(":");
+  if (method !== "embroidery" && method !== "dtf" && method !== "sublimation") return emptyPrint();
+  return { method, options: (opts || "").split(",").filter(Boolean) };
 };
