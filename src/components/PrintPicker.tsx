@@ -1,19 +1,47 @@
-import { PRINT_METHODS, type PrintSelection, printPricePerPc } from "@/data/printOptions";
+import { PRINT_METHODS, type PrintMethod, type PrintSelection, printPricePerPc } from "@/data/printOptions";
 
 type Props = {
   value: PrintSelection;
   onChange: (v: PrintSelection) => void;
   qty: number;
+  // Restrict to a subset of methods (accessories often only allow 1). Defaults to all garment methods.
+  methods?: PrintMethod[];
+  // Free-only label overrides the entire picker (Pen, Badge)
+  freeLabel?: string | null;
+  // Fully disable printing (Safety Goggle)
+  disabled?: boolean;
 };
 
-export const PrintPicker = ({ value, onChange, qty }: Props) => {
-  const activeMethod = value.method
-    ? PRINT_METHODS.find((m) => m.id === value.method)
-    : null;
+export const PrintPicker = ({ value, onChange, qty, methods, freeLabel = null, disabled = false }: Props) => {
+  if (disabled) {
+    return (
+      <div className="mt-2">
+        <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Print Type</h4>
+        <div className="border border-border bg-secondary/40 px-3 py-2.5 text-xs text-muted-foreground uppercase tracking-widest">
+          No print available for this product
+        </div>
+      </div>
+    );
+  }
 
-  const setMethod = (mid: "embroidery" | "dtf" | "") => {
+  if (freeLabel) {
+    return (
+      <div className="mt-2">
+        <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Printing</h4>
+        <div className="border border-border bg-secondary/40 px-3 py-2.5 text-sm flex items-center justify-between">
+          <span>{freeLabel}</span>
+          <span className="text-[10px] font-mono uppercase text-primary">Included</span>
+        </div>
+      </div>
+    );
+  }
+
+  const allowedMethods = methods && methods.length > 0 ? methods : PRINT_METHODS;
+  const activeMethod = value.method ? allowedMethods.find((m) => m.id === value.method) : null;
+
+  const setMethod = (mid: string) => {
     if (mid === "") onChange({ method: null, options: [] });
-    else onChange({ method: mid, options: [] });
+    else onChange({ method: mid as PrintSelection["method"], options: [] });
   };
 
   const toggleOption = (oid: string) => {
@@ -24,7 +52,7 @@ export const PrintPicker = ({ value, onChange, qty }: Props) => {
     }
   };
 
-  const perPc = printPricePerPc(value);
+  const perPc = printPricePerPc(value, allowedMethods);
   const totalCharge = perPc * qty;
 
   return (
@@ -32,17 +60,20 @@ export const PrintPicker = ({ value, onChange, qty }: Props) => {
       <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Print Type</h4>
       <select
         value={value.method ?? ""}
-        onChange={(e) => setMethod(e.target.value as "embroidery" | "dtf" | "")}
+        onChange={(e) => setMethod(e.target.value)}
         className="w-full border border-border px-3 py-2.5 text-sm bg-background focus:outline-none focus:border-ink"
       >
         <option value="">No Print</option>
-        {PRINT_METHODS.map((m) => (
+        {allowedMethods.map((m) => (
           <option key={m.id} value={m.id}>{m.label}</option>
         ))}
       </select>
 
       {activeMethod && (
         <div className="mt-3 border border-border bg-secondary/40 p-3 space-y-1.5">
+          {activeMethod.note && (
+            <p className="text-[11px] text-muted-foreground italic mb-1">{activeMethod.note}</p>
+          )}
           {activeMethod.options.map((o) => {
             const checked = value.options.includes(o.id);
             return (
