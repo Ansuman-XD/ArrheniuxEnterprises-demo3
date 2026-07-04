@@ -254,7 +254,7 @@ const BulkOrder = () => {
       qty: total,
       unitPrice,
       subtotal,
-      discountPct: BULK_DISCOUNT_PCT,
+      discountPct: bulkPct,
       discountAmt,
       printType: printText,
       printCharge,
