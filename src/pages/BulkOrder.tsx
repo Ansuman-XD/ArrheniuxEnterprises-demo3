@@ -174,14 +174,15 @@ const BulkOrder = () => {
 
   const total = isGarment ? Object.values(sizeQty).reduce((a, b) => a + b, 0) : unitQty;
   const unitPrice = product ? priceValue(product) : 0;
-  const perPcPrint = canPrint ? printPricePerPc(printSel) : 0;
+  const perPcPrint = canPrint ? printPricePerPc(printSel, restrictedMethods) : 0;
   const printCharge = perPcPrint * total;
-  const printText = canPrint ? printLabel(printSel) : "N/A";
+  const printText = canPrint ? printLabel(printSel, restrictedMethods) : "N/A";
   const subtotal = unitPrice * total + printCharge;
-  const discountAmt = Math.round((subtotal * BULK_DISCOUNT_PCT) / 100);
+  const bulkPct = rule && !rule.discountEnabled ? 0 : BULK_DISCOUNT_PCT;
+  const discountAmt = Math.round((subtotal * bulkPct) / 100);
   const afterDiscount = Math.max(0, subtotal - discountAmt);
   const courier = total * COURIER_PER_PC;
-  const gst = Math.round((afterDiscount + courier) * GST_RATE);
+  const gst = Math.round((afterDiscount + courier) * gstRate);
   const grandTotal = afterDiscount + courier + gst;
 
   const validate = (): string | null => {
