@@ -11,16 +11,17 @@ import {
   isNonGarmentCategory,
   isArrheniuxCategory,
   supportsPrint,
+  getAccessoryRules,
+  getGstPct,
   priceValue,
   productCode,
   COURIER_PER_PC,
-  GST_RATE,
   BULK_DISCOUNT_PCT,
   BULK_THRESHOLD,
   type Tier,
   type CatalogProduct,
 } from "@/data/catalog";
-import { emptyPrint, printPricePerPc, printLabel, type PrintSelection } from "@/data/printOptions";
+import { emptyPrint, printPricePerPc, printLabel, decodePrint, type PrintSelection, type PrintMethod } from "@/data/printOptions";
 import { waLink } from "@/data/site";
 import { getSession, createOrder } from "@/lib/authStore";
 import { openRazorpay } from "@/lib/razorpay";
@@ -29,6 +30,21 @@ import { toast } from "@/hooks/use-toast";
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"] as const;
 type Size = typeof SIZES[number];
 const SIZE_STEP = 2;
+
+// Bulk Order excludes ARRHENIUX line — standard categories only.
+const bulkCatalog = () => catalog.filter((c) => !isArrheniuxCategory(c.slug));
+
+const parseSizesParam = (raw: string | null): Record<Size, number> => {
+  const base: Record<Size, number> = { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0 };
+  if (!raw) return base;
+  raw.split(",").forEach((chunk) => {
+    const [s, q] = chunk.split(":");
+    if ((SIZES as readonly string[]).includes(s)) {
+      (base as Record<string, number>)[s] = Math.max(0, Number(q) || 0);
+    }
+  });
+  return base;
+};
 
 type DraftCustomer = {
   fullName: string;
@@ -65,6 +81,10 @@ const BulkOrder = () => {
     const urlCat = params.get("cat");
     const urlTier = params.get("tier");
     const urlSub = params.get("sub");
+    const urlColor = params.get("color") || "";
+    const urlSizes = parseSizesParam(params.get("sizes"));
+    const urlPrint = decodePrint(params.get("print"));
+    const hasUrlSizes = Object.values(urlSizes).some((n) => n > 0);
     const draft = loadDraft();
     if (urlPid) {
       const p = findProduct(urlPid);
@@ -75,11 +95,11 @@ const BulkOrder = () => {
           tier: (p.tier as Tier) || "",
           subSlug: p.subSlug,
           productId: p.id,
-          color: p.colors[0] || "",
+          color: urlColor || p.colors[0] || "",
           unitQty: seedQty,
-          sizeQty: { ...EMPTY_SIZES },
+          sizeQty: hasUrlSizes ? urlSizes : { ...EMPTY_SIZES },
           customer: draft.customer || EMPTY_CUSTOMER,
-          print: emptyPrint(),
+          print: urlPrint.method ? urlPrint : (draft.print || emptyPrint()),
         };
       }
     }
@@ -89,17 +109,18 @@ const BulkOrder = () => {
         tier: (urlTier as Tier) || "",
         subSlug: urlSub || "",
         productId: "",
-        color: "",
+        color: urlColor,
         unitQty: BULK_THRESHOLD,
-        sizeQty: { ...EMPTY_SIZES },
+        sizeQty: hasUrlSizes ? urlSizes : { ...EMPTY_SIZES },
         customer: draft.customer || EMPTY_CUSTOMER,
-        print: emptyPrint(),
+        print: urlPrint.method ? urlPrint : emptyPrint(),
       };
     }
     return draft;
   }, [params]);
 
-  const [catSlug, setCatSlug] = useState<string>(initial.catSlug || catalog[0].slug);
+  const catList = bulkCatalog();
+  const [catSlug, setCatSlug] = useState<string>(initial.catSlug || catList[0].slug);
   const [tier, setTier] = useState<Tier | "">(initial.tier ?? "");
   const [subSlug, setSubSlug] = useState<string>(initial.subSlug || "");
   const [productId, setProductId] = useState<string>(initial.productId || "");
@@ -117,7 +138,19 @@ const BulkOrder = () => {
   const products: CatalogProduct[] = subcat?.products ?? [];
   const product = products.find((p) => p.id === productId);
   const isGarment = product ? !isNonGarmentCategory(product.categorySlug) : !isNonGarmentCategory(catSlug);
-  const canPrint = supportsPrint(catSlug) && !isArrheniuxCategory(catSlug);
+  const rule = product ? getAccessoryRules(product.subSlug) : null;
+  const canPrint = supportsPrint(catSlug) && !isArrheniuxCategory(catSlug) && (rule?.print.kind !== "none");
+  const gstRate = product ? getGstPct(product) : 0.05;
+  const gstPctLabel = Math.round(gstRate * 100);
+
+  const restrictedMethods: PrintMethod[] | undefined = rule?.print.kind === "custom"
+    ? rule.print.methods.map((m) => ({ id: m.id, label:
+        m.id === "dtf" ? "DTF Print" :
+        m.id === "sublimation" ? "Sublimation Print" : "Embroidery Print",
+        options: m.options }))
+    : undefined;
+  const printFreeLabel = rule?.print.kind === "free" ? rule.print.label : null;
+  const printDisabled = rule?.print.kind === "none";
 
   useEffect(() => {
     if (!cat.hasTiers) setTier("");
@@ -141,14 +174,15 @@ const BulkOrder = () => {
 
   const total = isGarment ? Object.values(sizeQty).reduce((a, b) => a + b, 0) : unitQty;
   const unitPrice = product ? priceValue(product) : 0;
-  const perPcPrint = canPrint ? printPricePerPc(printSel) : 0;
+  const perPcPrint = canPrint ? printPricePerPc(printSel, restrictedMethods) : 0;
   const printCharge = perPcPrint * total;
-  const printText = canPrint ? printLabel(printSel) : "N/A";
+  const printText = canPrint ? printLabel(printSel, restrictedMethods) : "N/A";
   const subtotal = unitPrice * total + printCharge;
-  const discountAmt = Math.round((subtotal * BULK_DISCOUNT_PCT) / 100);
+  const bulkPct = rule && !rule.discountEnabled ? 0 : BULK_DISCOUNT_PCT;
+  const discountAmt = Math.round((subtotal * bulkPct) / 100);
   const afterDiscount = Math.max(0, subtotal - discountAmt);
   const courier = total * COURIER_PER_PC;
-  const gst = Math.round((afterDiscount + courier) * GST_RATE);
+  const gst = Math.round((afterDiscount + courier) * gstRate);
   const grandTotal = afterDiscount + courier + gst;
 
   const validate = (): string | null => {
@@ -185,9 +219,9 @@ const BulkOrder = () => {
     lines.push(`• Unit Price: ₹${unitPrice}`);
     if (printCharge > 0) lines.push(`• Print Charge: ₹${printCharge}`);
     lines.push(`• Subtotal: ₹${subtotal}`);
-    lines.push(`• Bulk Discount (${BULK_DISCOUNT_PCT}%): −₹${discountAmt}`);
+    lines.push(`• Bulk Discount (${bulkPct}%): −₹${discountAmt}`);
     lines.push(`• Courier (₹${COURIER_PER_PC}×${total}): ₹${courier}`);
-    lines.push(`• GST 5%: ₹${gst}`);
+    lines.push(`• GST ${gstPctLabel}%: ₹${gst}`);
     lines.push(`• *Grand Total: ₹${grandTotal}*`);
     lines.push(`• *Amount Paid: ₹${paid}*`);
     if (mode === "advance-50") lines.push(`• Balance Due: ₹${grandTotal - paid}`);
@@ -220,7 +254,7 @@ const BulkOrder = () => {
       qty: total,
       unitPrice,
       subtotal,
-      discountPct: BULK_DISCOUNT_PCT,
+      discountPct: bulkPct,
       discountAmt,
       printType: printText,
       printCharge,
@@ -354,7 +388,7 @@ const BulkOrder = () => {
 
               {canPrint && (
                 <div className="mt-5">
-                  <PrintPicker value={printSel} onChange={setPrintSel} qty={total} />
+                  <PrintPicker value={printSel} onChange={setPrintSel} qty={total} methods={restrictedMethods} freeLabel={printFreeLabel} disabled={printDisabled} />
                 </div>
               )}
 
@@ -397,9 +431,9 @@ const BulkOrder = () => {
                 <Row label="Total Quantity" value={`${total} pcs`} />
                 {printCharge > 0 && <Row label={`Print (${printText})`} value={`+₹${printCharge}`} />}
                 <Row label="Subtotal" value={`₹${subtotal.toLocaleString("en-IN")}`} />
-                <Row label={`Bulk Discount ${BULK_DISCOUNT_PCT}%`} value={`−₹${discountAmt.toLocaleString("en-IN")}`} />
+                <Row label={`Bulk Discount ${bulkPct}%`} value={`−₹${discountAmt.toLocaleString("en-IN")}`} />
                 <Row label={`Courier (₹${COURIER_PER_PC}×${total})`} value={`₹${courier.toLocaleString("en-IN")}`} />
-                <Row label="GST 5%" value={`₹${gst.toLocaleString("en-IN")}`} />
+                <Row label={`GST ${gstPctLabel}%`} value={`₹${gst.toLocaleString("en-IN")}`} />
                 <div className="flex items-center justify-between px-4 py-3 bg-ink text-cream">
                   <span className="text-xs uppercase tracking-widest font-bold">Grand Total</span>
                   <span className="font-display text-2xl">₹{grandTotal.toLocaleString("en-IN")}</span>

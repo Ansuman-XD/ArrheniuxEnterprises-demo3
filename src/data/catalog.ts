@@ -177,14 +177,15 @@ export const catalog: CatalogCategory[] = [
       "Nirmal Net Polyester 120 GSM",
       "Kohili Net Polyester 120 GSM",
     ]),
-    premium: makeSubs("custom-fabric-t-shirts", tshirts, "premium", [
-      "Cotton 240 GSM",
-      "Cotton 180 GSM",
-      "Polycotton 240 GSM",
-      "Polycotton 220 GSM",
-      "Polycotton 180 GSM",
-      "SAP Matty Premium Polyester 180 GSM",
-      "SAP Matty Premium Polyester 160 GSM",
+    premium: makeSubs("custom-fabric-t-shirts", polos, "premium", [
+      "240 GSM Cotton Polo T-Shirt",
+      "240 GSM Polycotton Polo T-Shirt",
+      "240 GSM CP Polo T-Shirt",
+      "240 GSM Spun Polo T-Shirt (Polyester)",
+      "240 GSM Honeycomb Polo T-Shirt (Polyester)",
+      "180 GSM SAP Matty Polo T-Shirt (Premium Polyester)",
+      "180 GSM Dotnet Polo T-Shirt (Polyester)",
+      "170 GSM Nirmal Net Polo T-Shirt (Polyester)",
     ]),
   },
   {
@@ -273,25 +274,57 @@ export const catalog: CatalogCategory[] = [
       "Mug",
       "Safety Goggle",
       "Cap",
-      "Premium Conference Backpack",
+      "Premium Backpack",
       "Umbrella",
       "Pen",
-      "Event ID Card",
       "Badge",
+      "Event Lanyard",
       "Bottle",
     ], 2),
   },
   {
-    slug: "corporate-joining-kits",
-    name: "Corporate Joining Kits",
+    slug: "corporate-welcome-kit",
+    name: "Corporate Welcome Kit",
     image: corporate,
     hasTiers: false,
-    blurb: "Ready-to-ship welcome kits for new hires.",
-    items: makeSubs("corporate-joining-kits", corporate, undefined, [
-      "Basic Joining Kit",
-      "Classic Joining Kit",
-      "Premium Joining Kit",
-    ], 2),
+    blurb: "Ready-to-ship welcome kits for new hires, events, colleges and teams.",
+    items: [
+      ...makeSubs("corporate-welcome-kit", corporate, undefined, [
+        "Basic Welcome Kit",
+      ], 2),
+      // Classic Kit gets four themed products (Employee/Conference/College/Team)
+      ...makeSubs("corporate-welcome-kit", corporate, undefined, [
+        "Classic Welcome Kit",
+      ], 1).map((s) => {
+        const themed = ["Employee Welcome Kit", "Conference Welcome Kit", "College Welcome Kit", "Team Welcome Kit"];
+        s.products = themed.map((n) => {
+          __id++;
+          __ts += 1000;
+          return {
+            id: `c${__id}`,
+            name: n,
+            categorySlug: "corporate-welcome-kit",
+            subSlug: s.slug,
+            tier: undefined,
+            fabric: "Kit",
+            gsm: "Kit",
+            moq: 20,
+            price: `₹1200`,
+            image: corporate,
+            gallery: [corporate, corporate, corporate, corporate],
+            colors: DEFAULT_COLORS,
+            description: `${n} — configurable welcome kit. Includes a customised t-shirt plus your selected merch add-ons. One free customised tote bag included with every kit.`,
+            material: "Curated bundle",
+            isNew: true,
+            addedAt: __ts,
+          } as CatalogProduct;
+        });
+        return s;
+      }),
+      ...makeSubs("corporate-welcome-kit", corporate, undefined, [
+        "Premium Welcome Kit",
+      ], 2),
+    ],
   },
   {
     slug: "arrheniux-t-shirts",
@@ -349,9 +382,10 @@ export const listingHref = (catSlug: string, tier: string | undefined, subSlug: 
   `/category/${catSlug}/${tier ?? "_"}/${subSlug}`;
 
 // ---------- Garment vs non-garment ----------
-const NON_GARMENT = new Set(["custom-accessories", "corporate-joining-kits"]);
+const NON_GARMENT = new Set(["custom-accessories", "corporate-welcome-kit"]);
 export const isNonGarmentCategory = (slug: string) => NON_GARMENT.has(slug);
 export const isArrheniuxCategory = (slug: string) => slug === "arrheniux-t-shirts";
+export const isWelcomeKitCategory = (slug: string) => slug === "corporate-welcome-kit";
 
 // Print type is offered on everything EXCEPT non-garment items and the ARRHENIUX line.
 export const supportsPrint = (catSlug: string) =>
@@ -363,18 +397,33 @@ export const priceValue = (p: Pick<CatalogProduct, "price">) =>
 
 // Per-piece courier
 export const COURIER_PER_PC = 30;
-export const GST_RATE = 0.05; // 5%
+export const GST_RATE = 0.05; // default 5%
 export const BULK_DISCOUNT_PCT = 40;
 export const BULK_THRESHOLD = 80;
-export const B2B_MOQ = 100;
+export const B2B_MOQ = 14;
 export const B2B_STEP = 2;
+export const ARR_SIZE_MAX = 3; // ARRHENIUX per-size cap
 
-// Per-product MOQ: ARRHENIUX = 1, everything else = 5
-export const getMOQ = (p: Pick<CatalogProduct, "categorySlug">) =>
-  isArrheniuxCategory(p.categorySlug) ? 1 : 5;
+// Per-product MOQ: ARRHENIUX = 1, everything else = 5 (accessories may override)
+export const getMOQ = (p: Pick<CatalogProduct, "categorySlug" | "subSlug">) => {
+  if (isArrheniuxCategory(p.categorySlug)) return 1;
+  const rule = getAccessoryRules(p.subSlug);
+  if (rule) return rule.moq;
+  return 5;
+};
+
+export const getMaxQty = (p: Pick<CatalogProduct, "categorySlug" | "subSlug">) => {
+  const rule = getAccessoryRules(p.subSlug);
+  if (rule) return rule.max;
+  return BULK_THRESHOLD;
+};
 
 // Retail-tier % discount (below bulk threshold)
-export const getDiscountPct = (qty: number) => {
+export const getDiscountPct = (qty: number, p?: Pick<CatalogProduct, "subSlug">) => {
+  if (p) {
+    const rule = getAccessoryRules(p.subSlug);
+    if (rule && !rule.discountEnabled) return 0;
+  }
   if (qty >= 50) return 30;
   if (qty >= 25) return 20;
   if (qty >= 10) return 10;
@@ -391,8 +440,114 @@ export const productCode = (p: Pick<CatalogProduct, "id" | "categorySlug">) => {
   return `ARR-${catInitials}-${p.id.toUpperCase()}`;
 };
 
+// ---------- Accessory / non-garment per-product rules ----------
+export type AccessoryRule = {
+  moq: number;
+  max: number;
+  gstPct: number; // 5 or 18
+  discountEnabled: boolean;
+  oem?: boolean;
+  // Print config: which method(s) allowed, which option ids under each, or FREE-only note
+  print:
+    | { kind: "none" }
+    | { kind: "free"; label: string } // e.g. Pen "Company Name Printing — FREE"
+    | { kind: "custom"; methods: Array<{ id: "embroidery" | "dtf" | "sublimation"; options: { id: string; label: string; pricePerPc: number }[] }> };
+  note?: string;
+};
+
+const ACCESSORY_RULES: Record<string, AccessoryRule> = {
+  "canvas-tote": {
+    moq: 5, max: 80, gstPct: 5, discountEnabled: false,
+    print: { kind: "custom", methods: [{ id: "dtf", options: [
+      { id: "tote-a4", label: "A4 Print", pricePerPc: 40 },
+      { id: "tote-company-name", label: "Company Name (8×2 inch)", pricePerPc: 30 },
+    ]}]},
+  },
+  "safety-goggle": {
+    moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true,
+    print: { kind: "none" },
+  },
+  "premium-backpack": {
+    moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true,
+    print: { kind: "custom", methods: [{ id: "dtf", options: [
+      { id: "bp-logo", label: "Logo (3×3 inch)", pricePerPc: 20 },
+    ]}]},
+  },
+  "pen": {
+    moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true,
+    print: { kind: "free", label: "Company Name Printing — FREE" },
+  },
+  "badge": {
+    moq: 50, max: 80, gstPct: 18, discountEnabled: false,
+    print: { kind: "free", label: "Printed Logo — FREE" },
+  },
+  "mug": {
+    moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true,
+    print: { kind: "custom", methods: [{ id: "sublimation", options: [
+      { id: "mug-logo", label: "Company Logo (Sublimation)", pricePerPc: 0 },
+    ]}]},
+  },
+  "cap": {
+    moq: 50, max: 80, gstPct: 5, discountEnabled: false, oem: true,
+    print: { kind: "custom", methods: [{ id: "dtf", options: [
+      { id: "cap-logo", label: "Logo (2×2 inch)", pricePerPc: 10 },
+    ]}]},
+  },
+  "umbrella": {
+    moq: 50, max: 80, gstPct: 5, discountEnabled: false,
+    print: { kind: "custom", methods: [
+      { id: "dtf", options: [
+        { id: "umb-single", label: "Single Logo (3×3 inch)", pricePerPc: 10 },
+        { id: "umb-double", label: "Double Logo", pricePerPc: 20 },
+        { id: "umb-triple", label: "Triple Logo", pricePerPc: 30 },
+      ]},
+      { id: "sublimation", options: [
+        { id: "umb-sub-single", label: "Single Logo (3×3 inch)", pricePerPc: 10 },
+        { id: "umb-sub-double", label: "Double Logo", pricePerPc: 20 },
+        { id: "umb-sub-triple", label: "Triple Logo", pricePerPc: 30 },
+      ]},
+    ]},
+  },
+  "event-lanyard": {
+    moq: 50, max: 80, gstPct: 5, discountEnabled: false,
+    print: { kind: "custom", methods: [{ id: "sublimation", options: [
+      { id: "lan-double", label: "Double-Sided Logo", pricePerPc: 20 },
+    ]}]},
+  },
+};
+
+export const getAccessoryRules = (subSlug?: string): AccessoryRule | null => {
+  if (!subSlug) return null;
+  return ACCESSORY_RULES[subSlug] ?? null;
+};
+
+// GST% for a product (5% default, some accessories 18%)
+export const getGstPct = (p: Pick<CatalogProduct, "subSlug">) => {
+  const rule = getAccessoryRules(p.subSlug);
+  return rule ? rule.gstPct / 100 : GST_RATE;
+};
+
+// Sample price = 1 pc at unit price + courier + GST (a small stand-alone charge)
+export const samplePrice = (p: CatalogProduct) => {
+  const unit = priceValue(p);
+  const gst = Math.round((unit + COURIER_PER_PC) * getGstPct(p));
+  return unit + COURIER_PER_PC + gst;
+};
+
+// ---------- Welcome Kit config ----------
+export const WELCOME_KIT_MIN = 20;
+export const WELCOME_KIT_ITEMS = [
+  { id: "tshirt", label: "T-Shirt", required: true },
+  { id: "mug", label: "Mug" },
+  { id: "pen", label: "Pen" },
+  { id: "notebook", label: "Notebook" },
+  { id: "bottle", label: "Bottle" },
+  { id: "keychain", label: "Key Chain" },
+  { id: "backpack", label: "Backpack" },
+] as const;
+export const WELCOME_KIT_MIN_ITEMS = 3;
+
 // ---------- B2B curated subcategories ----------
-// The B2B Shop displays only these 6 subcategories, mapped to real catalog subs.
 export type B2BSub = {
   slug: string;
   name: string;
@@ -419,7 +574,10 @@ export const getB2BProducts = (b2bSlug: string): CatalogProduct[] => {
   return sub?.products ?? [];
 };
 
-// Legacy print type placeholder — kept for backward compatibility; new UI uses PRINT_METHODS in data/printOptions.ts
+// Valid B2B agent codes (demo). Replace with backend validation later.
+export const B2B_AGENT_CODES = ["AGENT2024", "ARR-B2B", "DEALER100"];
+
+// Legacy print type placeholder
 export type PrintType = { id: string; label: string; pricePerPc: number };
 export const PRINT_TYPES: PrintType[] = [{ id: "none", label: "No Print", pricePerPc: 0 }];
 export const findPrintType = (_id: string): PrintType => PRINT_TYPES[0];

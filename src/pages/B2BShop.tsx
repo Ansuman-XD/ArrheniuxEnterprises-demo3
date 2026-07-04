@@ -9,7 +9,6 @@ import {
   priceValue,
   productCode,
   COURIER_PER_PC,
-  GST_RATE,
   BULK_DISCOUNT_PCT,
   B2B_MOQ,
   B2B_STEP,
@@ -49,7 +48,7 @@ const B2BShop = () => {
   const discountAmt = Math.round((subtotal * BULK_DISCOUNT_PCT) / 100);
   const afterDiscount = Math.max(0, subtotal - discountAmt);
   const courier = total * COURIER_PER_PC;
-  const gst = Math.round((afterDiscount + courier) * GST_RATE);
+  const gst = Math.round((afterDiscount + courier) * 0.05);
   const grandTotal = afterDiscount + courier + gst;
 
   const bumpSize = (s: Size, d: number) =>
