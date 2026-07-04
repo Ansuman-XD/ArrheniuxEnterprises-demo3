@@ -388,7 +388,7 @@ const BulkOrder = () => {
 
               {canPrint && (
                 <div className="mt-5">
-                  <PrintPicker value={printSel} onChange={setPrintSel} qty={total} />
+                  <PrintPicker value={printSel} onChange={setPrintSel} qty={total} methods={restrictedMethods} freeLabel={printFreeLabel} disabled={printDisabled} />
                 </div>
               )}
 
