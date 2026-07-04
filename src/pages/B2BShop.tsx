@@ -9,7 +9,6 @@ import {
   priceValue,
   productCode,
   COURIER_PER_PC,
-  GST_RATE,
   BULK_DISCOUNT_PCT,
   B2B_MOQ,
   B2B_STEP,
