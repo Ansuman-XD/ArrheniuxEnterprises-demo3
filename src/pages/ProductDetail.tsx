@@ -97,25 +97,30 @@ const ProductDetail = () => {
   const printDisabled = rule?.print.kind === "none";
   const printFreeLabel = rule?.print.kind === "free" ? rule.print.label : null;
 
-  const total = useMemo(
-    () => (isGarment ? Object.values(sizeQty).reduce((a, b) => a + b, 0) : unitQty),
-    [isGarment, sizeQty, unitQty]
-  );
+  const kitIncludesTshirt = kitItems.includes("tshirt");
+  const kitSizeTotal = Object.values(sizeQty).reduce((a, b) => a + b, 0);
+  const kitQty = kitIncludesTshirt ? kitSizeTotal : kitQtyManual;
+  const kitEnoughItems = kitItems.length >= WELCOME_KIT_MIN_ITEMS;
+
+  const total = useMemo(() => {
+    if (isKit) return kitQty;
+    return isGarment ? kitSizeTotal : unitQty;
+  }, [isKit, kitQty, isGarment, kitSizeTotal, unitQty]);
 
   const unitPrice = priceValue(product);
   const printPerPc = canPrint ? printPricePerPc(printSel, restrictedMethods) : 0;
   const printCharge = printPerPc * total;
   const printTypeText = canPrint ? printLabel(printSel, restrictedMethods) : "N/A";
   const subtotal = unitPrice * total + printCharge;
-  const discountPct = getDiscountPct(total, product);
+  const discountPct = isKit ? 0 : getDiscountPct(total, product);
   const discountAmt = Math.round((subtotal * discountPct) / 100);
   const afterDiscount = Math.max(0, subtotal - discountAmt);
-  const courier = total * COURIER_PER_PC;
+  const courier = total * courierPerPc;
   const gst = Math.round((afterDiscount + courier) * gstRate);
   const grandTotal = afterDiscount + courier + gst;
   const isBulk = total > maxQty;
   const meetsMoq = total >= moq;
-  const canOrder = meetsMoq && total <= maxQty;
+  const canOrder = meetsMoq && total <= maxQty && (!isKit || kitEnoughItems);
 
   const bumpSize = (s: Size, d: number) =>
     setSizeQty((q) => {
