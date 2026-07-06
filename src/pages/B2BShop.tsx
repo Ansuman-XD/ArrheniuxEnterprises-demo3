@@ -160,6 +160,51 @@ const B2BShop = () => {
     });
   };
 
+  if (!verified) {
+    return (
+      <Layout>
+        <section className="container-x py-16 min-h-[60vh] flex items-center justify-center">
+          <div className="w-full max-w-md border border-border bg-card p-6 shadow-sm">
+            <span className="text-xs font-bold uppercase tracking-widest text-primary">B2B Access</span>
+            <h1 className="font-display text-3xl mt-2 leading-none">VERIFY TO CONTINUE</h1>
+            <p className="text-sm text-muted-foreground mt-3">
+              The B2B Shop is restricted to verified partners. Enter your Marketing Agent Code or your Shop GST Number to continue.
+            </p>
+            <div className="mt-5 flex border border-border">
+              <button
+                type="button"
+                onClick={() => { setMode("agent"); setEntry(""); setGateError(""); }}
+                className={`flex-1 py-2 text-xs uppercase tracking-widest font-semibold transition ${mode === "agent" ? "bg-ink text-cream" : "text-ink hover:bg-secondary"}`}
+              >
+                Agent Code
+              </button>
+              <button
+                type="button"
+                onClick={() => { setMode("gst"); setEntry(""); setGateError(""); }}
+                className={`flex-1 py-2 text-xs uppercase tracking-widest font-semibold transition ${mode === "gst" ? "bg-ink text-cream" : "text-ink hover:bg-secondary"}`}
+              >
+                Shop GST
+              </button>
+            </div>
+            <label className="block mt-4 text-[10px] uppercase tracking-widest text-muted-foreground">
+              {mode === "agent" ? "Marketing Agent Code" : "Shop GST Number (15 chars)"}
+            </label>
+            <input
+              value={entry}
+              onChange={(e) => setEntry(e.target.value)}
+              placeholder={mode === "agent" ? "e.g. AGENT2024" : "22AAAAA0000A1Z5"}
+              className="mt-1 w-full border border-border px-3 py-2.5 text-sm bg-background focus:outline-none focus:border-ink"
+            />
+            {gateError && <p className="text-xs text-destructive mt-2">{gateError}</p>}
+            <button onClick={submitGate} className="btn-bold mt-4 w-full justify-center !py-3">
+              Verify & Enter B2B Shop
+            </button>
+          </div>
+        </section>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <section className="bg-secondary">
