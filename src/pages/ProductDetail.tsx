@@ -52,6 +52,9 @@ const ProductDetail = () => {
   });
   const [unitQty, setUnitQty] = useState(1);
   const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
+  // Welcome-kit config
+  const [kitItems, setKitItems] = useState<string[]>(["tshirt"]);
+  const [kitQtyManual, setKitQtyManual] = useState<number>(20);
 
   if (!product) {
     return (
