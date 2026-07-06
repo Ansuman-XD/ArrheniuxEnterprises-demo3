@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { catalog, type Tier } from "@/data/catalog";
+import { catalog as fullCatalog, type Tier, isArrheniuxCategory } from "@/data/catalog";
+const catalog = fullCatalog.filter((c) => !isArrheniuxCategory(c.slug));
 
 // Mirrors Categories mega menu but funnels selections to /bulk-order with preset params.
 export const BulkMegaMenu = () => {
