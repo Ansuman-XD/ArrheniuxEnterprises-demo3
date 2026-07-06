@@ -13,6 +13,7 @@ import {
   supportsPrint,
   getAccessoryRules,
   getGstPct,
+  getCourierPerPc,
   priceValue,
   productCode,
   COURIER_PER_PC,
