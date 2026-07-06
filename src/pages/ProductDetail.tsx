@@ -67,15 +67,17 @@ const ProductDetail = () => {
   const cat = findCategory(product.categorySlug);
   const subcat = cat ? findSubcategory(cat, product.tier, product.subSlug) : undefined;
   const isGarment = !isNonGarmentCategory(product.categorySlug);
+  const isKit = isWelcomeKitCategory(product.categorySlug);
   const canPrint = supportsPrint(product.categorySlug);
   const isArr = isArrheniuxCategory(product.categorySlug);
   const rule = getAccessoryRules(product.subSlug);
-  const moq = getMOQ(product);
-  const maxQty = getMaxQty(product);
-  const bulkThreshold = maxQty + 1; // for non-standard products, exceeding max routes to bulk
+  const moq = isKit ? WELCOME_KIT_MIN : getMOQ(product);
+  const maxQty = isKit ? 80 : getMaxQty(product);
+  const bulkThreshold = maxQty + 1;
   const code = productCode(product);
   const gstRate = getGstPct(product);
   const gstPctLabel = Math.round(gstRate * 100);
+  const courierPerPc = getCourierPerPc(product);
 
   // Reviews aggregate
   const reviews = getReviewsForProduct(product.id);
