@@ -366,26 +366,36 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Discount notice */}
-            <div className="mt-5 border border-border bg-secondary/60 p-4">
-              <div className="text-[11px] uppercase tracking-widest font-bold text-primary mb-2">Quantity Discount Policy</div>
-              {rule && !rule.discountEnabled ? (
-                <p className="text-sm text-muted-foreground">No quantity discount on this product.</p>
-              ) : (
-                <ul className="text-xs space-y-1 text-ink/80">
-                  <li>• 5–9 pieces → No Discount</li>
-                  <li>• 10–24 pieces → 10% Discount</li>
-                  <li>• 25–49 pieces → 20% Discount</li>
-                  <li>• 50–80 pieces → 30% Discount</li>
-                  <li>• 80+ pieces → 40% Discount (Bulk Order only)</li>
-                </ul>
-              )}
-              <div className="mt-2 pt-2 border-t border-border text-[11px] text-muted-foreground">
-                Minimum Order Quantity: {moq} pcs · Maximum Order Quantity: {maxQty} pcs
-                <br />
-                If you need more than {maxQty} pieces, please place your order through the Bulk Order section.
+            {/* Discount notice / Free tote banner for Welcome Kits */}
+            {isKit ? (
+              <div className="mt-5 border-2 border-primary bg-primary/10 p-4">
+                <div className="text-[11px] uppercase tracking-widest font-bold text-primary mb-1">Complimentary</div>
+                <p className="text-sm font-semibold text-ink">Free Custom Tote Bag Included with Every Welcome Kit</p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Kit MOQ: {WELCOME_KIT_MIN} · Max {maxQty}. Above {maxQty} kits, order through Bulk Order.
+                </p>
               </div>
-            </div>
+            ) : (
+              <div className="mt-5 border border-border bg-secondary/60 p-4">
+                <div className="text-[11px] uppercase tracking-widest font-bold text-primary mb-2">Quantity Discount Policy</div>
+                {rule && !rule.discountEnabled ? (
+                  <p className="text-sm text-muted-foreground">No quantity discount on this product.</p>
+                ) : (
+                  <ul className="text-xs space-y-1 text-ink/80">
+                    <li>• 5–9 pieces → No Discount</li>
+                    <li>• 10–24 pieces → 10% Discount</li>
+                    <li>• 25–49 pieces → 20% Discount</li>
+                    <li>• 50–80 pieces → 30% Discount</li>
+                    <li>• 80+ pieces → 40% Discount (Bulk Order only)</li>
+                  </ul>
+                )}
+                <div className="mt-2 pt-2 border-t border-border text-[11px] text-muted-foreground">
+                  Minimum Order Quantity: {moq} pcs · Maximum Order Quantity: {maxQty} pcs
+                  <br />
+                  If you need more than {maxQty} pieces, please place your order through the Bulk Order section.
+                </div>
+              </div>
+            )}
 
             {/* Color */}
             {product.colors.length > 0 && (
