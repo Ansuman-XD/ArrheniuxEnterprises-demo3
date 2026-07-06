@@ -239,7 +239,8 @@ const ProductDetail = () => {
       description: `Sample: ${product.name}`,
       prefill: { name: user.name, email: user.email, contact: user.phone },
       onSuccess: (paymentId) => {
-        const gstSample = Math.round((unitPrice + COURIER_PER_PC) * gstRate);
+        const sampleCourier = courierPerPc;
+        const gstSample = Math.round((unitPrice + sampleCourier) * gstRate);
         const o = createOrder({
           userId: user.id,
           productId: product.id,
@@ -253,7 +254,7 @@ const ProductDetail = () => {
           discountAmt: 0,
           printType: "N/A",
           printCharge: 0,
-          courier: COURIER_PER_PC,
+          courier: sampleCourier,
           gst: gstSample,
           total: amount,
           paid: amount,
