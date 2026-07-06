@@ -180,10 +180,11 @@ const ProductDetail = () => {
   };
 
   const handlePay = () => {
-    if (!canOrder) return;
     if (isBulk) {
       navigate(bulkRedirectHref());
       return;
+    }
+    if (!canOrder) return;
     }
     const user = getSession();
     if (!user) {
