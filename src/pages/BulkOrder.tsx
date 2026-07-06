@@ -319,7 +319,7 @@ const BulkOrder = () => {
             <h2 className="font-condensed text-2xl tracking-wide mb-4">SELECT PRODUCT</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               <Select label="Category" value={catSlug} onChange={setCatSlug}
-                options={catalog.map((c) => ({ value: c.slug, label: c.name }))} />
+                options={catList.map((c) => ({ value: c.slug, label: c.name }))} />
               {showsTierStep && (
                 <Select label="Regular / Premium" value={tier} onChange={(v) => setTier(v as Tier | "")}
                   options={[
