@@ -222,7 +222,7 @@ const BulkOrder = () => {
     if (printCharge > 0) lines.push(`• Print Charge: ₹${printCharge}`);
     lines.push(`• Subtotal: ₹${subtotal}`);
     lines.push(`• Bulk Discount (${bulkPct}%): −₹${discountAmt}`);
-    lines.push(`• Courier (₹${COURIER_PER_PC}×${total}): ₹${courier}`);
+    lines.push(courierPc > 0 ? `• Courier (₹${courierPc}×${total}): ₹${courier}` : `• Courier: FREE`);
     lines.push(`• GST ${gstPctLabel}%: ₹${gst}`);
     lines.push(`• *Grand Total: ₹${grandTotal}*`);
     lines.push(`• *Amount Paid: ₹${paid}*`);
