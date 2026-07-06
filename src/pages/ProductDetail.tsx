@@ -185,7 +185,6 @@ const ProductDetail = () => {
       return;
     }
     if (!canOrder) return;
-    }
     const user = getSession();
     if (!user) {
       navigate(`/auth?next=${encodeURIComponent(location.pathname)}`);
