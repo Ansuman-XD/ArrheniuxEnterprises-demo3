@@ -434,7 +434,7 @@ const BulkOrder = () => {
                 {printCharge > 0 && <Row label={`Print (${printText})`} value={`+₹${printCharge}`} />}
                 <Row label="Subtotal" value={`₹${subtotal.toLocaleString("en-IN")}`} />
                 <Row label={`Bulk Discount ${bulkPct}%`} value={`−₹${discountAmt.toLocaleString("en-IN")}`} />
-                <Row label={`Courier (₹${COURIER_PER_PC}×${total})`} value={`₹${courier.toLocaleString("en-IN")}`} />
+                <Row label={courierPc > 0 ? `Courier (₹${courierPc}×${total})` : "Courier"} value={courierPc > 0 ? `₹${courier.toLocaleString("en-IN")}` : "FREE"} />
                 <Row label={`GST ${gstPctLabel}%`} value={`₹${gst.toLocaleString("en-IN")}`} />
                 <div className="flex items-center justify-between px-4 py-3 bg-ink text-cream">
                   <span className="text-xs uppercase tracking-widest font-bold">Grand Total</span>
