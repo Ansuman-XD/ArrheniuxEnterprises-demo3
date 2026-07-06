@@ -144,12 +144,18 @@ const ProductDetail = () => {
     lines.push(`• Material: ${product.material}`);
     lines.push(`• Color: ${selectedColor}`);
     if (canPrint) lines.push(`• Print: ${printTypeText}`);
-    if (isGarment) {
-      const sizeLines = SIZES.filter((s) => sizeQty[s] > 0).map((s) => `   - ${s}: ${sizeQty[s]} pcs`);
-      lines.push("• Sizes:");
-      lines.push(...sizeLines);
+    if (isKit) {
+      lines.push(`• Kit Items: ${kitItems.map((id) => WELCOME_KIT_ITEMS.find((k) => k.id === id)?.label).filter(Boolean).join(", ")}`);
+      lines.push(`• Free Custom Tote Bag Included`);
     }
-    lines.push(`• Total Quantity: ${total} pcs`);
+    if (isGarment || (isKit && kitIncludesTshirt)) {
+      const sizeLines = SIZES.filter((s) => sizeQty[s] > 0).map((s) => `   - ${s}: ${sizeQty[s]} pcs`);
+      if (sizeLines.length) {
+        lines.push(isKit ? "• T-Shirt Sizes:" : "• Sizes:");
+        lines.push(...sizeLines);
+      }
+    }
+    lines.push(isKit ? `• Total Kits: ${total}` : `• Total Quantity: ${total} pcs`);
     lines.push("");
     lines.push("*Pricing*");
     lines.push(`• Unit Price: ₹${unitPrice}`);
