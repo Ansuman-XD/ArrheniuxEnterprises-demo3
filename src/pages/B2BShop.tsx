@@ -351,6 +351,15 @@ const B2BShop = () => {
                   </div>
                 </div>
 
+                {/* Delivery Information */}
+                <div className="mt-4 border-2 border-primary/40 bg-primary/5 p-4">
+                  <div className="text-[11px] uppercase tracking-widest font-bold text-primary mb-2">Delivery Information</div>
+                  <ul className="text-xs space-y-1 text-ink/80">
+                    <li>• <strong>Odisha (City to City):</strong> Transport charges are extra and depend on destination.</li>
+                    <li>• <strong>Other States:</strong> Additional courier or transport charges will apply.</li>
+                  </ul>
+                </div>
+
                 {total > 0 && total < B2B_MOQ && (
                   <p className="text-xs text-destructive mt-2">Minimum {B2B_MOQ} pcs required for B2B orders.</p>
                 )}
