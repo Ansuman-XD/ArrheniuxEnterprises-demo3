@@ -568,7 +568,7 @@ const ProductDetail = () => {
               {printCharge > 0 && <Row label={`Print (${printTypeText})`} value={`+₹${printCharge}`} />}
               <Row label="Subtotal" value={`₹${subtotal}`} />
               <Row label="Discount" value={discountPct > 0 ? `${discountPct}% (−₹${discountAmt})` : "—"} />
-              <Row label={`Courier (₹${COURIER_PER_PC}×${total})`} value={`₹${courier}`} />
+              <Row label={courierPerPc > 0 ? `Courier (₹${courierPerPc}×${total})` : "Courier"} value={courierPerPc > 0 ? `₹${courier}` : "FREE"} />
               <Row label={`GST ${gstPctLabel}%`} value={`₹${gst}`} />
               <div className="flex items-center justify-between px-4 py-3 bg-ink text-cream">
                 <span className="text-xs uppercase tracking-widest font-bold">Final Total</span>
