@@ -27,12 +27,35 @@ const EMPTY_SIZES: Record<Size, number> = { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL:
 
 type View = { step: "subs" } | { step: "products"; subSlug: string } | { step: "detail"; subSlug: string; productId: string };
 
+const B2B_ACCESS_KEY = "arr_b2b_access_v1";
+const AGENT_CODES = ["AGENT2024", "ARR-B2B", "DEALER100"];
+const GST_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{3}$/i;
+
 const B2BShop = () => {
   const navigate = useNavigate();
   const [view, setView] = useState<View>({ step: "subs" });
   const [sizeQty, setSizeQty] = useState<Record<Size, number>>({ ...EMPTY_SIZES });
   const [color, setColor] = useState<string>("");
   const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
+  const [verified, setVerified] = useState<boolean>(() => {
+    try { return localStorage.getItem(B2B_ACCESS_KEY) === "1"; } catch { return false; }
+  });
+  const [mode, setMode] = useState<"agent" | "gst">("agent");
+  const [entry, setEntry] = useState("");
+  const [gateError, setGateError] = useState("");
+
+  const submitGate = () => {
+    const val = entry.trim();
+    if (!val) return setGateError("Please enter a value.");
+    if (mode === "agent") {
+      if (!AGENT_CODES.includes(val.toUpperCase())) return setGateError("Invalid marketing agent code.");
+    } else {
+      if (!GST_REGEX.test(val)) return setGateError("Enter a valid 15-character GST number.");
+    }
+    try { localStorage.setItem(B2B_ACCESS_KEY, "1"); } catch { /* ignore */ }
+    setGateError("");
+    setVerified(true);
+  };
 
   const activeSub = view.step !== "subs" ? B2B_SUBCATEGORIES.find((s) => s.slug === view.subSlug) : null;
   const products = view.step !== "subs" ? getB2BProducts(view.subSlug) : [];
