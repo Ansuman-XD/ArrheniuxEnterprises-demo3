@@ -156,7 +156,7 @@ const ProductDetail = () => {
     if (printCharge > 0) lines.push(`• Print Charge: ₹${printCharge}`);
     lines.push(`• Subtotal: ₹${subtotal}`);
     lines.push(`• Discount: ${discountPct}% (−₹${discountAmt})`);
-    lines.push(`• Courier (₹${COURIER_PER_PC} × ${total}): ₹${courier}`);
+    lines.push(courierPerPc > 0 ? `• Courier (₹${courierPerPc} × ${total}): ₹${courier}` : `• Courier: FREE`);
     lines.push(`• GST ${gstPctLabel}%: ₹${gst}`);
     lines.push(`• *Paid: ₹${grandTotal}*`);
     lines.push("");
