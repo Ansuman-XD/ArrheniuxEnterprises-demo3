@@ -13,6 +13,7 @@ import {
   supportsPrint,
   getAccessoryRules,
   getGstPct,
+  getCourierPerPc,
   priceValue,
   productCode,
   COURIER_PER_PC,
@@ -181,7 +182,8 @@ const BulkOrder = () => {
   const bulkPct = rule && !rule.discountEnabled ? 0 : BULK_DISCOUNT_PCT;
   const discountAmt = Math.round((subtotal * bulkPct) / 100);
   const afterDiscount = Math.max(0, subtotal - discountAmt);
-  const courier = total * COURIER_PER_PC;
+  const courierPc = product ? getCourierPerPc(product) : COURIER_PER_PC;
+  const courier = total * courierPc;
   const gst = Math.round((afterDiscount + courier) * gstRate);
   const grandTotal = afterDiscount + courier + gst;
 
@@ -220,7 +222,7 @@ const BulkOrder = () => {
     if (printCharge > 0) lines.push(`• Print Charge: ₹${printCharge}`);
     lines.push(`• Subtotal: ₹${subtotal}`);
     lines.push(`• Bulk Discount (${bulkPct}%): −₹${discountAmt}`);
-    lines.push(`• Courier (₹${COURIER_PER_PC}×${total}): ₹${courier}`);
+    lines.push(courierPc > 0 ? `• Courier (₹${courierPc}×${total}): ₹${courier}` : `• Courier: FREE`);
     lines.push(`• GST ${gstPctLabel}%: ₹${gst}`);
     lines.push(`• *Grand Total: ₹${grandTotal}*`);
     lines.push(`• *Amount Paid: ₹${paid}*`);
@@ -317,7 +319,7 @@ const BulkOrder = () => {
             <h2 className="font-condensed text-2xl tracking-wide mb-4">SELECT PRODUCT</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               <Select label="Category" value={catSlug} onChange={setCatSlug}
-                options={catalog.map((c) => ({ value: c.slug, label: c.name }))} />
+                options={catList.map((c) => ({ value: c.slug, label: c.name }))} />
               {showsTierStep && (
                 <Select label="Regular / Premium" value={tier} onChange={(v) => setTier(v as Tier | "")}
                   options={[
@@ -432,7 +434,7 @@ const BulkOrder = () => {
                 {printCharge > 0 && <Row label={`Print (${printText})`} value={`+₹${printCharge}`} />}
                 <Row label="Subtotal" value={`₹${subtotal.toLocaleString("en-IN")}`} />
                 <Row label={`Bulk Discount ${bulkPct}%`} value={`−₹${discountAmt.toLocaleString("en-IN")}`} />
-                <Row label={`Courier (₹${COURIER_PER_PC}×${total})`} value={`₹${courier.toLocaleString("en-IN")}`} />
+                <Row label={courierPc > 0 ? `Courier (₹${courierPc}×${total})` : "Courier"} value={courierPc > 0 ? `₹${courier.toLocaleString("en-IN")}` : "FREE"} />
                 <Row label={`GST ${gstPctLabel}%`} value={`₹${gst.toLocaleString("en-IN")}`} />
                 <div className="flex items-center justify-between px-4 py-3 bg-ink text-cream">
                   <span className="text-xs uppercase tracking-widest font-bold">Grand Total</span>

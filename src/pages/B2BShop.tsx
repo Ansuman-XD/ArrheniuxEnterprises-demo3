@@ -27,12 +27,35 @@ const EMPTY_SIZES: Record<Size, number> = { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL:
 
 type View = { step: "subs" } | { step: "products"; subSlug: string } | { step: "detail"; subSlug: string; productId: string };
 
+const B2B_ACCESS_KEY = "arr_b2b_access_v1";
+const AGENT_CODES = ["AGENT2024", "ARR-B2B", "DEALER100"];
+const GST_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{3}$/i;
+
 const B2BShop = () => {
   const navigate = useNavigate();
   const [view, setView] = useState<View>({ step: "subs" });
   const [sizeQty, setSizeQty] = useState<Record<Size, number>>({ ...EMPTY_SIZES });
   const [color, setColor] = useState<string>("");
   const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
+  const [verified, setVerified] = useState<boolean>(() => {
+    try { return localStorage.getItem(B2B_ACCESS_KEY) === "1"; } catch { return false; }
+  });
+  const [mode, setMode] = useState<"agent" | "gst">("agent");
+  const [entry, setEntry] = useState("");
+  const [gateError, setGateError] = useState("");
+
+  const submitGate = () => {
+    const val = entry.trim();
+    if (!val) return setGateError("Please enter a value.");
+    if (mode === "agent") {
+      if (!AGENT_CODES.includes(val.toUpperCase())) return setGateError("Invalid marketing agent code.");
+    } else {
+      if (!GST_REGEX.test(val)) return setGateError("Enter a valid 15-character GST number.");
+    }
+    try { localStorage.setItem(B2B_ACCESS_KEY, "1"); } catch { /* ignore */ }
+    setGateError("");
+    setVerified(true);
+  };
 
   const activeSub = view.step !== "subs" ? B2B_SUBCATEGORIES.find((s) => s.slug === view.subSlug) : null;
   const products = view.step !== "subs" ? getB2BProducts(view.subSlug) : [];
@@ -136,6 +159,51 @@ const B2BShop = () => {
       },
     });
   };
+
+  if (!verified) {
+    return (
+      <Layout>
+        <section className="container-x py-16 min-h-[60vh] flex items-center justify-center">
+          <div className="w-full max-w-md border border-border bg-card p-6 shadow-sm">
+            <span className="text-xs font-bold uppercase tracking-widest text-primary">B2B Access</span>
+            <h1 className="font-display text-3xl mt-2 leading-none">VERIFY TO CONTINUE</h1>
+            <p className="text-sm text-muted-foreground mt-3">
+              The B2B Shop is restricted to verified partners. Enter your Marketing Agent Code or your Shop GST Number to continue.
+            </p>
+            <div className="mt-5 flex border border-border">
+              <button
+                type="button"
+                onClick={() => { setMode("agent"); setEntry(""); setGateError(""); }}
+                className={`flex-1 py-2 text-xs uppercase tracking-widest font-semibold transition ${mode === "agent" ? "bg-ink text-cream" : "text-ink hover:bg-secondary"}`}
+              >
+                Agent Code
+              </button>
+              <button
+                type="button"
+                onClick={() => { setMode("gst"); setEntry(""); setGateError(""); }}
+                className={`flex-1 py-2 text-xs uppercase tracking-widest font-semibold transition ${mode === "gst" ? "bg-ink text-cream" : "text-ink hover:bg-secondary"}`}
+              >
+                Shop GST
+              </button>
+            </div>
+            <label className="block mt-4 text-[10px] uppercase tracking-widest text-muted-foreground">
+              {mode === "agent" ? "Marketing Agent Code" : "Shop GST Number (15 chars)"}
+            </label>
+            <input
+              value={entry}
+              onChange={(e) => setEntry(e.target.value)}
+              placeholder={mode === "agent" ? "e.g. AGENT2024" : "22AAAAA0000A1Z5"}
+              className="mt-1 w-full border border-border px-3 py-2.5 text-sm bg-background focus:outline-none focus:border-ink"
+            />
+            {gateError && <p className="text-xs text-destructive mt-2">{gateError}</p>}
+            <button onClick={submitGate} className="btn-bold mt-4 w-full justify-center !py-3">
+              Verify & Enter B2B Shop
+            </button>
+          </div>
+        </section>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -281,6 +349,15 @@ const B2BShop = () => {
                     <span className="text-xs uppercase tracking-widest font-bold">Total</span>
                     <span className="font-display text-2xl">₹{grandTotal.toLocaleString("en-IN")}</span>
                   </div>
+                </div>
+
+                {/* Delivery Information */}
+                <div className="mt-4 border-2 border-primary/40 bg-primary/5 p-4">
+                  <div className="text-[11px] uppercase tracking-widest font-bold text-primary mb-2">Delivery Information</div>
+                  <ul className="text-xs space-y-1 text-ink/80">
+                    <li>• <strong>Odisha (City to City):</strong> Transport charges are extra and depend on destination.</li>
+                    <li>• <strong>Other States:</strong> Additional courier or transport charges will apply.</li>
+                  </ul>
                 </div>
 
                 {total > 0 && total < B2B_MOQ && (

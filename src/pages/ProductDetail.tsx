@@ -18,12 +18,17 @@ import {
   getMaxQty,
   getAccessoryRules,
   getGstPct,
+  getCourierPerPc,
   samplePrice,
   COURIER_PER_PC,
   BULK_THRESHOLD,
   ARR_SIZE_MAX,
   productCode,
   supportsPrint,
+  isWelcomeKitCategory,
+  WELCOME_KIT_ITEMS,
+  WELCOME_KIT_MIN,
+  WELCOME_KIT_MIN_ITEMS,
 } from "@/data/catalog";
 import { emptyPrint, printPricePerPc, printLabel, encodePrint, type PrintSelection, type PrintMethod } from "@/data/printOptions";
 import { waLink } from "@/data/site";
@@ -47,6 +52,9 @@ const ProductDetail = () => {
   });
   const [unitQty, setUnitQty] = useState(1);
   const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
+  // Welcome-kit config
+  const [kitItems, setKitItems] = useState<string[]>(["tshirt"]);
+  const [kitQtyManual, setKitQtyManual] = useState<number>(20);
 
   if (!product) {
     return (
@@ -62,15 +70,17 @@ const ProductDetail = () => {
   const cat = findCategory(product.categorySlug);
   const subcat = cat ? findSubcategory(cat, product.tier, product.subSlug) : undefined;
   const isGarment = !isNonGarmentCategory(product.categorySlug);
+  const isKit = isWelcomeKitCategory(product.categorySlug);
   const canPrint = supportsPrint(product.categorySlug);
   const isArr = isArrheniuxCategory(product.categorySlug);
   const rule = getAccessoryRules(product.subSlug);
-  const moq = getMOQ(product);
-  const maxQty = getMaxQty(product);
-  const bulkThreshold = maxQty + 1; // for non-standard products, exceeding max routes to bulk
+  const moq = isKit ? WELCOME_KIT_MIN : getMOQ(product);
+  const maxQty = isKit ? 80 : getMaxQty(product);
+  const bulkThreshold = maxQty + 1;
   const code = productCode(product);
   const gstRate = getGstPct(product);
   const gstPctLabel = Math.round(gstRate * 100);
+  const courierPerPc = getCourierPerPc(product);
 
   // Reviews aggregate
   const reviews = getReviewsForProduct(product.id);
@@ -87,25 +97,30 @@ const ProductDetail = () => {
   const printDisabled = rule?.print.kind === "none";
   const printFreeLabel = rule?.print.kind === "free" ? rule.print.label : null;
 
-  const total = useMemo(
-    () => (isGarment ? Object.values(sizeQty).reduce((a, b) => a + b, 0) : unitQty),
-    [isGarment, sizeQty, unitQty]
-  );
+  const kitIncludesTshirt = kitItems.includes("tshirt");
+  const kitSizeTotal = Object.values(sizeQty).reduce((a, b) => a + b, 0);
+  const kitQty = kitIncludesTshirt ? kitSizeTotal : kitQtyManual;
+  const kitEnoughItems = kitItems.length >= WELCOME_KIT_MIN_ITEMS;
+
+  const total = useMemo(() => {
+    if (isKit) return kitQty;
+    return isGarment ? kitSizeTotal : unitQty;
+  }, [isKit, kitQty, isGarment, kitSizeTotal, unitQty]);
 
   const unitPrice = priceValue(product);
   const printPerPc = canPrint ? printPricePerPc(printSel, restrictedMethods) : 0;
   const printCharge = printPerPc * total;
   const printTypeText = canPrint ? printLabel(printSel, restrictedMethods) : "N/A";
   const subtotal = unitPrice * total + printCharge;
-  const discountPct = getDiscountPct(total, product);
+  const discountPct = isKit ? 0 : getDiscountPct(total, product);
   const discountAmt = Math.round((subtotal * discountPct) / 100);
   const afterDiscount = Math.max(0, subtotal - discountAmt);
-  const courier = total * COURIER_PER_PC;
+  const courier = total * courierPerPc;
   const gst = Math.round((afterDiscount + courier) * gstRate);
   const grandTotal = afterDiscount + courier + gst;
   const isBulk = total > maxQty;
   const meetsMoq = total >= moq;
-  const canOrder = meetsMoq && total <= maxQty;
+  const canOrder = meetsMoq && total <= maxQty && (!isKit || kitEnoughItems);
 
   const bumpSize = (s: Size, d: number) =>
     setSizeQty((q) => {
@@ -129,19 +144,25 @@ const ProductDetail = () => {
     lines.push(`• Material: ${product.material}`);
     lines.push(`• Color: ${selectedColor}`);
     if (canPrint) lines.push(`• Print: ${printTypeText}`);
-    if (isGarment) {
-      const sizeLines = SIZES.filter((s) => sizeQty[s] > 0).map((s) => `   - ${s}: ${sizeQty[s]} pcs`);
-      lines.push("• Sizes:");
-      lines.push(...sizeLines);
+    if (isKit) {
+      lines.push(`• Kit Items: ${kitItems.map((id) => WELCOME_KIT_ITEMS.find((k) => k.id === id)?.label).filter(Boolean).join(", ")}`);
+      lines.push(`• Free Custom Tote Bag Included`);
     }
-    lines.push(`• Total Quantity: ${total} pcs`);
+    if (isGarment || (isKit && kitIncludesTshirt)) {
+      const sizeLines = SIZES.filter((s) => sizeQty[s] > 0).map((s) => `   - ${s}: ${sizeQty[s]} pcs`);
+      if (sizeLines.length) {
+        lines.push(isKit ? "• T-Shirt Sizes:" : "• Sizes:");
+        lines.push(...sizeLines);
+      }
+    }
+    lines.push(isKit ? `• Total Kits: ${total}` : `• Total Quantity: ${total} pcs`);
     lines.push("");
     lines.push("*Pricing*");
     lines.push(`• Unit Price: ₹${unitPrice}`);
     if (printCharge > 0) lines.push(`• Print Charge: ₹${printCharge}`);
     lines.push(`• Subtotal: ₹${subtotal}`);
     lines.push(`• Discount: ${discountPct}% (−₹${discountAmt})`);
-    lines.push(`• Courier (₹${COURIER_PER_PC} × ${total}): ₹${courier}`);
+    lines.push(courierPerPc > 0 ? `• Courier (₹${courierPerPc} × ${total}): ₹${courier}` : `• Courier: FREE`);
     lines.push(`• GST ${gstPctLabel}%: ₹${gst}`);
     lines.push(`• *Paid: ₹${grandTotal}*`);
     lines.push("");
@@ -165,11 +186,11 @@ const ProductDetail = () => {
   };
 
   const handlePay = () => {
-    if (!canOrder) return;
     if (isBulk) {
       navigate(bulkRedirectHref());
       return;
     }
+    if (!canOrder) return;
     const user = getSession();
     if (!user) {
       navigate(`/auth?next=${encodeURIComponent(location.pathname)}`);
@@ -224,7 +245,8 @@ const ProductDetail = () => {
       description: `Sample: ${product.name}`,
       prefill: { name: user.name, email: user.email, contact: user.phone },
       onSuccess: (paymentId) => {
-        const gstSample = Math.round((unitPrice + COURIER_PER_PC) * gstRate);
+        const sampleCourier = courierPerPc;
+        const gstSample = Math.round((unitPrice + sampleCourier) * gstRate);
         const o = createOrder({
           userId: user.id,
           productId: product.id,
@@ -238,7 +260,7 @@ const ProductDetail = () => {
           discountAmt: 0,
           printType: "N/A",
           printCharge: 0,
-          courier: COURIER_PER_PC,
+          courier: sampleCourier,
           gst: gstSample,
           total: amount,
           paid: amount,
@@ -351,26 +373,36 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Discount notice */}
-            <div className="mt-5 border border-border bg-secondary/60 p-4">
-              <div className="text-[11px] uppercase tracking-widest font-bold text-primary mb-2">Quantity Discount Policy</div>
-              {rule && !rule.discountEnabled ? (
-                <p className="text-sm text-muted-foreground">No quantity discount on this product.</p>
-              ) : (
-                <ul className="text-xs space-y-1 text-ink/80">
-                  <li>• 5–9 pieces → No Discount</li>
-                  <li>• 10–24 pieces → 10% Discount</li>
-                  <li>• 25–49 pieces → 20% Discount</li>
-                  <li>• 50–80 pieces → 30% Discount</li>
-                  <li>• 80+ pieces → 40% Discount (Bulk Order only)</li>
-                </ul>
-              )}
-              <div className="mt-2 pt-2 border-t border-border text-[11px] text-muted-foreground">
-                Minimum Order Quantity: {moq} pcs · Maximum Order Quantity: {maxQty} pcs
-                <br />
-                If you need more than {maxQty} pieces, please place your order through the Bulk Order section.
+            {/* Discount notice / Free tote banner for Welcome Kits */}
+            {isKit ? (
+              <div className="mt-5 border-2 border-primary bg-primary/10 p-4">
+                <div className="text-[11px] uppercase tracking-widest font-bold text-primary mb-1">Complimentary</div>
+                <p className="text-sm font-semibold text-ink">Free Custom Tote Bag Included with Every Welcome Kit</p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Kit MOQ: {WELCOME_KIT_MIN} · Max {maxQty}. Above {maxQty} kits, order through Bulk Order.
+                </p>
               </div>
-            </div>
+            ) : (
+              <div className="mt-5 border border-border bg-secondary/60 p-4">
+                <div className="text-[11px] uppercase tracking-widest font-bold text-primary mb-2">Quantity Discount Policy</div>
+                {rule && !rule.discountEnabled ? (
+                  <p className="text-sm text-muted-foreground">No quantity discount on this product.</p>
+                ) : (
+                  <ul className="text-xs space-y-1 text-ink/80">
+                    <li>• 5–9 pieces → No Discount</li>
+                    <li>• 10–24 pieces → 10% Discount</li>
+                    <li>• 25–49 pieces → 20% Discount</li>
+                    <li>• 50–80 pieces → 30% Discount</li>
+                    <li>• 80+ pieces → 40% Discount (Bulk Order only)</li>
+                  </ul>
+                )}
+                <div className="mt-2 pt-2 border-t border-border text-[11px] text-muted-foreground">
+                  Minimum Order Quantity: {moq} pcs · Maximum Order Quantity: {maxQty} pcs
+                  <br />
+                  If you need more than {maxQty} pieces, please place your order through the Bulk Order section.
+                </div>
+              </div>
+            )}
 
             {/* Color */}
             {product.colors.length > 0 && (
@@ -404,8 +436,76 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {/* Quantity */}
-            {isGarment ? (
+            {/* Quantity / Kit builder */}
+            {isKit ? (
+              <div className="mt-6 space-y-5">
+                <div>
+                  <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Customize Combined Product</h4>
+                  <p className="text-[11px] text-muted-foreground mb-3">Build your own welcome kit. Select at least {WELCOME_KIT_MIN_ITEMS} products.</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {WELCOME_KIT_ITEMS.map((it) => {
+                      const checked = kitItems.includes(it.id);
+                      const isTshirt = it.id === "tshirt";
+                      return (
+                        <label key={it.id} className={`flex items-center gap-2 border px-3 py-2 text-sm cursor-pointer transition ${checked ? "border-ink bg-secondary" : "border-border"}`}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => {
+                              setKitItems((prev) => prev.includes(it.id) ? prev.filter((x) => x !== it.id) : [...prev, it.id]);
+                            }}
+                            className="h-4 w-4 accent-primary"
+                          />
+                          <span>{isTshirt ? "Custom T-Shirt" : it.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {!kitEnoughItems && (
+                    <p className="text-xs text-destructive mt-2">Please select at least {WELCOME_KIT_MIN_ITEMS} products.</p>
+                  )}
+                </div>
+
+                {kitIncludesTshirt ? (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs uppercase tracking-widest font-bold">T-Shirt Sizes</h4>
+                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                        Total kits = total shirts ({kitSizeTotal})
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {SIZES.map((s) => (
+                        <div key={s} className="flex items-center justify-between border border-border px-3 py-2">
+                          <span className="font-condensed text-xl w-10">{s}</span>
+                          <div className="inline-flex items-center border border-ink">
+                            <button type="button" onClick={() => bumpSize(s, -1)} className="px-2.5 py-1.5"><Minus className="h-3.5 w-3.5" /></button>
+                            <input type="number" min={0} value={sizeQty[s]}
+                              onChange={(e) => setSizeQty((q) => ({ ...q, [s]: Math.max(0, Number(e.target.value) || 0) }))}
+                              className="w-14 text-center text-sm bg-transparent border-x border-ink py-1.5 font-bold" />
+                            <button type="button" onClick={() => bumpSize(s, 1)} className="px-2.5 py-1.5"><Plus className="h-3.5 w-3.5" /></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Kit Quantity *</h4>
+                    <div className="flex items-center justify-between border border-border px-3 py-3">
+                      <span className="font-condensed text-xl">Kits</span>
+                      <div className="inline-flex items-center border border-ink">
+                        <button type="button" onClick={() => setKitQtyManual((q) => Math.max(WELCOME_KIT_MIN, q - 1))} className="px-3 py-1.5"><Minus className="h-3.5 w-3.5" /></button>
+                        <input type="number" min={WELCOME_KIT_MIN} value={kitQtyManual}
+                          onChange={(e) => setKitQtyManual(Math.max(0, Number(e.target.value) || 0))}
+                          className="w-16 text-center text-sm bg-transparent border-x border-ink py-1.5 font-bold" />
+                        <button type="button" onClick={() => setKitQtyManual((q) => q + 1)} className="px-3 py-1.5"><Plus className="h-3.5 w-3.5" /></button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : isGarment ? (
               <div className="mt-6">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-xs uppercase tracking-widest font-bold">Sizes & Quantity</h4>
@@ -475,7 +575,7 @@ const ProductDetail = () => {
               {printCharge > 0 && <Row label={`Print (${printTypeText})`} value={`+₹${printCharge}`} />}
               <Row label="Subtotal" value={`₹${subtotal}`} />
               <Row label="Discount" value={discountPct > 0 ? `${discountPct}% (−₹${discountAmt})` : "—"} />
-              <Row label={`Courier (₹${COURIER_PER_PC}×${total})`} value={`₹${courier}`} />
+              <Row label={courierPerPc > 0 ? `Courier (₹${courierPerPc}×${total})` : "Courier"} value={courierPerPc > 0 ? `₹${courier}` : "FREE"} />
               <Row label={`GST ${gstPctLabel}%`} value={`₹${gst}`} />
               <div className="flex items-center justify-between px-4 py-3 bg-ink text-cream">
                 <span className="text-xs uppercase tracking-widest font-bold">Final Total</span>

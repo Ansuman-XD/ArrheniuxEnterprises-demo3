@@ -447,71 +447,71 @@ export type AccessoryRule = {
   gstPct: number; // 5 or 18
   discountEnabled: boolean;
   oem?: boolean;
+  courierPerPc?: number; // override; accessories default to 0
   // Print config: which method(s) allowed, which option ids under each, or FREE-only note
   print:
     | { kind: "none" }
-    | { kind: "free"; label: string } // e.g. Pen "Company Name Printing — FREE"
+    | { kind: "free"; label: string }
     | { kind: "custom"; methods: Array<{ id: "embroidery" | "dtf" | "sublimation"; options: { id: string; label: string; pricePerPc: number }[] }> };
   note?: string;
 };
 
 const ACCESSORY_RULES: Record<string, AccessoryRule> = {
   "canvas-tote": {
-    moq: 5, max: 80, gstPct: 5, discountEnabled: false,
+    moq: 5, max: 80, gstPct: 5, discountEnabled: false, courierPerPc: 0,
     print: { kind: "custom", methods: [{ id: "dtf", options: [
+      { id: "tote-logo-3x3", label: "Company/College Logo (3×3 inch)", pricePerPc: 20 },
       { id: "tote-a4", label: "A4 Print", pricePerPc: 40 },
-      { id: "tote-company-name", label: "Company Name (8×2 inch)", pricePerPc: 30 },
+      { id: "tote-company-name", label: "Company Name Design (8×2 inch)", pricePerPc: 30 },
     ]}]},
   },
   "safety-goggle": {
-    moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true,
+    moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true, courierPerPc: 0,
     print: { kind: "none" },
   },
   "premium-backpack": {
-    moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true,
+    moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true, courierPerPc: 0,
     print: { kind: "custom", methods: [{ id: "dtf", options: [
-      { id: "bp-logo", label: "Logo (3×3 inch)", pricePerPc: 20 },
+      { id: "bp-logo", label: "Company/College Logo (3×3 inch)", pricePerPc: 20 },
     ]}]},
   },
   "pen": {
-    moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true,
-    print: { kind: "free", label: "Company Name Printing — FREE" },
+    moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true, courierPerPc: 0,
+    print: { kind: "free", label: "Logo Printing: FREE" },
   },
   "badge": {
-    moq: 50, max: 80, gstPct: 18, discountEnabled: false,
-    print: { kind: "free", label: "Printed Logo — FREE" },
+    moq: 50, max: 80, gstPct: 18, discountEnabled: false, courierPerPc: 0,
+    print: { kind: "free", label: "Logo Printing: FREE" },
   },
   "mug": {
-    moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true,
-    print: { kind: "custom", methods: [{ id: "sublimation", options: [
-      { id: "mug-logo", label: "Company Logo (Sublimation)", pricePerPc: 0 },
-    ]}]},
+    moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true, courierPerPc: 0,
+    print: { kind: "free", label: "Logo Printing: FREE" },
   },
   "cap": {
-    moq: 50, max: 80, gstPct: 5, discountEnabled: false, oem: true,
+    moq: 50, max: 80, gstPct: 5, discountEnabled: false, oem: true, courierPerPc: 0,
     print: { kind: "custom", methods: [{ id: "dtf", options: [
-      { id: "cap-logo", label: "Logo (2×2 inch)", pricePerPc: 10 },
+      { id: "cap-logo", label: "Company/College Logo (2×2 inch)", pricePerPc: 10 },
     ]}]},
   },
   "umbrella": {
-    moq: 50, max: 80, gstPct: 5, discountEnabled: false,
+    moq: 50, max: 80, gstPct: 5, discountEnabled: false, courierPerPc: 0,
     print: { kind: "custom", methods: [
       { id: "dtf", options: [
-        { id: "umb-single", label: "Single Logo (3×3 inch)", pricePerPc: 10 },
-        { id: "umb-double", label: "Double Logo", pricePerPc: 20 },
-        { id: "umb-triple", label: "Triple Logo", pricePerPc: 30 },
+        { id: "umb-single", label: "Single Side Logo", pricePerPc: 10 },
+        { id: "umb-double", label: "Double Side Logo", pricePerPc: 20 },
+        { id: "umb-triple", label: "Triple Side Logo", pricePerPc: 30 },
       ]},
       { id: "sublimation", options: [
-        { id: "umb-sub-single", label: "Single Logo (3×3 inch)", pricePerPc: 10 },
-        { id: "umb-sub-double", label: "Double Logo", pricePerPc: 20 },
-        { id: "umb-sub-triple", label: "Triple Logo", pricePerPc: 30 },
+        { id: "umb-sub-single", label: "Single Side Logo", pricePerPc: 10 },
+        { id: "umb-sub-double", label: "Double Side Logo", pricePerPc: 20 },
+        { id: "umb-sub-triple", label: "Triple Side Logo", pricePerPc: 30 },
       ]},
     ]},
   },
   "event-lanyard": {
-    moq: 50, max: 80, gstPct: 5, discountEnabled: false,
+    moq: 50, max: 80, gstPct: 5, discountEnabled: false, courierPerPc: 0,
     print: { kind: "custom", methods: [{ id: "sublimation", options: [
-      { id: "lan-double", label: "Double-Sided Logo", pricePerPc: 20 },
+      { id: "lan-double", label: "Double Side Print", pricePerPc: 100 },
     ]}]},
   },
 };
@@ -527,11 +527,20 @@ export const getGstPct = (p: Pick<CatalogProduct, "subSlug">) => {
   return rule ? rule.gstPct / 100 : GST_RATE;
 };
 
+// Courier per piece. Accessories & Welcome Kit (non-garment) = ₹0. Garment default = ₹30.
+export const getCourierPerPc = (p: Pick<CatalogProduct, "categorySlug" | "subSlug">) => {
+  const rule = getAccessoryRules(p.subSlug);
+  if (rule && typeof rule.courierPerPc === "number") return rule.courierPerPc;
+  if (isNonGarmentCategory(p.categorySlug)) return 0;
+  return COURIER_PER_PC;
+};
+
 // Sample price = 1 pc at unit price + courier + GST (a small stand-alone charge)
 export const samplePrice = (p: CatalogProduct) => {
   const unit = priceValue(p);
-  const gst = Math.round((unit + COURIER_PER_PC) * getGstPct(p));
-  return unit + COURIER_PER_PC + gst;
+  const courier = getCourierPerPc(p);
+  const gst = Math.round((unit + courier) * getGstPct(p));
+  return unit + courier + gst;
 };
 
 // ---------- Welcome Kit config ----------
