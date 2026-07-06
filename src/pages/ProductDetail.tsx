@@ -429,8 +429,76 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {/* Quantity */}
-            {isGarment ? (
+            {/* Quantity / Kit builder */}
+            {isKit ? (
+              <div className="mt-6 space-y-5">
+                <div>
+                  <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Customize Combined Product</h4>
+                  <p className="text-[11px] text-muted-foreground mb-3">Build your own welcome kit. Select at least {WELCOME_KIT_MIN_ITEMS} products.</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {WELCOME_KIT_ITEMS.map((it) => {
+                      const checked = kitItems.includes(it.id);
+                      const isTshirt = it.id === "tshirt";
+                      return (
+                        <label key={it.id} className={`flex items-center gap-2 border px-3 py-2 text-sm cursor-pointer transition ${checked ? "border-ink bg-secondary" : "border-border"}`}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => {
+                              setKitItems((prev) => prev.includes(it.id) ? prev.filter((x) => x !== it.id) : [...prev, it.id]);
+                            }}
+                            className="h-4 w-4 accent-primary"
+                          />
+                          <span>{isTshirt ? "Custom T-Shirt" : it.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {!kitEnoughItems && (
+                    <p className="text-xs text-destructive mt-2">Please select at least {WELCOME_KIT_MIN_ITEMS} products.</p>
+                  )}
+                </div>
+
+                {kitIncludesTshirt ? (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xs uppercase tracking-widest font-bold">T-Shirt Sizes</h4>
+                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                        Total kits = total shirts ({kitSizeTotal})
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {SIZES.map((s) => (
+                        <div key={s} className="flex items-center justify-between border border-border px-3 py-2">
+                          <span className="font-condensed text-xl w-10">{s}</span>
+                          <div className="inline-flex items-center border border-ink">
+                            <button type="button" onClick={() => bumpSize(s, -1)} className="px-2.5 py-1.5"><Minus className="h-3.5 w-3.5" /></button>
+                            <input type="number" min={0} value={sizeQty[s]}
+                              onChange={(e) => setSizeQty((q) => ({ ...q, [s]: Math.max(0, Number(e.target.value) || 0) }))}
+                              className="w-14 text-center text-sm bg-transparent border-x border-ink py-1.5 font-bold" />
+                            <button type="button" onClick={() => bumpSize(s, 1)} className="px-2.5 py-1.5"><Plus className="h-3.5 w-3.5" /></button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Kit Quantity *</h4>
+                    <div className="flex items-center justify-between border border-border px-3 py-3">
+                      <span className="font-condensed text-xl">Kits</span>
+                      <div className="inline-flex items-center border border-ink">
+                        <button type="button" onClick={() => setKitQtyManual((q) => Math.max(WELCOME_KIT_MIN, q - 1))} className="px-3 py-1.5"><Minus className="h-3.5 w-3.5" /></button>
+                        <input type="number" min={WELCOME_KIT_MIN} value={kitQtyManual}
+                          onChange={(e) => setKitQtyManual(Math.max(0, Number(e.target.value) || 0))}
+                          className="w-16 text-center text-sm bg-transparent border-x border-ink py-1.5 font-bold" />
+                        <button type="button" onClick={() => setKitQtyManual((q) => q + 1)} className="px-3 py-1.5"><Plus className="h-3.5 w-3.5" /></button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : isGarment ? (
               <div className="mt-6">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-xs uppercase tracking-widest font-bold">Sizes & Quantity</h4>
