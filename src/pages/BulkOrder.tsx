@@ -182,7 +182,8 @@ const BulkOrder = () => {
   const bulkPct = rule && !rule.discountEnabled ? 0 : BULK_DISCOUNT_PCT;
   const discountAmt = Math.round((subtotal * bulkPct) / 100);
   const afterDiscount = Math.max(0, subtotal - discountAmt);
-  const courier = total * COURIER_PER_PC;
+  const courierPc = product ? getCourierPerPc(product) : COURIER_PER_PC;
+  const courier = total * courierPc;
   const gst = Math.round((afterDiscount + courier) * gstRate);
   const grandTotal = afterDiscount + courier + gst;
 
