@@ -5,6 +5,8 @@ import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductReviews } from "@/components/ProductReviews";
 import { PrintPicker } from "@/components/PrintPicker";
+import { ArtworkUpload, artworkSummary, type ArtworkFile } from "@/components/ArtworkUpload";
+import { SampleDialog } from "@/components/SampleDialog";
 import {
   findProduct,
   findCategory,
@@ -19,16 +21,13 @@ import {
   getAccessoryRules,
   getGstPct,
   getCourierPerPc,
-  samplePrice,
-  COURIER_PER_PC,
-  BULK_THRESHOLD,
-  ARR_SIZE_MAX,
   productCode,
   supportsPrint,
   isWelcomeKitCategory,
   WELCOME_KIT_ITEMS,
   WELCOME_KIT_MIN,
   WELCOME_KIT_MIN_ITEMS,
+  welcomeKitUnitPrice,
 } from "@/data/catalog";
 import { emptyPrint, printPricePerPc, printLabel, encodePrint, type PrintSelection, type PrintMethod } from "@/data/printOptions";
 import { waLink } from "@/data/site";
