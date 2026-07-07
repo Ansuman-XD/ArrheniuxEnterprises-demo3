@@ -113,20 +113,27 @@ const ProductDetail = () => {
     return isGarment ? kitSizeTotal : unitQty;
   }, [isKit, kitQty, isGarment, kitSizeTotal, unitQty]);
 
-  const unitPrice = priceValue(product);
+  const kitUnit = isKit ? welcomeKitUnitPrice(kitItems) : 0;
+  const unitPrice = isKit ? kitUnit : priceValue(product);
   const printPerPc = canPrint ? printPricePerPc(printSel, restrictedMethods) : 0;
   const printCharge = printPerPc * total;
-  const printTypeText = canPrint ? printLabel(printSel, restrictedMethods) : "N/A";
+  const printTypeText = isKit ? "Company Logo Printing — FREE" : (canPrint ? printLabel(printSel, restrictedMethods) : "N/A");
   const subtotal = unitPrice * total + printCharge;
-  const discountPct = isKit ? 0 : getDiscountPct(total, product);
+  const discountPct = isKit || isArr ? 0 : getDiscountPct(total, product);
   const discountAmt = Math.round((subtotal * discountPct) / 100);
   const afterDiscount = Math.max(0, subtotal - discountAmt);
   const courier = total * courierPerPc;
   const gst = Math.round((afterDiscount + courier) * gstRate);
   const grandTotal = afterDiscount + courier + gst;
-  const isBulk = total > maxQty;
+  const isBulk = !isArr && total > maxQty;
   const meetsMoq = total >= moq;
   const canOrder = meetsMoq && total <= maxQty && (!isKit || kitEnoughItems);
+  const samplePriceValue = (() => {
+    const u = priceValue(product);
+    const c = getCourierPerPc(product);
+    const g = Math.round((u + c) * gstRate);
+    return u + c + g;
+  })();
 
   const bumpSize = (s: Size, d: number) =>
     setSizeQty((q) => {
