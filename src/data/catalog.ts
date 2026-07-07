@@ -398,9 +398,10 @@ export const B2B_MOQ = 14;
 export const B2B_STEP = 2;
 export const ARR_SIZE_MAX = 3; // ARRHENIUX per-size cap
 
-// Per-product MOQ: ARRHENIUX = 1, everything else = 5 (accessories may override)
+// Per-product MOQ: ARRHENIUX = 1, Custom Premium Polo = 50, accessories per rule, else 5
 export const getMOQ = (p: Pick<CatalogProduct, "categorySlug" | "subSlug">) => {
   if (isArrheniuxCategory(p.categorySlug)) return 1;
+  if (p.categorySlug === "custom-fabric-t-shirts") return 50;
   const rule = getAccessoryRules(p.subSlug);
   if (rule) return rule.moq;
   return 5;
