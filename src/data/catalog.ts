@@ -448,15 +448,19 @@ export type AccessoryRule = {
   print:
     | { kind: "none" }
     | { kind: "free"; label: string }
-    | { kind: "custom"; methods: Array<{ id: "embroidery" | "dtf" | "sublimation"; options: { id: string; label: string; pricePerPc: number }[] }> };
+    | { kind: "custom"; methods: Array<{ id: "embroidery" | "dtf" | "sublimation" | "laser" | "digital"; label?: string; options: { id: string; label: string; pricePerPc: number }[] }> };
   note?: string;
+  // Named colour choices displayed as a select (Cap, Umbrella, Lanyard)
+  namedColors?: string[];
+  // Additional named "print colour" choice (Event Lanyard)
+  printColors?: string[];
 };
 
 const ACCESSORY_RULES: Record<string, AccessoryRule> = {
   "canvas-tote": {
     moq: 5, max: 80, gstPct: 5, discountEnabled: false, courierPerPc: 0,
-    print: { kind: "custom", methods: [{ id: "dtf", options: [
-      { id: "tote-logo-3x3", label: "Company/College Logo (3×3 inch)", pricePerPc: 20 },
+    print: { kind: "custom", methods: [{ id: "dtf", label: "DTF Print", options: [
+      { id: "tote-logo", label: "Company Logo (3×2 inch)", pricePerPc: 20 },
       { id: "tote-a4", label: "A4 Print", pricePerPc: 40 },
       { id: "tote-company-name", label: "Company Name Design (8×2 inch)", pricePerPc: 30 },
     ]}]},
@@ -467,48 +471,54 @@ const ACCESSORY_RULES: Record<string, AccessoryRule> = {
   },
   "premium-backpack": {
     moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true, courierPerPc: 0,
-    print: { kind: "custom", methods: [{ id: "dtf", options: [
-      { id: "bp-logo", label: "Company/College Logo (3×3 inch)", pricePerPc: 20 },
+    print: { kind: "custom", methods: [{ id: "dtf", label: "DTF Print", options: [
+      { id: "bp-logo", label: "Company Logo (3×2 inch)", pricePerPc: 20 },
     ]}]},
   },
   "pen": {
     moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true, courierPerPc: 0,
-    print: { kind: "free", label: "Logo Printing: FREE" },
+    print: { kind: "custom", methods: [
+      { id: "dtf", label: "DTF Print", options: [{ id: "pen-dtf-logo", label: "Company Logo", pricePerPc: 20 }] },
+      { id: "laser", label: "Laser Print", options: [{ id: "pen-laser-logo", label: "Company Logo", pricePerPc: 20 }] },
+      { id: "sublimation", label: "Sublimation Print", options: [{ id: "pen-sub-logo", label: "Company Logo", pricePerPc: 20 }] },
+    ]},
   },
   "badge": {
     moq: 50, max: 80, gstPct: 18, discountEnabled: false, courierPerPc: 0,
-    print: { kind: "free", label: "Logo Printing: FREE" },
+    print: { kind: "custom", methods: [{ id: "digital", label: "Digital Print", options: [
+      { id: "badge-logo", label: "Company Logo", pricePerPc: 80 },
+    ]}]},
+    note: "Fastener Type: Safety Pin",
   },
   "mug": {
     moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true, courierPerPc: 0,
-    print: { kind: "free", label: "Logo Printing: FREE" },
+    print: { kind: "custom", methods: [{ id: "sublimation", label: "Sublimation Print", options: [
+      { id: "mug-logo", label: "Company Logo", pricePerPc: 20 },
+      { id: "mug-team", label: "Team Photo", pricePerPc: 50 },
+    ]}]},
+    note: "Only White Color Mug Available",
   },
   "cap": {
     moq: 50, max: 80, gstPct: 5, discountEnabled: false, oem: true, courierPerPc: 0,
-    print: { kind: "custom", methods: [{ id: "dtf", options: [
-      { id: "cap-logo", label: "Company/College Logo (2×2 inch)", pricePerPc: 10 },
+    print: { kind: "custom", methods: [{ id: "dtf", label: "DTF Print", options: [
+      { id: "cap-logo", label: "Company Logo", pricePerPc: 20 },
     ]}]},
+    namedColors: ["Black Cap", "White Cap"],
   },
   "umbrella": {
     moq: 50, max: 80, gstPct: 5, discountEnabled: false, courierPerPc: 0,
-    print: { kind: "custom", methods: [
-      { id: "dtf", options: [
-        { id: "umb-single", label: "Single Side Logo", pricePerPc: 10 },
-        { id: "umb-double", label: "Double Side Logo", pricePerPc: 20 },
-        { id: "umb-triple", label: "Triple Side Logo", pricePerPc: 30 },
-      ]},
-      { id: "sublimation", options: [
-        { id: "umb-sub-single", label: "Single Side Logo", pricePerPc: 10 },
-        { id: "umb-sub-double", label: "Double Side Logo", pricePerPc: 20 },
-        { id: "umb-sub-triple", label: "Triple Side Logo", pricePerPc: 30 },
-      ]},
-    ]},
+    print: { kind: "custom", methods: [{ id: "dtf", label: "DTF Print", options: [
+      { id: "umb-logo", label: "Company Logo", pricePerPc: 10 },
+    ]}]},
+    namedColors: ["Red & White Umbrella", "Blue & White Umbrella", "Black Umbrella"],
   },
   "event-lanyard": {
     moq: 50, max: 80, gstPct: 5, discountEnabled: false, courierPerPc: 0,
-    print: { kind: "custom", methods: [{ id: "sublimation", options: [
-      { id: "lan-double", label: "Double Side Print", pricePerPc: 100 },
+    print: { kind: "custom", methods: [{ id: "sublimation", label: "Sublimation Print", options: [
+      { id: "lan-logo", label: "Company Logo", pricePerPc: 20 },
     ]}]},
+    namedColors: ["Black", "White", "Red", "Royal Blue", "Multicolor"],
+    printColors: ["White", "Black"],
   },
 };
 
