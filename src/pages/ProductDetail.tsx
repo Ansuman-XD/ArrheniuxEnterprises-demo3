@@ -682,6 +682,8 @@ const ProductDetail = () => {
           </div>
         </section>
       )}
+
+      <SampleDialog product={product} open={sampleOpen} onClose={() => setSampleOpen(false)} isGarment={isGarment} />
     </Layout>
   );
 };
