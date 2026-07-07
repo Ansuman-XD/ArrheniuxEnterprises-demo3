@@ -72,6 +72,7 @@ export const encodePrint = (sel: PrintSelection): string => {
 export const decodePrint = (raw: string | null): PrintSelection => {
   if (!raw) return emptyPrint();
   const [method, opts] = raw.split(":");
-  if (method !== "embroidery" && method !== "dtf" && method !== "sublimation") return emptyPrint();
-  return { method, options: (opts || "").split(",").filter(Boolean) };
+  const valid: PrintMethodId[] = ["embroidery", "dtf", "sublimation", "laser", "digital"];
+  if (!valid.includes(method as PrintMethodId)) return emptyPrint();
+  return { method: method as PrintMethodId, options: (opts || "").split(",").filter(Boolean) };
 };
