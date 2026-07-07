@@ -1,6 +1,7 @@
 // Print method system: Embroidery / DTF / Sublimation with per-option pricing.
 export type PrintOption = { id: string; label: string; pricePerPc: number };
-export type PrintMethod = { id: "embroidery" | "dtf" | "sublimation"; label: string; options: PrintOption[]; note?: string };
+export type PrintMethodId = "embroidery" | "dtf" | "sublimation" | "laser" | "digital";
+export type PrintMethod = { id: PrintMethodId; label: string; options: PrintOption[]; note?: string };
 
 export const PRINT_METHODS: PrintMethod[] = [
   {
