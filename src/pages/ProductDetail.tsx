@@ -52,9 +52,14 @@ const ProductDetail = () => {
   });
   const [unitQty, setUnitQty] = useState(1);
   const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
+  const [artwork, setArtwork] = useState<ArtworkFile[]>([]);
+  const [sampleOpen, setSampleOpen] = useState(false);
   // Welcome-kit config
   const [kitItems, setKitItems] = useState<string[]>(["tshirt"]);
   const [kitQtyManual, setKitQtyManual] = useState<number>(20);
+  // Named accessory color (Cap/Umbrella/Lanyard) + lanyard print color
+  const [namedColor, setNamedColor] = useState<string>("");
+  const [printColor, setPrintColor] = useState<string>("");
 
   if (!product) {
     return (
