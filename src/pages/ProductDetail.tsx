@@ -419,8 +419,8 @@ const ProductDetail = () => {
               <p className="mt-3 text-xs italic text-muted-foreground border-l-2 border-primary pl-3">Note: {rule.note}</p>
             )}
 
-            {/* Print type */}
-            {canPrint && (
+            {/* Print type — hidden for kits (kits show "Logo Printing FREE" implicit) */}
+            {canPrint && !isKit && (
               <div className="mt-6">
                 <PrintPicker
                   value={printSel}
@@ -431,6 +431,20 @@ const ProductDetail = () => {
                   disabled={printDisabled}
                 />
               </div>
+            )}
+            {isKit && (
+              <div className="mt-6">
+                <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Print Type</h4>
+                <div className="border border-border bg-secondary/40 px-3 py-2.5 text-sm flex items-center justify-between">
+                  <span>Company Logo Printing</span>
+                  <span className="text-[10px] font-mono uppercase text-primary">FREE</span>
+                </div>
+              </div>
+            )}
+
+            {/* Upload artwork — hidden for ARRHENIUX */}
+            {!isArr && (
+              <ArtworkUpload value={artwork} onChange={setArtwork} />
             )}
 
             {/* Quantity / Kit builder */}
