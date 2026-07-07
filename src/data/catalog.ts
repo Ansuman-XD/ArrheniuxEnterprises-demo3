@@ -552,15 +552,17 @@ export const samplePrice = (p: CatalogProduct) => {
 // ---------- Welcome Kit config ----------
 export const WELCOME_KIT_MIN = 20;
 export const WELCOME_KIT_ITEMS = [
-  { id: "tshirt", label: "T-Shirt", required: true },
-  { id: "mug", label: "Mug" },
-  { id: "pen", label: "Pen" },
-  { id: "notebook", label: "Notebook" },
-  { id: "bottle", label: "Bottle" },
-  { id: "keychain", label: "Key Chain" },
-  { id: "backpack", label: "Backpack" },
+  { id: "tshirt", label: "T-Shirt", price: 200, required: true },
+  { id: "mug", label: "Mug", price: 100 },
+  { id: "pen", label: "Pen", price: 50 },
+  { id: "notebook", label: "Notebook", price: 30 },
+  { id: "bottle", label: "Bottle", price: 80 },
+  { id: "backpack", label: "Backpack", price: 150 },
 ] as const;
+// Mandatory T-Shirt + at least 2 more selections (spec: at least 2 additional).
 export const WELCOME_KIT_MIN_ITEMS = 3;
+export const welcomeKitUnitPrice = (selectedIds: string[]): number =>
+  selectedIds.reduce((sum, id) => sum + (WELCOME_KIT_ITEMS.find((k) => k.id === id)?.price ?? 0), 0);
 
 // ---------- B2B curated subcategories ----------
 export type B2BSub = {
