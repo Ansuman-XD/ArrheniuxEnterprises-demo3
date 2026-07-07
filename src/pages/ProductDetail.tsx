@@ -387,22 +387,36 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {/* Color */}
-            {product.colors.length > 0 && (
+            {/* Named color choice (Cap / Umbrella / Event Lanyard) */}
+            {rule?.namedColors && (
               <div className="mt-6">
-                <h4 className="text-xs uppercase tracking-widest font-bold mb-3">Color</h4>
-                <div className="flex gap-2">
-                  {product.colors.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setColor(c)}
-                      className={`h-10 w-10 rounded-full border-2 transition ${selectedColor === c ? "border-ink scale-110" : "border-border"}`}
-                      style={{ backgroundColor: c }}
-                      aria-label={c}
-                    />
-                  ))}
-                </div>
+                <h4 className="text-xs uppercase tracking-widest font-bold mb-3">Color / Variant *</h4>
+                <select
+                  value={namedColor || rule.namedColors[0]}
+                  onChange={(e) => setNamedColor(e.target.value)}
+                  className="w-full border border-border px-3 py-2.5 text-sm bg-background focus:outline-none focus:border-ink"
+                >
+                  {rule.namedColors.map((c) => (<option key={c} value={c}>{c}</option>))}
+                </select>
               </div>
+            )}
+
+            {/* Lanyard print color */}
+            {rule?.printColors && (
+              <div className="mt-4">
+                <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Print Color</h4>
+                <select
+                  value={printColor || rule.printColors[0]}
+                  onChange={(e) => setPrintColor(e.target.value)}
+                  className="w-full border border-border px-3 py-2.5 text-sm bg-background focus:outline-none focus:border-ink"
+                >
+                  {rule.printColors.map((c) => (<option key={c} value={c}>{c}</option>))}
+                </select>
+              </div>
+            )}
+
+            {rule?.note && (
+              <p className="mt-3 text-xs italic text-muted-foreground border-l-2 border-primary pl-3">Note: {rule.note}</p>
             )}
 
             {/* Print type */}
