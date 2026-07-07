@@ -46,7 +46,7 @@ const ProductDetail = () => {
   const product = findProduct(id);
 
   const [activeImg, setActiveImg] = useState(0);
-  const [color, setColor] = useState<string | null>(null);
+  
   const [sizeQty, setSizeQty] = useState<Record<Size, number>>({
     XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0,
   });
