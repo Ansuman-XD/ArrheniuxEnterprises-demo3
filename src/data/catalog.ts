@@ -289,10 +289,7 @@ export const catalog: CatalogCategory[] = [
     hasTiers: false,
     blurb: "Ready-to-ship welcome kits for new hires, events, colleges and teams.",
     items: [
-      ...makeSubs("corporate-welcome-kit", corporate, undefined, [
-        "Basic Welcome Kit",
-      ], 2),
-      // Classic Kit gets four themed products (Employee/Conference/College/Team)
+      // Only Classic Welcome Kit remains — themed variants.
       ...makeSubs("corporate-welcome-kit", corporate, undefined, [
         "Classic Welcome Kit",
       ], 1).map((s) => {
@@ -309,11 +306,11 @@ export const catalog: CatalogCategory[] = [
             fabric: "Kit",
             gsm: "Kit",
             moq: 20,
-            price: `₹1200`,
+            price: `₹0`,
             image: corporate,
             gallery: [corporate, corporate, corporate, corporate],
             colors: DEFAULT_COLORS,
-            description: `${n} — configurable welcome kit. Includes a customised t-shirt plus your selected merch add-ons. One free customised tote bag included with every kit.`,
+            description: `${n} — build your own welcome kit. T-Shirt is mandatory; pick at least two more add-ons. Price is calculated from individual item prices.`,
             material: "Curated bundle",
             isNew: true,
             addedAt: __ts,
@@ -321,9 +318,6 @@ export const catalog: CatalogCategory[] = [
         });
         return s;
       }),
-      ...makeSubs("corporate-welcome-kit", corporate, undefined, [
-        "Premium Welcome Kit",
-      ], 2),
     ],
   },
   {
