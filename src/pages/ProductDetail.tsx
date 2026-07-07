@@ -8,6 +8,7 @@ import { PrintPicker } from "@/components/PrintPicker";
 import { ArtworkUpload, artworkSummary, type ArtworkFile } from "@/components/ArtworkUpload";
 import { SampleDialog } from "@/components/SampleDialog";
 import {
+  ARR_SIZE_MAX,
   findProduct,
   findCategory,
   findSubcategory,
