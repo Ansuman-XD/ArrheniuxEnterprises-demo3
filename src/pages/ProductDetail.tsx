@@ -142,7 +142,11 @@ const ProductDetail = () => {
       return { ...q, [s]: next };
     });
 
-  const selectedColor = color ?? product.colors[0];
+  // Color: default = first product color; named accessories override
+  const selectedColor = rule?.namedColors
+    ? (namedColor || rule.namedColors[0])
+    : product.colors[0];
+  const selectedPrintColor = rule?.printColors ? (printColor || rule.printColors[0]) : "";
 
   const orderMessage = () => {
     const lines: string[] = [];
@@ -156,10 +160,16 @@ const ProductDetail = () => {
     lines.push(`• Product Code: ${code}`);
     lines.push(`• Material: ${product.material}`);
     lines.push(`• Color: ${selectedColor}`);
-    if (canPrint) lines.push(`• Print: ${printTypeText}`);
+    if (selectedPrintColor) lines.push(`• Print Color: ${selectedPrintColor}`);
     if (isKit) {
-      lines.push(`• Kit Items: ${kitItems.map((id) => WELCOME_KIT_ITEMS.find((k) => k.id === id)?.label).filter(Boolean).join(", ")}`);
-      lines.push(`• Free Custom Tote Bag Included`);
+      const kitList = kitItems.map((id) => {
+        const it = WELCOME_KIT_ITEMS.find((k) => k.id === id);
+        return it ? `${it.label} (₹${it.price})` : null;
+      }).filter(Boolean).join(", ");
+      lines.push(`• Kit Items: ${kitList}`);
+      lines.push(`• Print Type: Company Logo Printing (FREE)`);
+    } else if (canPrint) {
+      lines.push(`• Print: ${printTypeText}`);
     }
     if (isGarment || (isKit && kitIncludesTshirt)) {
       const sizeLines = SIZES.filter((s) => sizeQty[s] > 0).map((s) => `   - ${s}: ${sizeQty[s]} pcs`);
@@ -169,9 +179,10 @@ const ProductDetail = () => {
       }
     }
     lines.push(isKit ? `• Total Kits: ${total}` : `• Total Quantity: ${total} pcs`);
+    if (!isArr) lines.push(`• Uploaded Artwork: ${artworkSummary(artwork)}`);
     lines.push("");
     lines.push("*Pricing*");
-    lines.push(`• Unit Price: ₹${unitPrice}`);
+    lines.push(`• Unit Price: ₹${unitPrice}${isKit ? " (kit)" : ""}`);
     if (printCharge > 0) lines.push(`• Print Charge: ₹${printCharge}`);
     lines.push(`• Subtotal: ₹${subtotal}`);
     lines.push(`• Discount: ${discountPct}% (−₹${discountAmt})`);
