@@ -408,6 +408,7 @@ export const getMOQ = (p: Pick<CatalogProduct, "categorySlug" | "subSlug">) => {
 };
 
 export const getMaxQty = (p: Pick<CatalogProduct, "categorySlug" | "subSlug">) => {
+  if (isArrheniuxCategory(p.categorySlug)) return ARR_SIZE_MAX;
   const rule = getAccessoryRules(p.subSlug);
   if (rule) return rule.max;
   return BULK_THRESHOLD;
