@@ -5,7 +5,10 @@ import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductReviews } from "@/components/ProductReviews";
 import { PrintPicker } from "@/components/PrintPicker";
+import { ArtworkUpload, artworkSummary, type ArtworkFile } from "@/components/ArtworkUpload";
+import { SampleDialog } from "@/components/SampleDialog";
 import {
+  ARR_SIZE_MAX,
   findProduct,
   findCategory,
   findSubcategory,
@@ -19,16 +22,13 @@ import {
   getAccessoryRules,
   getGstPct,
   getCourierPerPc,
-  samplePrice,
-  COURIER_PER_PC,
-  BULK_THRESHOLD,
-  ARR_SIZE_MAX,
   productCode,
   supportsPrint,
   isWelcomeKitCategory,
   WELCOME_KIT_ITEMS,
   WELCOME_KIT_MIN,
   WELCOME_KIT_MIN_ITEMS,
+  welcomeKitUnitPrice,
 } from "@/data/catalog";
 import { emptyPrint, printPricePerPc, printLabel, encodePrint, type PrintSelection, type PrintMethod } from "@/data/printOptions";
 import { waLink } from "@/data/site";
@@ -46,15 +46,20 @@ const ProductDetail = () => {
   const product = findProduct(id);
 
   const [activeImg, setActiveImg] = useState(0);
-  const [color, setColor] = useState<string | null>(null);
+  
   const [sizeQty, setSizeQty] = useState<Record<Size, number>>({
     XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0,
   });
   const [unitQty, setUnitQty] = useState(1);
   const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
+  const [artwork, setArtwork] = useState<ArtworkFile[]>([]);
+  const [sampleOpen, setSampleOpen] = useState(false);
   // Welcome-kit config
   const [kitItems, setKitItems] = useState<string[]>(["tshirt"]);
   const [kitQtyManual, setKitQtyManual] = useState<number>(20);
+  // Named accessory color (Cap/Umbrella/Lanyard) + lanyard print color
+  const [namedColor, setNamedColor] = useState<string>("");
+  const [printColor, setPrintColor] = useState<string>("");
 
   if (!product) {
     return (
@@ -89,10 +94,11 @@ const ProductDetail = () => {
 
   // Print methods restricted per accessory rule (if any)
   const restrictedMethods: PrintMethod[] | undefined = rule?.print.kind === "custom"
-    ? rule.print.methods.map((m) => ({ id: m.id, label:
-        m.id === "dtf" ? "DTF Print" :
-        m.id === "sublimation" ? "Sublimation Print" : "Embroidery Print",
-        options: m.options }))
+    ? rule.print.methods.map((m) => ({
+        id: m.id,
+        label: m.label ?? (m.id === "dtf" ? "DTF Print" : m.id === "sublimation" ? "Sublimation Print" : m.id === "laser" ? "Laser Print" : m.id === "digital" ? "Digital Print" : "Embroidery Print"),
+        options: m.options,
+      }))
     : undefined;
   const printDisabled = rule?.print.kind === "none";
   const printFreeLabel = rule?.print.kind === "free" ? rule.print.label : null;
@@ -107,20 +113,27 @@ const ProductDetail = () => {
     return isGarment ? kitSizeTotal : unitQty;
   }, [isKit, kitQty, isGarment, kitSizeTotal, unitQty]);
 
-  const unitPrice = priceValue(product);
+  const kitUnit = isKit ? welcomeKitUnitPrice(kitItems) : 0;
+  const unitPrice = isKit ? kitUnit : priceValue(product);
   const printPerPc = canPrint ? printPricePerPc(printSel, restrictedMethods) : 0;
   const printCharge = printPerPc * total;
-  const printTypeText = canPrint ? printLabel(printSel, restrictedMethods) : "N/A";
+  const printTypeText = isKit ? "Company Logo Printing — FREE" : (canPrint ? printLabel(printSel, restrictedMethods) : "N/A");
   const subtotal = unitPrice * total + printCharge;
-  const discountPct = isKit ? 0 : getDiscountPct(total, product);
+  const discountPct = isKit || isArr ? 0 : getDiscountPct(total, product);
   const discountAmt = Math.round((subtotal * discountPct) / 100);
   const afterDiscount = Math.max(0, subtotal - discountAmt);
   const courier = total * courierPerPc;
   const gst = Math.round((afterDiscount + courier) * gstRate);
   const grandTotal = afterDiscount + courier + gst;
-  const isBulk = total > maxQty;
+  const isBulk = !isArr && total > maxQty;
   const meetsMoq = total >= moq;
   const canOrder = meetsMoq && total <= maxQty && (!isKit || kitEnoughItems);
+  const samplePriceValue = (() => {
+    const u = priceValue(product);
+    const c = getCourierPerPc(product);
+    const g = Math.round((u + c) * gstRate);
+    return u + c + g;
+  })();
 
   const bumpSize = (s: Size, d: number) =>
     setSizeQty((q) => {
@@ -129,7 +142,11 @@ const ProductDetail = () => {
       return { ...q, [s]: next };
     });
 
-  const selectedColor = color ?? product.colors[0];
+  // Color: default = first product color; named accessories override
+  const selectedColor = rule?.namedColors
+    ? (namedColor || rule.namedColors[0])
+    : product.colors[0];
+  const selectedPrintColor = rule?.printColors ? (printColor || rule.printColors[0]) : "";
 
   const orderMessage = () => {
     const lines: string[] = [];
@@ -143,10 +160,16 @@ const ProductDetail = () => {
     lines.push(`• Product Code: ${code}`);
     lines.push(`• Material: ${product.material}`);
     lines.push(`• Color: ${selectedColor}`);
-    if (canPrint) lines.push(`• Print: ${printTypeText}`);
+    if (selectedPrintColor) lines.push(`• Print Color: ${selectedPrintColor}`);
     if (isKit) {
-      lines.push(`• Kit Items: ${kitItems.map((id) => WELCOME_KIT_ITEMS.find((k) => k.id === id)?.label).filter(Boolean).join(", ")}`);
-      lines.push(`• Free Custom Tote Bag Included`);
+      const kitList = kitItems.map((id) => {
+        const it = WELCOME_KIT_ITEMS.find((k) => k.id === id);
+        return it ? `${it.label} (₹${it.price})` : null;
+      }).filter(Boolean).join(", ");
+      lines.push(`• Kit Items: ${kitList}`);
+      lines.push(`• Print Type: Company Logo Printing (FREE)`);
+    } else if (canPrint) {
+      lines.push(`• Print: ${printTypeText}`);
     }
     if (isGarment || (isKit && kitIncludesTshirt)) {
       const sizeLines = SIZES.filter((s) => sizeQty[s] > 0).map((s) => `   - ${s}: ${sizeQty[s]} pcs`);
@@ -156,9 +179,10 @@ const ProductDetail = () => {
       }
     }
     lines.push(isKit ? `• Total Kits: ${total}` : `• Total Quantity: ${total} pcs`);
+    if (!isArr) lines.push(`• Uploaded Artwork: ${artworkSummary(artwork)}`);
     lines.push("");
     lines.push("*Pricing*");
-    lines.push(`• Unit Price: ₹${unitPrice}`);
+    lines.push(`• Unit Price: ₹${unitPrice}${isKit ? " (kit)" : ""}`);
     if (printCharge > 0) lines.push(`• Print Charge: ₹${printCharge}`);
     lines.push(`• Subtotal: ₹${subtotal}`);
     lines.push(`• Discount: ${discountPct}% (−₹${discountAmt})`);
@@ -232,48 +256,7 @@ const ProductDetail = () => {
     });
   };
 
-  const handleSample = () => {
-    const user = getSession();
-    if (!user) {
-      navigate(`/auth?next=${encodeURIComponent(location.pathname)}`);
-      return;
-    }
-    const amount = samplePrice(product);
-    openRazorpay({
-      amountInr: amount,
-      name: "Arrhenix — Sample",
-      description: `Sample: ${product.name}`,
-      prefill: { name: user.name, email: user.email, contact: user.phone },
-      onSuccess: (paymentId) => {
-        const sampleCourier = courierPerPc;
-        const gstSample = Math.round((unitPrice + sampleCourier) * gstRate);
-        const o = createOrder({
-          userId: user.id,
-          productId: product.id,
-          productName: `${product.name} (Sample)`,
-          productCode: code,
-          productImage: product.image,
-          qty: 1,
-          unitPrice,
-          subtotal: unitPrice,
-          discountPct: 0,
-          discountAmt: 0,
-          printType: "N/A",
-          printCharge: 0,
-          courier: sampleCourier,
-          gst: gstSample,
-          total: amount,
-          paid: amount,
-          paymentMode: "full",
-          paymentRef: paymentId,
-          kind: "retail",
-          customer: { fullName: user.name, email: user.email, phone: user.phone || "" },
-        });
-        toast({ title: "Sample ordered", description: `Sample #${o.id.slice(0, 8).toUpperCase()} placed.` });
-        navigate("/my-orders");
-      },
-    });
-  };
+  const handleSample = () => setSampleOpen(true);
 
   const productUrl = typeof window !== "undefined" ? window.location.href : "";
   const handleShareWa = () => {
@@ -404,26 +387,40 @@ const ProductDetail = () => {
               </div>
             )}
 
-            {/* Color */}
-            {product.colors.length > 0 && (
+            {/* Named color choice (Cap / Umbrella / Event Lanyard) */}
+            {rule?.namedColors && (
               <div className="mt-6">
-                <h4 className="text-xs uppercase tracking-widest font-bold mb-3">Color</h4>
-                <div className="flex gap-2">
-                  {product.colors.map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setColor(c)}
-                      className={`h-10 w-10 rounded-full border-2 transition ${selectedColor === c ? "border-ink scale-110" : "border-border"}`}
-                      style={{ backgroundColor: c }}
-                      aria-label={c}
-                    />
-                  ))}
-                </div>
+                <h4 className="text-xs uppercase tracking-widest font-bold mb-3">Color / Variant *</h4>
+                <select
+                  value={namedColor || rule.namedColors[0]}
+                  onChange={(e) => setNamedColor(e.target.value)}
+                  className="w-full border border-border px-3 py-2.5 text-sm bg-background focus:outline-none focus:border-ink"
+                >
+                  {rule.namedColors.map((c) => (<option key={c} value={c}>{c}</option>))}
+                </select>
               </div>
             )}
 
-            {/* Print type */}
-            {canPrint && (
+            {/* Lanyard print color */}
+            {rule?.printColors && (
+              <div className="mt-4">
+                <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Print Color</h4>
+                <select
+                  value={printColor || rule.printColors[0]}
+                  onChange={(e) => setPrintColor(e.target.value)}
+                  className="w-full border border-border px-3 py-2.5 text-sm bg-background focus:outline-none focus:border-ink"
+                >
+                  {rule.printColors.map((c) => (<option key={c} value={c}>{c}</option>))}
+                </select>
+              </div>
+            )}
+
+            {rule?.note && (
+              <p className="mt-3 text-xs italic text-muted-foreground border-l-2 border-primary pl-3">Note: {rule.note}</p>
+            )}
+
+            {/* Print type — hidden for kits (kits show "Logo Printing FREE" implicit) */}
+            {canPrint && !isKit && (
               <div className="mt-6">
                 <PrintPicker
                   value={printSel}
@@ -434,6 +431,20 @@ const ProductDetail = () => {
                   disabled={printDisabled}
                 />
               </div>
+            )}
+            {isKit && (
+              <div className="mt-6">
+                <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Print Type</h4>
+                <div className="border border-border bg-secondary/40 px-3 py-2.5 text-sm flex items-center justify-between">
+                  <span>Company Logo Printing</span>
+                  <span className="text-[10px] font-mono uppercase text-primary">FREE</span>
+                </div>
+              </div>
+            )}
+
+            {/* Upload artwork — hidden for ARRHENIUX */}
+            {!isArr && (
+              <ArtworkUpload value={artwork} onChange={setArtwork} />
             )}
 
             {/* Quantity / Kit builder */}
@@ -447,16 +458,21 @@ const ProductDetail = () => {
                       const checked = kitItems.includes(it.id);
                       const isTshirt = it.id === "tshirt";
                       return (
-                        <label key={it.id} className={`flex items-center gap-2 border px-3 py-2 text-sm cursor-pointer transition ${checked ? "border-ink bg-secondary" : "border-border"}`}>
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => {
-                              setKitItems((prev) => prev.includes(it.id) ? prev.filter((x) => x !== it.id) : [...prev, it.id]);
-                            }}
-                            className="h-4 w-4 accent-primary"
-                          />
-                          <span>{isTshirt ? "Custom T-Shirt" : it.label}</span>
+                        <label key={it.id} className={`flex items-center justify-between gap-2 border px-3 py-2 text-sm transition ${checked ? "border-ink bg-secondary" : "border-border"} ${isTshirt ? "opacity-100" : "cursor-pointer"}`}>
+                          <span className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              disabled={isTshirt}
+                              onChange={() => {
+                                if (isTshirt) return;
+                                setKitItems((prev) => prev.includes(it.id) ? prev.filter((x) => x !== it.id) : [...prev, it.id]);
+                              }}
+                              className="h-4 w-4 accent-primary"
+                            />
+                            <span>{isTshirt ? "Custom T-Shirt (required)" : it.label}</span>
+                          </span>
+                          <span className="text-[10px] font-mono text-muted-foreground">₹{it.price}</span>
                         </label>
                       );
                     })}
@@ -609,7 +625,7 @@ const ProductDetail = () => {
               onClick={handleSample}
               className="mt-3 w-full inline-flex items-center justify-center gap-2 border border-ink py-3 text-xs uppercase tracking-widest font-semibold hover:bg-ink hover:text-cream transition"
             >
-              <Package className="h-4 w-4" /> Order Sample Product — ₹{samplePrice(product)}
+              <Package className="h-4 w-4" /> Order Sample Product — ₹{samplePriceValue}
             </button>
 
             {/* Share */}
@@ -671,6 +687,8 @@ const ProductDetail = () => {
           </div>
         </section>
       )}
+
+      <SampleDialog product={product} open={sampleOpen} onClose={() => setSampleOpen(false)} isGarment={isGarment} />
     </Layout>
   );
 };

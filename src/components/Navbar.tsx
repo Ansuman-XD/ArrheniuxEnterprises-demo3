@@ -13,6 +13,7 @@ export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [mobileCatOpen, setMobileCatOpen] = useState(false);
+  const [mobileBulkOpen, setMobileBulkOpen] = useState(false);
   const [user, setUser] = useState(getSession());
   const location = useLocation();
   const navigate = useNavigate();
@@ -164,7 +165,29 @@ export const Navbar = () => {
               </div>
             )}
             <a href="#collection" onClick={(e) => handleHashClick(e, "#collection")} className="py-2 uppercase text-sm tracking-wide font-medium">New Collection</a>
-            <Link to="/bulk-order" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium">Bulk Order</Link>
+            <button
+              onClick={() => setMobileBulkOpen((v) => !v)}
+              className="py-2 font-medium uppercase text-sm tracking-wide flex items-center justify-between"
+            >
+              Bulk Order <ChevronDown className={`h-4 w-4 transition ${mobileBulkOpen ? "rotate-180" : ""}`} />
+            </button>
+            {mobileBulkOpen && (
+              <div className="pl-3 border-l border-border flex flex-col gap-1 mb-2">
+                <Link to="/bulk-order" onClick={() => setOpen(false)} className="py-1.5 text-xs uppercase tracking-wide font-semibold text-primary">
+                  Bulk Order Home
+                </Link>
+                {catalog.filter((c) => c.slug !== "arrheniux-t-shirts").map((c) => (
+                  <Link
+                    key={c.slug}
+                    to={`/bulk-order?cat=${c.slug}`}
+                    onClick={() => setOpen(false)}
+                    className="py-1.5 text-xs uppercase tracking-wide text-muted-foreground hover:text-ink"
+                  >
+                    {c.name}
+                  </Link>
+                ))}
+              </div>
+            )}
             <Link to="/b2b-shop" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium">B2B Shop</Link>
             <a href="#about-us" onClick={(e) => handleHashClick(e, "#about-us")} className="py-2 uppercase text-sm tracking-wide font-medium">About Us</a>
             <a href="#reviews" onClick={(e) => handleHashClick(e, "#reviews")} className="py-2 uppercase text-sm tracking-wide font-medium">Client Reactions</a>

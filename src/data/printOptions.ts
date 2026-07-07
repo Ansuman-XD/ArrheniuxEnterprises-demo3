@@ -1,6 +1,7 @@
 // Print method system: Embroidery / DTF / Sublimation with per-option pricing.
 export type PrintOption = { id: string; label: string; pricePerPc: number };
-export type PrintMethod = { id: "embroidery" | "dtf" | "sublimation"; label: string; options: PrintOption[]; note?: string };
+export type PrintMethodId = "embroidery" | "dtf" | "sublimation" | "laser" | "digital";
+export type PrintMethod = { id: PrintMethodId; label: string; options: PrintOption[]; note?: string };
 
 export const PRINT_METHODS: PrintMethod[] = [
   {
@@ -36,7 +37,7 @@ export const PRINT_METHODS: PrintMethod[] = [
 ];
 
 export type PrintSelection = {
-  method: "embroidery" | "dtf" | "sublimation" | null;
+  method: PrintMethodId | null;
   options: string[];
 };
 
@@ -71,6 +72,7 @@ export const encodePrint = (sel: PrintSelection): string => {
 export const decodePrint = (raw: string | null): PrintSelection => {
   if (!raw) return emptyPrint();
   const [method, opts] = raw.split(":");
-  if (method !== "embroidery" && method !== "dtf" && method !== "sublimation") return emptyPrint();
-  return { method, options: (opts || "").split(",").filter(Boolean) };
+  const valid: PrintMethodId[] = ["embroidery", "dtf", "sublimation", "laser", "digital"];
+  if (!valid.includes(method as PrintMethodId)) return emptyPrint();
+  return { method: method as PrintMethodId, options: (opts || "").split(",").filter(Boolean) };
 };

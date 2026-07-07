@@ -164,11 +164,11 @@ export const catalog: CatalogCategory[] = [
   },
   {
     slug: "custom-fabric-t-shirts",
-    name: "Custom Fabric T-Shirts",
-    image: tshirts,
+    name: "Custom Premium Polo T-Shirt",
+    image: polos,
     hasTiers: true,
-    blurb: "Pick your exact fabric and GSM — built to spec.",
-    regular: makeSubs("custom-fabric-t-shirts", tshirts, "regular", [
+    blurb: "Pick your exact fabric and GSM — built to spec. Minimum 50 pcs.",
+    regular: makeSubs("custom-fabric-t-shirts", polos, "regular", [
       "Spun Matty 240 GSM",
       "Spun Matty 220 GSM",
       "Dotnet Polyester 180 GSM",
@@ -289,10 +289,7 @@ export const catalog: CatalogCategory[] = [
     hasTiers: false,
     blurb: "Ready-to-ship welcome kits for new hires, events, colleges and teams.",
     items: [
-      ...makeSubs("corporate-welcome-kit", corporate, undefined, [
-        "Basic Welcome Kit",
-      ], 2),
-      // Classic Kit gets four themed products (Employee/Conference/College/Team)
+      // Only Classic Welcome Kit remains — themed variants.
       ...makeSubs("corporate-welcome-kit", corporate, undefined, [
         "Classic Welcome Kit",
       ], 1).map((s) => {
@@ -309,11 +306,11 @@ export const catalog: CatalogCategory[] = [
             fabric: "Kit",
             gsm: "Kit",
             moq: 20,
-            price: `₹1200`,
+            price: `₹0`,
             image: corporate,
             gallery: [corporate, corporate, corporate, corporate],
             colors: DEFAULT_COLORS,
-            description: `${n} — configurable welcome kit. Includes a customised t-shirt plus your selected merch add-ons. One free customised tote bag included with every kit.`,
+            description: `${n} — build your own welcome kit. T-Shirt is mandatory; pick at least two more add-ons. Price is calculated from individual item prices.`,
             material: "Curated bundle",
             isNew: true,
             addedAt: __ts,
@@ -321,9 +318,6 @@ export const catalog: CatalogCategory[] = [
         });
         return s;
       }),
-      ...makeSubs("corporate-welcome-kit", corporate, undefined, [
-        "Premium Welcome Kit",
-      ], 2),
     ],
   },
   {
@@ -404,15 +398,17 @@ export const B2B_MOQ = 14;
 export const B2B_STEP = 2;
 export const ARR_SIZE_MAX = 3; // ARRHENIUX per-size cap
 
-// Per-product MOQ: ARRHENIUX = 1, everything else = 5 (accessories may override)
+// Per-product MOQ: ARRHENIUX = 1, Custom Premium Polo = 50, accessories per rule, else 5
 export const getMOQ = (p: Pick<CatalogProduct, "categorySlug" | "subSlug">) => {
   if (isArrheniuxCategory(p.categorySlug)) return 1;
+  if (p.categorySlug === "custom-fabric-t-shirts") return 50;
   const rule = getAccessoryRules(p.subSlug);
   if (rule) return rule.moq;
   return 5;
 };
 
 export const getMaxQty = (p: Pick<CatalogProduct, "categorySlug" | "subSlug">) => {
+  if (isArrheniuxCategory(p.categorySlug)) return ARR_SIZE_MAX;
   const rule = getAccessoryRules(p.subSlug);
   if (rule) return rule.max;
   return BULK_THRESHOLD;
@@ -452,15 +448,19 @@ export type AccessoryRule = {
   print:
     | { kind: "none" }
     | { kind: "free"; label: string }
-    | { kind: "custom"; methods: Array<{ id: "embroidery" | "dtf" | "sublimation"; options: { id: string; label: string; pricePerPc: number }[] }> };
+    | { kind: "custom"; methods: Array<{ id: "embroidery" | "dtf" | "sublimation" | "laser" | "digital"; label?: string; options: { id: string; label: string; pricePerPc: number }[] }> };
   note?: string;
+  // Named colour choices displayed as a select (Cap, Umbrella, Lanyard)
+  namedColors?: string[];
+  // Additional named "print colour" choice (Event Lanyard)
+  printColors?: string[];
 };
 
 const ACCESSORY_RULES: Record<string, AccessoryRule> = {
   "canvas-tote": {
     moq: 5, max: 80, gstPct: 5, discountEnabled: false, courierPerPc: 0,
-    print: { kind: "custom", methods: [{ id: "dtf", options: [
-      { id: "tote-logo-3x3", label: "Company/College Logo (3×3 inch)", pricePerPc: 20 },
+    print: { kind: "custom", methods: [{ id: "dtf", label: "DTF Print", options: [
+      { id: "tote-logo", label: "Company Logo (3×2 inch)", pricePerPc: 20 },
       { id: "tote-a4", label: "A4 Print", pricePerPc: 40 },
       { id: "tote-company-name", label: "Company Name Design (8×2 inch)", pricePerPc: 30 },
     ]}]},
@@ -471,48 +471,54 @@ const ACCESSORY_RULES: Record<string, AccessoryRule> = {
   },
   "premium-backpack": {
     moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true, courierPerPc: 0,
-    print: { kind: "custom", methods: [{ id: "dtf", options: [
-      { id: "bp-logo", label: "Company/College Logo (3×3 inch)", pricePerPc: 20 },
+    print: { kind: "custom", methods: [{ id: "dtf", label: "DTF Print", options: [
+      { id: "bp-logo", label: "Company Logo (3×2 inch)", pricePerPc: 20 },
     ]}]},
   },
   "pen": {
     moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true, courierPerPc: 0,
-    print: { kind: "free", label: "Logo Printing: FREE" },
+    print: { kind: "custom", methods: [
+      { id: "dtf", label: "DTF Print", options: [{ id: "pen-dtf-logo", label: "Company Logo", pricePerPc: 20 }] },
+      { id: "laser", label: "Laser Print", options: [{ id: "pen-laser-logo", label: "Company Logo", pricePerPc: 20 }] },
+      { id: "sublimation", label: "Sublimation Print", options: [{ id: "pen-sub-logo", label: "Company Logo", pricePerPc: 20 }] },
+    ]},
   },
   "badge": {
     moq: 50, max: 80, gstPct: 18, discountEnabled: false, courierPerPc: 0,
-    print: { kind: "free", label: "Logo Printing: FREE" },
+    print: { kind: "custom", methods: [{ id: "digital", label: "Digital Print", options: [
+      { id: "badge-logo", label: "Company Logo", pricePerPc: 80 },
+    ]}]},
+    note: "Fastener Type: Safety Pin",
   },
   "mug": {
     moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true, courierPerPc: 0,
-    print: { kind: "free", label: "Logo Printing: FREE" },
+    print: { kind: "custom", methods: [{ id: "sublimation", label: "Sublimation Print", options: [
+      { id: "mug-logo", label: "Company Logo", pricePerPc: 20 },
+      { id: "mug-team", label: "Team Photo", pricePerPc: 50 },
+    ]}]},
+    note: "Only White Color Mug Available",
   },
   "cap": {
     moq: 50, max: 80, gstPct: 5, discountEnabled: false, oem: true, courierPerPc: 0,
-    print: { kind: "custom", methods: [{ id: "dtf", options: [
-      { id: "cap-logo", label: "Company/College Logo (2×2 inch)", pricePerPc: 10 },
+    print: { kind: "custom", methods: [{ id: "dtf", label: "DTF Print", options: [
+      { id: "cap-logo", label: "Company Logo", pricePerPc: 20 },
     ]}]},
+    namedColors: ["Black Cap", "White Cap"],
   },
   "umbrella": {
     moq: 50, max: 80, gstPct: 5, discountEnabled: false, courierPerPc: 0,
-    print: { kind: "custom", methods: [
-      { id: "dtf", options: [
-        { id: "umb-single", label: "Single Side Logo", pricePerPc: 10 },
-        { id: "umb-double", label: "Double Side Logo", pricePerPc: 20 },
-        { id: "umb-triple", label: "Triple Side Logo", pricePerPc: 30 },
-      ]},
-      { id: "sublimation", options: [
-        { id: "umb-sub-single", label: "Single Side Logo", pricePerPc: 10 },
-        { id: "umb-sub-double", label: "Double Side Logo", pricePerPc: 20 },
-        { id: "umb-sub-triple", label: "Triple Side Logo", pricePerPc: 30 },
-      ]},
-    ]},
+    print: { kind: "custom", methods: [{ id: "dtf", label: "DTF Print", options: [
+      { id: "umb-logo", label: "Company Logo", pricePerPc: 10 },
+    ]}]},
+    namedColors: ["Red & White Umbrella", "Blue & White Umbrella", "Black Umbrella"],
   },
   "event-lanyard": {
     moq: 50, max: 80, gstPct: 5, discountEnabled: false, courierPerPc: 0,
-    print: { kind: "custom", methods: [{ id: "sublimation", options: [
-      { id: "lan-double", label: "Double Side Print", pricePerPc: 100 },
+    print: { kind: "custom", methods: [{ id: "sublimation", label: "Sublimation Print", options: [
+      { id: "lan-logo", label: "Company Logo", pricePerPc: 20 },
     ]}]},
+    namedColors: ["Black", "White", "Red", "Royal Blue", "Multicolor"],
+    printColors: ["White", "Black"],
   },
 };
 
@@ -546,15 +552,17 @@ export const samplePrice = (p: CatalogProduct) => {
 // ---------- Welcome Kit config ----------
 export const WELCOME_KIT_MIN = 20;
 export const WELCOME_KIT_ITEMS = [
-  { id: "tshirt", label: "T-Shirt", required: true },
-  { id: "mug", label: "Mug" },
-  { id: "pen", label: "Pen" },
-  { id: "notebook", label: "Notebook" },
-  { id: "bottle", label: "Bottle" },
-  { id: "keychain", label: "Key Chain" },
-  { id: "backpack", label: "Backpack" },
+  { id: "tshirt", label: "T-Shirt", price: 200, required: true },
+  { id: "mug", label: "Mug", price: 100 },
+  { id: "pen", label: "Pen", price: 50 },
+  { id: "notebook", label: "Notebook", price: 30 },
+  { id: "bottle", label: "Bottle", price: 80 },
+  { id: "backpack", label: "Backpack", price: 150 },
 ] as const;
+// Mandatory T-Shirt + at least 2 more selections (spec: at least 2 additional).
 export const WELCOME_KIT_MIN_ITEMS = 3;
+export const welcomeKitUnitPrice = (selectedIds: string[]): number =>
+  selectedIds.reduce((sum, id) => sum + (WELCOME_KIT_ITEMS.find((k) => k.id === id)?.price ?? 0), 0);
 
 // ---------- B2B curated subcategories ----------
 export type B2BSub = {

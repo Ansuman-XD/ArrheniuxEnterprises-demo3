@@ -145,10 +145,11 @@ const BulkOrder = () => {
   const gstPctLabel = Math.round(gstRate * 100);
 
   const restrictedMethods: PrintMethod[] | undefined = rule?.print.kind === "custom"
-    ? rule.print.methods.map((m) => ({ id: m.id, label:
-        m.id === "dtf" ? "DTF Print" :
-        m.id === "sublimation" ? "Sublimation Print" : "Embroidery Print",
-        options: m.options }))
+    ? rule.print.methods.map((m) => ({
+        id: m.id,
+        label: m.label ?? (m.id === "dtf" ? "DTF Print" : m.id === "sublimation" ? "Sublimation Print" : m.id === "laser" ? "Laser Print" : m.id === "digital" ? "Digital Print" : "Embroidery Print"),
+        options: m.options,
+      }))
     : undefined;
   const printFreeLabel = rule?.print.kind === "free" ? rule.print.label : null;
   const printDisabled = rule?.print.kind === "none";
