@@ -164,11 +164,11 @@ export const catalog: CatalogCategory[] = [
   },
   {
     slug: "custom-fabric-t-shirts",
-    name: "Custom Fabric T-Shirts",
-    image: tshirts,
+    name: "Custom Premium Polo T-Shirt",
+    image: polos,
     hasTiers: true,
-    blurb: "Pick your exact fabric and GSM — built to spec.",
-    regular: makeSubs("custom-fabric-t-shirts", tshirts, "regular", [
+    blurb: "Pick your exact fabric and GSM — built to spec. Minimum 50 pcs.",
+    regular: makeSubs("custom-fabric-t-shirts", polos, "regular", [
       "Spun Matty 240 GSM",
       "Spun Matty 220 GSM",
       "Dotnet Polyester 180 GSM",
