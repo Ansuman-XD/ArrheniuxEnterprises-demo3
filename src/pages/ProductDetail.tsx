@@ -581,7 +581,7 @@ const ProductDetail = () => {
               onClick={handleSample}
               className="mt-3 w-full inline-flex items-center justify-center gap-2 border border-ink py-3 text-xs uppercase tracking-widest font-semibold hover:bg-ink hover:text-cream transition"
             >
-              <Package className="h-4 w-4" /> Order Sample Product — ₹{samplePrice(product)}
+              <Package className="h-4 w-4" /> Order Sample Product — ₹{samplePriceValue}
             </button>
 
             {/* Share */}
