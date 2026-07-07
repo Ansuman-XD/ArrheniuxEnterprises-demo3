@@ -313,11 +313,7 @@ const B2BShop = () => {
                   </div>
                 )}
 
-                {canPrint && (
-                  <div className="mt-4">
-                    <PrintPicker value={printSel} onChange={setPrintSel} qty={total} />
-                  </div>
-                )}
+                {/* Print type removed from B2B per spec */}
 
                 <div className="mt-5">
                   <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Sizes & Quantity (step of {B2B_STEP})</h4>
