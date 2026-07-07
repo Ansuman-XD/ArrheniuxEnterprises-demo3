@@ -245,48 +245,7 @@ const ProductDetail = () => {
     });
   };
 
-  const handleSample = () => {
-    const user = getSession();
-    if (!user) {
-      navigate(`/auth?next=${encodeURIComponent(location.pathname)}`);
-      return;
-    }
-    const amount = samplePrice(product);
-    openRazorpay({
-      amountInr: amount,
-      name: "Arrhenix — Sample",
-      description: `Sample: ${product.name}`,
-      prefill: { name: user.name, email: user.email, contact: user.phone },
-      onSuccess: (paymentId) => {
-        const sampleCourier = courierPerPc;
-        const gstSample = Math.round((unitPrice + sampleCourier) * gstRate);
-        const o = createOrder({
-          userId: user.id,
-          productId: product.id,
-          productName: `${product.name} (Sample)`,
-          productCode: code,
-          productImage: product.image,
-          qty: 1,
-          unitPrice,
-          subtotal: unitPrice,
-          discountPct: 0,
-          discountAmt: 0,
-          printType: "N/A",
-          printCharge: 0,
-          courier: sampleCourier,
-          gst: gstSample,
-          total: amount,
-          paid: amount,
-          paymentMode: "full",
-          paymentRef: paymentId,
-          kind: "retail",
-          customer: { fullName: user.name, email: user.email, phone: user.phone || "" },
-        });
-        toast({ title: "Sample ordered", description: `Sample #${o.id.slice(0, 8).toUpperCase()} placed.` });
-        navigate("/my-orders");
-      },
-    });
-  };
+  const handleSample = () => setSampleOpen(true);
 
   const productUrl = typeof window !== "undefined" ? window.location.href : "";
   const handleShareWa = () => {
