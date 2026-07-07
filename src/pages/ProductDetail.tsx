@@ -458,16 +458,21 @@ const ProductDetail = () => {
                       const checked = kitItems.includes(it.id);
                       const isTshirt = it.id === "tshirt";
                       return (
-                        <label key={it.id} className={`flex items-center gap-2 border px-3 py-2 text-sm cursor-pointer transition ${checked ? "border-ink bg-secondary" : "border-border"}`}>
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => {
-                              setKitItems((prev) => prev.includes(it.id) ? prev.filter((x) => x !== it.id) : [...prev, it.id]);
-                            }}
-                            className="h-4 w-4 accent-primary"
-                          />
-                          <span>{isTshirt ? "Custom T-Shirt" : it.label}</span>
+                        <label key={it.id} className={`flex items-center justify-between gap-2 border px-3 py-2 text-sm transition ${checked ? "border-ink bg-secondary" : "border-border"} ${isTshirt ? "opacity-100" : "cursor-pointer"}`}>
+                          <span className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              disabled={isTshirt}
+                              onChange={() => {
+                                if (isTshirt) return;
+                                setKitItems((prev) => prev.includes(it.id) ? prev.filter((x) => x !== it.id) : [...prev, it.id]);
+                              }}
+                              className="h-4 w-4 accent-primary"
+                            />
+                            <span>{isTshirt ? "Custom T-Shirt (required)" : it.label}</span>
+                          </span>
+                          <span className="text-[10px] font-mono text-muted-foreground">₹{it.price}</span>
                         </label>
                       );
                     })}
