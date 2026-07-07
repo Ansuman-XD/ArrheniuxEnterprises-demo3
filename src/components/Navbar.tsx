@@ -13,6 +13,7 @@ export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [mobileCatOpen, setMobileCatOpen] = useState(false);
+  const [mobileBulkOpen, setMobileBulkOpen] = useState(false);
   const [user, setUser] = useState(getSession());
   const location = useLocation();
   const navigate = useNavigate();
