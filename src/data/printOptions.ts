@@ -37,7 +37,7 @@ export const PRINT_METHODS: PrintMethod[] = [
 ];
 
 export type PrintSelection = {
-  method: "embroidery" | "dtf" | "sublimation" | null;
+  method: PrintMethodId | null;
   options: string[];
 };
 
