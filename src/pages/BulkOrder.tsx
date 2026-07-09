@@ -132,8 +132,6 @@ const BulkOrder = () => {
   const [customer, setCustomer] = useState<DraftCustomer>(initial.customer || EMPTY_CUSTOMER);
   const [printSel, setPrintSel] = useState<PrintSelection>(initial.print || emptyPrint());
   const [artwork, setArtwork] = useState<ArtworkFile[]>([]);
-  const [namedColor, setNamedColor] = useState<string>("");
-  const [printColor, setPrintColor] = useState<string>("");
   const [error, setError] = useState("");
 
   const cat = findCategory(catSlug)!;
@@ -213,8 +211,6 @@ const BulkOrder = () => {
       lines.push(`• Product: ${product.name}`);
       lines.push(`• Code: ${productCode(product)}`);
       lines.push(`• Material: ${product.material}`);
-      if (rule?.namedColors) lines.push(`• Color / Variant: ${namedColor || rule.namedColors[0]}`);
-      if (rule?.printColors) lines.push(`• Print Color: ${printColor || rule.printColors[0]}`);
     }
     if (canPrint) lines.push(`• Print: ${printText}`);
     lines.push(`• Artwork Files: ${artworkSummary(artwork)}`);
@@ -382,36 +378,6 @@ const BulkOrder = () => {
                 </div>
               </div>
 
-              {rule?.namedColors && (
-                <div className="mt-5">
-                  <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Color / Variant *</h4>
-                  <select
-                    value={namedColor || rule.namedColors[0]}
-                    onChange={(e) => setNamedColor(e.target.value)}
-                    className="w-full border border-border px-3 py-2.5 text-sm bg-background focus:outline-none focus:border-ink"
-                  >
-                    {rule.namedColors.map((c) => (<option key={c} value={c}>{c}</option>))}
-                  </select>
-                </div>
-              )}
-
-              {rule?.printColors && (
-                <div className="mt-4">
-                  <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Print Color</h4>
-                  <select
-                    value={printColor || rule.printColors[0]}
-                    onChange={(e) => setPrintColor(e.target.value)}
-                    className="w-full border border-border px-3 py-2.5 text-sm bg-background focus:outline-none focus:border-ink"
-                  >
-                    {rule.printColors.map((c) => (<option key={c} value={c}>{c}</option>))}
-                  </select>
-                </div>
-              )}
-
-              {rule?.note && (
-                <p className="mt-3 text-xs italic text-muted-foreground border-l-2 border-primary pl-3">Note: {rule.note}</p>
-              )}
-
               {canPrint && (
                 <div className="mt-5">
                   <PrintPicker value={printSel} onChange={setPrintSel} qty={total} methods={restrictedMethods} freeLabel={printFreeLabel} disabled={printDisabled} />
@@ -421,7 +387,6 @@ const BulkOrder = () => {
               {!isArrheniuxCategory(product.categorySlug) && (
                 <ArtworkUpload value={artwork} onChange={setArtwork} />
               )}
-
 
 
               {isGarment ? (
