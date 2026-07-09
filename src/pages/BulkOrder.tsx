@@ -211,9 +211,9 @@ const BulkOrder = () => {
       lines.push(`• Product: ${product.name}`);
       lines.push(`• Code: ${productCode(product)}`);
       lines.push(`• Material: ${product.material}`);
-      lines.push(`• Color: ${color || product.colors[0]}`);
     }
     if (canPrint) lines.push(`• Print: ${printText}`);
+    lines.push(`• Artwork Files: ${artworkSummary(artwork)}`);
     if (isGarment) {
       lines.push("• Sizes:");
       SIZES.filter((s) => sizeQty[s] > 0).forEach((s) => lines.push(`   - ${s}: ${sizeQty[s]} pcs`));
