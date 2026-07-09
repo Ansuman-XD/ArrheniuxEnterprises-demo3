@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Minus, Plus, CreditCard } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { PrintPicker } from "@/components/PrintPicker";
+import { ArtworkUpload, artworkSummary, type ArtworkFile } from "@/components/ArtworkUpload";
 import {
   catalog,
   findCategory,
@@ -130,6 +131,7 @@ const BulkOrder = () => {
   const [sizeQty, setSizeQty] = useState<Record<Size, number>>(initial.sizeQty || { ...EMPTY_SIZES });
   const [customer, setCustomer] = useState<DraftCustomer>(initial.customer || EMPTY_CUSTOMER);
   const [printSel, setPrintSel] = useState<PrintSelection>(initial.print || emptyPrint());
+  const [artwork, setArtwork] = useState<ArtworkFile[]>([]);
   const [error, setError] = useState("");
 
   const cat = findCategory(catSlug)!;
@@ -209,9 +211,9 @@ const BulkOrder = () => {
       lines.push(`• Product: ${product.name}`);
       lines.push(`• Code: ${productCode(product)}`);
       lines.push(`• Material: ${product.material}`);
-      lines.push(`• Color: ${color || product.colors[0]}`);
     }
     if (canPrint) lines.push(`• Print: ${printText}`);
+    lines.push(`• Artwork Files: ${artworkSummary(artwork)}`);
     if (isGarment) {
       lines.push("• Sizes:");
       SIZES.filter((s) => sizeQty[s] > 0).forEach((s) => lines.push(`   - ${s}: ${sizeQty[s]} pcs`));
@@ -376,24 +378,16 @@ const BulkOrder = () => {
                 </div>
               </div>
 
-              {isGarment && product.colors.length > 0 && (
-                <div className="mt-5">
-                  <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Color</h4>
-                  <div className="flex gap-2">
-                    {product.colors.map((c) => (
-                      <button type="button" key={c} onClick={() => setColor(c)}
-                        className={`h-9 w-9 rounded-full border-2 transition ${(color || product.colors[0]) === c ? "border-ink scale-110" : "border-border"}`}
-                        style={{ backgroundColor: c }} aria-label={c} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {canPrint && (
                 <div className="mt-5">
                   <PrintPicker value={printSel} onChange={setPrintSel} qty={total} methods={restrictedMethods} freeLabel={printFreeLabel} disabled={printDisabled} />
                 </div>
               )}
+
+              {!isArrheniuxCategory(product.categorySlug) && (
+                <ArtworkUpload value={artwork} onChange={setArtwork} />
+              )}
+
 
               {isGarment ? (
                 <div className="mt-5">

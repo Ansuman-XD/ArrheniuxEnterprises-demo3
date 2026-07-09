@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Minus, Plus, CreditCard, ChevronLeft } from "lucide-react";
+import { Minus, Plus, CreditCard, ChevronLeft, Package } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { PrintPicker } from "@/components/PrintPicker";
+import { SampleDialog } from "@/components/SampleDialog";
 import {
   B2B_SUBCATEGORIES,
   getB2BProducts,
@@ -43,6 +44,7 @@ const B2BShop = () => {
   const [mode, setMode] = useState<"agent" | "gst">("agent");
   const [entry, setEntry] = useState("");
   const [gateError, setGateError] = useState("");
+  const [sampleOpen, setSampleOpen] = useState(false);
 
   const submitGate = () => {
     const val = entry.trim();
@@ -367,11 +369,20 @@ const B2BShop = () => {
                 >
                   <CreditCard className="h-4 w-4" /> Pay Now (Razorpay)
                 </button>
+                <button
+                  onClick={() => setSampleOpen(true)}
+                  className="mt-3 w-full inline-flex items-center justify-center gap-2 border border-ink py-3 text-xs uppercase tracking-widest font-semibold hover:bg-ink hover:text-cream transition"
+                >
+                  <Package className="h-4 w-4" /> Order Sample Product
+                </button>
                 <p className="text-[11px] text-muted-foreground mt-2 text-center">
                   Payment first. WhatsApp will open automatically with your order summary — attach artwork there.
                 </p>
               </div>
             </div>
+            {product && (
+              <SampleDialog product={product} open={sampleOpen} onClose={() => setSampleOpen(false)} isGarment={true} />
+            )}
           </>
         )}
       </section>
