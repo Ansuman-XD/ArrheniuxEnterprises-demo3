@@ -488,7 +488,7 @@ const ACCESSORY_RULES: Record<string, AccessoryRule> = {
     print: { kind: "custom", methods: [{ id: "digital", label: "Digital Print", options: [
       { id: "badge-logo", label: "Company Logo", pricePerPc: 80 },
     ]}]},
-    note: "Fastener Type: Safety Pin",
+    note: "Fastener Type: Pin",
   },
   "mug": {
     moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true, courierPerPc: 0,
@@ -496,21 +496,21 @@ const ACCESSORY_RULES: Record<string, AccessoryRule> = {
       { id: "mug-logo", label: "Company Logo", pricePerPc: 20 },
       { id: "mug-team", label: "Team Photo", pricePerPc: 50 },
     ]}]},
-    note: "Only White Color Mug Available",
+    note: "Available Color: White only.",
   },
   "cap": {
     moq: 50, max: 80, gstPct: 5, discountEnabled: false, oem: true, courierPerPc: 0,
     print: { kind: "custom", methods: [{ id: "dtf", label: "DTF Print", options: [
       { id: "cap-logo", label: "Company Logo", pricePerPc: 20 },
     ]}]},
-    namedColors: ["Black Cap", "White Cap"],
+    namedColors: ["Black", "White"],
   },
   "umbrella": {
     moq: 50, max: 80, gstPct: 5, discountEnabled: false, courierPerPc: 0,
     print: { kind: "custom", methods: [{ id: "dtf", label: "DTF Print", options: [
       { id: "umb-logo", label: "Company Logo", pricePerPc: 10 },
     ]}]},
-    namedColors: ["Red & White Umbrella", "Blue & White Umbrella", "Black Umbrella"],
+    namedColors: ["Red & White", "Blue & White", "Black"],
   },
   "event-lanyard": {
     moq: 50, max: 80, gstPct: 5, discountEnabled: false, courierPerPc: 0,
