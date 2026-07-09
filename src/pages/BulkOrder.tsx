@@ -131,6 +131,7 @@ const BulkOrder = () => {
   const [sizeQty, setSizeQty] = useState<Record<Size, number>>(initial.sizeQty || { ...EMPTY_SIZES });
   const [customer, setCustomer] = useState<DraftCustomer>(initial.customer || EMPTY_CUSTOMER);
   const [printSel, setPrintSel] = useState<PrintSelection>(initial.print || emptyPrint());
+  const [artwork, setArtwork] = useState<ArtworkFile[]>([]);
   const [error, setError] = useState("");
 
   const cat = findCategory(catSlug)!;
