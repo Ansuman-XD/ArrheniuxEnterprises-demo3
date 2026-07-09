@@ -378,24 +378,16 @@ const BulkOrder = () => {
                 </div>
               </div>
 
-              {isGarment && product.colors.length > 0 && (
-                <div className="mt-5">
-                  <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Color</h4>
-                  <div className="flex gap-2">
-                    {product.colors.map((c) => (
-                      <button type="button" key={c} onClick={() => setColor(c)}
-                        className={`h-9 w-9 rounded-full border-2 transition ${(color || product.colors[0]) === c ? "border-ink scale-110" : "border-border"}`}
-                        style={{ backgroundColor: c }} aria-label={c} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {canPrint && (
                 <div className="mt-5">
                   <PrintPicker value={printSel} onChange={setPrintSel} qty={total} methods={restrictedMethods} freeLabel={printFreeLabel} disabled={printDisabled} />
                 </div>
               )}
+
+              {!isArrheniuxCategory(product.categorySlug) && (
+                <ArtworkUpload value={artwork} onChange={setArtwork} />
+              )}
+
 
               {isGarment ? (
                 <div className="mt-5">
