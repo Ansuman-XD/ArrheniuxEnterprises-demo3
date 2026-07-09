@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Minus, Plus, CreditCard, ChevronLeft } from "lucide-react";
+import { Minus, Plus, CreditCard, ChevronLeft, Package } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { PrintPicker } from "@/components/PrintPicker";
+import { SampleDialog } from "@/components/SampleDialog";
 import {
   B2B_SUBCATEGORIES,
   getB2BProducts,
