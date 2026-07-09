@@ -213,6 +213,8 @@ const BulkOrder = () => {
       lines.push(`• Product: ${product.name}`);
       lines.push(`• Code: ${productCode(product)}`);
       lines.push(`• Material: ${product.material}`);
+      if (rule?.namedColors) lines.push(`• Color / Variant: ${namedColor || rule.namedColors[0]}`);
+      if (rule?.printColors) lines.push(`• Print Color: ${printColor || rule.printColors[0]}`);
     }
     if (canPrint) lines.push(`• Print: ${printText}`);
     lines.push(`• Artwork Files: ${artworkSummary(artwork)}`);
