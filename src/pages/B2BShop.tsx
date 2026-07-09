@@ -44,6 +44,7 @@ const B2BShop = () => {
   const [mode, setMode] = useState<"agent" | "gst">("agent");
   const [entry, setEntry] = useState("");
   const [gateError, setGateError] = useState("");
+  const [sampleOpen, setSampleOpen] = useState(false);
 
   const submitGate = () => {
     const val = entry.trim();
