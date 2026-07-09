@@ -132,6 +132,8 @@ const BulkOrder = () => {
   const [customer, setCustomer] = useState<DraftCustomer>(initial.customer || EMPTY_CUSTOMER);
   const [printSel, setPrintSel] = useState<PrintSelection>(initial.print || emptyPrint());
   const [artwork, setArtwork] = useState<ArtworkFile[]>([]);
+  const [namedColor, setNamedColor] = useState<string>("");
+  const [printColor, setPrintColor] = useState<string>("");
   const [error, setError] = useState("");
 
   const cat = findCategory(catSlug)!;
