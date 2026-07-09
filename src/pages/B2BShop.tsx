@@ -369,11 +369,20 @@ const B2BShop = () => {
                 >
                   <CreditCard className="h-4 w-4" /> Pay Now (Razorpay)
                 </button>
+                <button
+                  onClick={() => setSampleOpen(true)}
+                  className="mt-3 w-full inline-flex items-center justify-center gap-2 border border-ink py-3 text-xs uppercase tracking-widest font-semibold hover:bg-ink hover:text-cream transition"
+                >
+                  <Package className="h-4 w-4" /> Order Sample Product
+                </button>
                 <p className="text-[11px] text-muted-foreground mt-2 text-center">
                   Payment first. WhatsApp will open automatically with your order summary — attach artwork there.
                 </p>
               </div>
             </div>
+            {product && (
+              <SampleDialog product={product} open={sampleOpen} onClose={() => setSampleOpen(false)} isGarment={true} />
+            )}
           </>
         )}
       </section>
