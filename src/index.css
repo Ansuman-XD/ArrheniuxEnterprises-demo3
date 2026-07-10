@@ -98,12 +98,44 @@
 @layer components {
   .container-x { @apply mx-auto w-full max-w-[1400px] px-5 md:px-10; }
   .btn-bold {
-    @apply inline-flex items-center gap-2 bg-ink text-cream px-6 py-3 font-medium uppercase tracking-wide text-sm transition hover:bg-primary;
+    @apply inline-flex items-center gap-2 bg-ink text-cream px-6 py-3 font-medium uppercase tracking-wide text-sm transition-all duration-200 hover:bg-primary hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0;
   }
   .btn-outline-bold {
-    @apply inline-flex items-center gap-2 border-2 border-ink text-ink px-6 py-3 font-medium uppercase tracking-wide text-sm transition hover:bg-ink hover:text-cream;
+    @apply inline-flex items-center gap-2 border-2 border-ink text-ink px-6 py-3 font-medium uppercase tracking-wide text-sm transition-all duration-200 hover:bg-ink hover:text-cream hover:-translate-y-0.5;
   }
   .btn-wa {
-    @apply inline-flex items-center gap-2 bg-[hsl(var(--whatsapp))] text-white px-6 py-3 font-medium uppercase tracking-wide text-sm transition hover:brightness-95;
+    @apply inline-flex items-center gap-2 bg-[hsl(var(--whatsapp))] text-white px-6 py-3 font-medium uppercase tracking-wide text-sm transition-all duration-200 hover:brightness-95 hover:-translate-y-0.5 hover:shadow-lg;
+  }
+}
+
+@layer utilities {
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .animate-fade-in { animation: fade-in 0.35s ease-out both; }
+  .animate-scale-in { animation: scale-in 0.25s ease-out both; }
+
+  /* Subtle entrance for main sections */
+  main > section { animation: fade-up 0.7s ease-out both; }
+  main > section:nth-child(2) { animation-delay: 60ms; }
+  main > section:nth-child(3) { animation-delay: 120ms; }
+  main > section:nth-child(4) { animation-delay: 180ms; }
+
+  /* Card / image hover polish (non-invasive) */
+  .group:hover img { transition: transform 0.5s ease; }
+
+  @media (prefers-reduced-motion: reduce) {
+    main > section,
+    .animate-fade-in,
+    .animate-scale-in { animation: none !important; }
   }
 }
