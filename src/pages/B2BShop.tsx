@@ -54,7 +54,7 @@ const B2BShop = () => {
     } else {
       if (!GST_REGEX.test(val)) return setGateError("Enter a valid 15-character GST number.");
     }
-    try { localStorage.setItem(B2B_ACCESS_KEY, "1"); } catch { /* ignore */ }
+    try { sessionStorage.setItem(B2B_ACCESS_KEY, "1"); } catch { /* ignore */ }
     setGateError("");
     setVerified(true);
   };
