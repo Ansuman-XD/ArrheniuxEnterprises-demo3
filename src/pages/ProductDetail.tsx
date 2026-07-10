@@ -138,7 +138,15 @@ const ProductDetail = () => {
   const bumpSize = (s: Size, d: number) =>
     setSizeQty((q) => {
       let next = Math.max(0, (q[s] || 0) + d);
-      if (isArr) next = Math.min(ARR_SIZE_MAX, next);
+      if (isArr) {
+        next = Math.min(ARR_SIZE_MAX, next);
+        const others = SIZES.reduce((sum, k) => sum + (k === s ? 0 : (q[k] || 0)), 0);
+        const roomLeft = Math.max(0, ARR_SIZE_MAX - others);
+        if (next > roomLeft) {
+          toast({ title: "Maximum 3 pieces", description: "ARRHENIUX orders are limited to 3 pieces per order." });
+          next = roomLeft;
+        }
+      }
       return { ...q, [s]: next };
     });
 
@@ -526,7 +534,7 @@ const ProductDetail = () => {
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-xs uppercase tracking-widest font-bold">Sizes & Quantity</h4>
                   <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    {isArr ? `Max ${ARR_SIZE_MAX} per size` : `MOQ ${moq} · ${maxQty}+ goes to Bulk`}
+                    {isArr ? `Max ${ARR_SIZE_MAX} pcs per order` : `MOQ ${moq} · ${maxQty}+ goes to Bulk`}
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -544,7 +552,15 @@ const ProductDetail = () => {
                           value={sizeQty[s]}
                           onChange={(e) => {
                             let v = Math.max(0, Number(e.target.value) || 0);
-                            if (isArr) v = Math.min(ARR_SIZE_MAX, v);
+                            if (isArr) {
+                              v = Math.min(ARR_SIZE_MAX, v);
+                              const others = SIZES.reduce((sum, k) => sum + (k === s ? 0 : (sizeQty[k] || 0)), 0);
+                              const roomLeft = Math.max(0, ARR_SIZE_MAX - others);
+                              if (v > roomLeft) {
+                                toast({ title: "Maximum 3 pieces", description: "ARRHENIUX orders are limited to 3 pieces per order." });
+                                v = roomLeft;
+                              }
+                            }
                             setSizeQty((q) => ({ ...q, [s]: v }));
                           }}
                           className="w-14 text-center text-sm bg-transparent border-x border-ink py-1.5 font-bold"
@@ -601,6 +617,9 @@ const ProductDetail = () => {
 
             {!meetsMoq && total > 0 && (
               <p className="text-xs text-destructive mt-2">Minimum order quantity is {moq} pcs.</p>
+            )}
+            {isArr && total >= ARR_SIZE_MAX && (
+              <p className="text-xs text-primary font-semibold mt-2">Maximum order quantity for ARRHENIUX is {ARR_SIZE_MAX} pieces per order.</p>
             )}
 
             {isBulk ? (
