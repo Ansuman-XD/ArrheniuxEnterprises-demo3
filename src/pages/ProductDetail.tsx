@@ -552,7 +552,15 @@ const ProductDetail = () => {
                           value={sizeQty[s]}
                           onChange={(e) => {
                             let v = Math.max(0, Number(e.target.value) || 0);
-                            if (isArr) v = Math.min(ARR_SIZE_MAX, v);
+                            if (isArr) {
+                              v = Math.min(ARR_SIZE_MAX, v);
+                              const others = SIZES.reduce((sum, k) => sum + (k === s ? 0 : (sizeQty[k] || 0)), 0);
+                              const roomLeft = Math.max(0, ARR_SIZE_MAX - others);
+                              if (v > roomLeft) {
+                                toast({ title: "Maximum 3 pieces", description: "ARRHENIUX orders are limited to 3 pieces per order." });
+                                v = roomLeft;
+                              }
+                            }
                             setSizeQty((q) => ({ ...q, [s]: v }));
                           }}
                           className="w-14 text-center text-sm bg-transparent border-x border-ink py-1.5 font-bold"
