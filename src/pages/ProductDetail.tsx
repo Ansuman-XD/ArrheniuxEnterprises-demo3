@@ -618,6 +618,9 @@ const ProductDetail = () => {
             {!meetsMoq && total > 0 && (
               <p className="text-xs text-destructive mt-2">Minimum order quantity is {moq} pcs.</p>
             )}
+            {isArr && total >= ARR_SIZE_MAX && (
+              <p className="text-xs text-primary font-semibold mt-2">Maximum order quantity for ARRHENIUX is {ARR_SIZE_MAX} pieces per order.</p>
+            )}
 
             {isBulk ? (
               <button onClick={handlePay} className="btn-bold mt-6 w-full justify-center text-base !py-4">
