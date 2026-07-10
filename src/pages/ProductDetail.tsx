@@ -138,7 +138,15 @@ const ProductDetail = () => {
   const bumpSize = (s: Size, d: number) =>
     setSizeQty((q) => {
       let next = Math.max(0, (q[s] || 0) + d);
-      if (isArr) next = Math.min(ARR_SIZE_MAX, next);
+      if (isArr) {
+        next = Math.min(ARR_SIZE_MAX, next);
+        const others = SIZES.reduce((sum, k) => sum + (k === s ? 0 : (q[k] || 0)), 0);
+        const roomLeft = Math.max(0, ARR_SIZE_MAX - others);
+        if (next > roomLeft) {
+          toast({ title: "Maximum 3 pieces", description: "ARRHENIUX orders are limited to 3 pieces per order." });
+          next = roomLeft;
+        }
+      }
       return { ...q, [s]: next };
     });
 
