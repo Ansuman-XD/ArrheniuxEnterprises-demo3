@@ -39,7 +39,7 @@ const B2BShop = () => {
   const [color, setColor] = useState<string>("");
   const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
   const [verified, setVerified] = useState<boolean>(() => {
-    try { return localStorage.getItem(B2B_ACCESS_KEY) === "1"; } catch { return false; }
+    try { return sessionStorage.getItem(B2B_ACCESS_KEY) === "1"; } catch { return false; }
   });
   const [mode, setMode] = useState<"agent" | "gst">("agent");
   const [entry, setEntry] = useState("");
