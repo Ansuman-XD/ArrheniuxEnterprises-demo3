@@ -534,7 +534,7 @@ const ProductDetail = () => {
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-xs uppercase tracking-widest font-bold">Sizes & Quantity</h4>
                   <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    {isArr ? `Max ${ARR_SIZE_MAX} per size` : `MOQ ${moq} · ${maxQty}+ goes to Bulk`}
+                    {isArr ? `Max ${ARR_SIZE_MAX} pcs per order` : `MOQ ${moq} · ${maxQty}+ goes to Bulk`}
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
