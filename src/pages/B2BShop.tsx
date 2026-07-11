@@ -127,21 +127,16 @@ const B2BShop = () => {
   };
 
   const handlePay = () => {
-    if (!product) return;
+    if (!product || !agent) return;
     if (total < B2B_MOQ) return;
-    const user = getSession();
-    if (!user) {
-      navigate(`/auth?next=${encodeURIComponent("/b2b-shop")}`);
-      return;
-    }
     openRazorpay({
       amountInr: grandTotal,
       name: "Arrhenix — B2B",
       description: `${product.name} × ${total} pcs`,
-      prefill: { name: user.name, email: user.email, contact: user.phone },
+      prefill: { name: agent.contactPerson, email: agent.email, contact: agent.mobile },
       onSuccess: (paymentId) => {
         const o = createOrder({
-          userId: user.id,
+          userId: `agent:${agent.id}`,
           productId: product.id,
           productName: product.name,
           productCode: productCode(product),
@@ -161,11 +156,19 @@ const B2BShop = () => {
           paymentRef: paymentId,
           kind: "b2b",
           sizes: sizeQty,
-          customer: { fullName: user.name, email: user.email, phone: user.phone || "" },
+          customer: {
+            fullName: agent.contactPerson,
+            email: agent.email,
+            phone: agent.mobile,
+            company: agent.company,
+            gst: agent.gst,
+            agentCode: agent.code,
+            address: `${agent.address}, ${agent.city}, ${agent.state} - ${agent.pincode}`,
+          },
         });
         toast({ title: "Payment successful", description: `B2B order #${o.id.slice(0, 8).toUpperCase()} placed.` });
         window.open(waLink(buildMessage()), "_blank", "noreferrer");
-        navigate("/my-orders");
+        navigate("/");
       },
     });
   };
@@ -173,42 +176,53 @@ const B2BShop = () => {
   if (!verified) {
     return (
       <Layout>
-        <section className="container-x py-16 min-h-[60vh] flex items-center justify-center">
-          <div className="w-full max-w-md border border-border bg-card p-6 shadow-sm">
+        <section className="container-x py-16 min-h-[60vh] flex items-center justify-center animate-fade-in">
+          <div className="w-full max-w-lg border border-border bg-card p-6 shadow-sm animate-scale-in">
             <span className="text-xs font-bold uppercase tracking-widest text-primary">B2B Access</span>
-            <h1 className="font-display text-3xl mt-2 leading-none">VERIFY TO CONTINUE</h1>
-            <p className="text-sm text-muted-foreground mt-3">
-              The B2B Shop is restricted to verified partners. Enter your Marketing Agent Code or your Shop GST Number to continue.
-            </p>
-            <div className="mt-5 flex border border-border">
-              <button
-                type="button"
-                onClick={() => { setMode("agent"); setEntry(""); setGateError(""); }}
-                className={`flex-1 py-2 text-xs uppercase tracking-widest font-semibold transition ${mode === "agent" ? "bg-ink text-cream" : "text-ink hover:bg-secondary"}`}
-              >
-                Agent Code
-              </button>
-              <button
-                type="button"
-                onClick={() => { setMode("gst"); setEntry(""); setGateError(""); }}
-                className={`flex-1 py-2 text-xs uppercase tracking-widest font-semibold transition ${mode === "gst" ? "bg-ink text-cream" : "text-ink hover:bg-secondary"}`}
-              >
-                Shop GST
-              </button>
-            </div>
-            <label className="block mt-4 text-[10px] uppercase tracking-widest text-muted-foreground">
-              {mode === "agent" ? "Marketing Agent Code" : "Shop GST Number (15 chars)"}
-            </label>
-            <input
-              value={entry}
-              onChange={(e) => setEntry(e.target.value)}
-              placeholder={mode === "agent" ? "e.g. AGENT2024" : "22AAAAA0000A1Z5"}
-              className="mt-1 w-full border border-border px-3 py-2.5 text-sm bg-background focus:outline-none focus:border-ink"
-            />
-            {gateError && <p className="text-xs text-destructive mt-2">{gateError}</p>}
-            <button onClick={submitGate} className="btn-bold mt-4 w-full justify-center !py-3">
-              Verify & Enter B2B Shop
-            </button>
+            <h1 className="font-display text-3xl mt-2 leading-none">
+              {gateStep === "code" ? "VERIFY TO CONTINUE" : "AGENT REGISTRATION"}
+            </h1>
+            {gateStep === "code" ? (
+              <>
+                <p className="text-sm text-muted-foreground mt-3">
+                  B2B Shop is restricted to verified marketing agents. Please enter your Marketing Agent Code to continue.
+                </p>
+                <label className="block mt-5 text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Marketing Agent Code *
+                </label>
+                <input
+                  value={codeInput}
+                  onChange={(e) => setCodeInput(e.target.value)}
+                  placeholder="e.g. AGENT2024"
+                  className="mt-1 w-full border border-border px-3 py-2.5 text-sm bg-background focus:outline-none focus:border-ink"
+                />
+                {gateError && <p className="text-xs text-destructive mt-2">{gateError}</p>}
+                <button onClick={verifyCode} className="btn-bold mt-4 w-full justify-center !py-3">
+                  Verify Agent Code
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground mt-3">
+                  Agent verified: <span className="font-semibold text-ink">{verifiedCode}</span>. Complete registration to place B2B orders (no user login required).
+                </p>
+                <div className="grid sm:grid-cols-2 gap-3 mt-4">
+                  <GateField label="Company Name *" value={agentForm.company} onChange={(v) => setAgentForm({ ...agentForm, company: v })} />
+                  <GateField label="Contact Person *" value={agentForm.contactPerson} onChange={(v) => setAgentForm({ ...agentForm, contactPerson: v })} />
+                  <GateField label="Mobile *" value={agentForm.mobile} onChange={(v) => setAgentForm({ ...agentForm, mobile: v })} />
+                  <GateField label="Email *" value={agentForm.email} onChange={(v) => setAgentForm({ ...agentForm, email: v })} />
+                  <GateField label="GST Number *" value={agentForm.gst} onChange={(v) => setAgentForm({ ...agentForm, gst: v })} />
+                  <GateField label="Pincode *" value={agentForm.pincode} onChange={(v) => setAgentForm({ ...agentForm, pincode: v })} />
+                  <div className="sm:col-span-2"><GateField label="Business Address *" value={agentForm.address} onChange={(v) => setAgentForm({ ...agentForm, address: v })} /></div>
+                  <GateField label="City *" value={agentForm.city} onChange={(v) => setAgentForm({ ...agentForm, city: v })} />
+                  <GateField label="State *" value={agentForm.state} onChange={(v) => setAgentForm({ ...agentForm, state: v })} />
+                </div>
+                {gateError && <p className="text-xs text-destructive mt-2">{gateError}</p>}
+                <button onClick={submitRegistration} className="btn-bold mt-4 w-full justify-center !py-3">
+                  Complete Registration & Enter B2B Shop
+                </button>
+              </>
+            )}
           </div>
         </section>
       </Layout>
