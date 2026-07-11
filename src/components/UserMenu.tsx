@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User as UserIcon, LogOut, Package, ShieldCheck, ChevronDown } from "lucide-react";
+import { User as UserIcon, LogOut, Package, ShieldCheck, ChevronDown, MapPin } from "lucide-react";
 import { clearSession, type User } from "@/lib/authStore";
 
 export const UserMenu = ({ user, onChange }: { user: User; onChange: () => void }) => {
@@ -45,6 +45,13 @@ export const UserMenu = ({ user, onChange }: { user: User; onChange: () => void 
             className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-secondary"
           >
             <Package className="h-4 w-4" /> My Orders
+          </Link>
+          <Link
+            to="/my-addresses"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-secondary"
+          >
+            <MapPin className="h-4 w-4" /> My Address
           </Link>
           {user.role === "admin" && (
             <Link
