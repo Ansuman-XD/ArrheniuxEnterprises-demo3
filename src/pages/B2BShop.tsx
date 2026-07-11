@@ -81,7 +81,7 @@ const B2BShop = () => {
   const subtotal = unitPrice * total + printCharge;
   const discountAmt = Math.round((subtotal * BULK_DISCOUNT_PCT) / 100);
   const afterDiscount = Math.max(0, subtotal - discountAmt);
-  const courier = total * COURIER_PER_PC;
+  const courier = 0;
   const gst = Math.round((afterDiscount + courier) * 0.05);
   const grandTotal = afterDiscount + courier + gst;
 
@@ -90,7 +90,6 @@ const B2BShop = () => {
 
   const resetSelections = () => {
     setSizeQty({ ...EMPTY_SIZES });
-    setColor("");
     setPrintSel(emptyPrint());
   };
 
