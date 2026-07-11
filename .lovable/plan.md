@@ -1,88 +1,101 @@
-# Implementation Plan
+Large scoped update — implementing across catalog, checkout flows, B2B, profile, and UI polish. Existing design, spacing, typography untouched.
 
-Big restructure — keeping all visual design, theme, typography, animations untouched. Only data, routing, navigation, and feature logic change.
+## 1. Customize School Uniform (new category)
 
-## 1. New Catalog Data (`src/data/catalog.ts`)
+`src/data/catalog.ts`
+- Insert new category right after `aprons`: slug `customize-school-uniform`, name "Customize School Uniform", `hasTiers: false`.
+- Subcategories (`items`):
+  1. Spun Matty 220 GSM
+  2. PC Matty 220 GSM
+  3. Track Pant Spun Poly Polyester
+  4. Track Pant Cotton PC Loop Knit
+- Each subcategory shows a small product list (3 styles via `makeSubs`).
+- MOQ rules:
+  - `getMOQ`: category returns 50 (categories flow)
+  - `BulkOrder` page enforces 80 min for this category
+- Treated as garment (size selection, courier already handled).
 
-New file (leave `src/data/site.ts` alone except where products are consumed). Structure:
+## 2. Print Type — School Uniform only
 
+New rule in `catalog.ts` `SCHOOL_UNIFORM_PRINT` (kept separate from accessory rules to avoid conflicts):
+- Method dropdown: DTF / Sublimation / Embroidery
+- DTF options: Chest Logo ₹15, Back Name Print ₹20 (checkboxes)
+- Sublimation options: Woven Chest Logo ₹20, Back Name Print ₹20
+- Embroidery options: Chest Logo ₹20
+
+Extend `PrintPicker` to accept a `singleMethod` prop OR reuse the existing custom-methods pathway with a "method dropdown" UI variant. Simplest: pass full custom `methods` array and let user tick options; keep existing UI. Charges auto-summed as today.
+
+## 3. Sample Product button
+
+- School Uniform PDPs get "Order Sample Product" using existing `SampleDialog` (already handles size + print + upload + billing + Razorpay + order history + WhatsApp). Just make sure category qualifies (`isGarment` true). No new code needed beyond category registration.
+
+## 4. Remove Color Selection everywhere
+
+Files: `src/pages/ProductDetail.tsx`, `src/components/SampleDialog.tsx`, `src/pages/BulkOrder.tsx`, `src/pages/B2BShop.tsx`.
+- Suppress the generic color swatch block when there are no `namedColors` in the accessory rule.
+- Keep named color selectors for Cap, Umbrella, Lanyard, etc. (rule-driven, unchanged).
+- Remove `color` line from WhatsApp summary when not applicable.
+
+## 5. Courier — display FREE, do not add
+
+Global: change billing UI to always show `Courier Charges: FREE`.
+- `getCourierPerPc` → return 0 everywhere (safest single-point change).
+- Update all pages that show the courier row: PDP, Sample, Bulk, B2B, invoice.
+- Retain the total formula (no courier component now).
+
+## 6. B2B Verification revamp
+
+`src/pages/B2BShop.tsx`
+- Always start in "unverified" state on mount (do not read from storage). Gate persists only for the session's active tab lifetime (in-memory React state) → guarantees popup on every fresh window/open.
+- Remove GST-number input; keep only Marketing Agent Code.
+- Step 2 (new): Agent Registration Form — Company Name, Contact Person, Mobile, Email, GST Number, Address, City, State, Pincode. All required.
+- On submit → save to `localStorage` (`arr_b2b_agents`) keyed by code + timestamp, and set component state to unlocked.
+- Verified agent can place orders without user login (B2BShop sample/order flows currently call `getSession`; bypass login check for B2B by seeding an in-memory "agent identity" used only inside B2B flow. Other sections keep login).
+
+Add store helper in `authStore.ts`: `saveAgentRegistration`, `getAgentRegistrations`.
+
+## 7. My Address management
+
+New page `src/pages/MyAddresses.tsx` + link from `UserMenu` and `MyOrders` sidebar.
+
+Address type:
 ```ts
-type Tier = "regular" | "premium";
-type SubCategory = { slug; name; tier?: Tier; products: Product[] };
-type Category = { slug; name; image; hasTiers: boolean; regular?: SubCategory[]; premium?: SubCategory[]; items?: SubCategory[] };
+{ id, name, line1, line2, landmark?, mobile, altMobile?, city, state, pincode, isDefault }
 ```
 
-All 10 categories from the brief encoded with their subcategories. Each subcategory gets 2–4 placeholder products (reusing existing category images) so listings aren't empty. Products carry `id, name, categorySlug, subSlug, tier, fabric, gsm, price, images[6], colors[], description, material`.
+Store in `authStore.ts`: `getAddresses(userId)`, `saveAddress`, `updateAddress`, `deleteAddress`, `setDefaultAddress`, `getDefaultAddress(userId)`.
 
-## 2. Routing (`src/App.tsx`)
+Checkout integration:
+- `ProductDetail`, `BulkOrder`, `SampleDialog`: before Razorpay pay, if user has ≥1 address, use default; allow selecting from list via inline `<select>`. If none, prompt to add (link to `/my-addresses?return=<path>`).
+- Include address in `Order.customer` and WhatsApp summary block "Delivery Address".
 
-Add routes (existing ones kept):
-- `/category/:cat` → tier picker (or subcategory list if no tiers)
-- `/category/:cat/:tier` → subcategory grid (tier ∈ regular|premium)
-- `/category/:cat/:tier/:sub` → product listing
-- `/category/:cat/:sub` → listing for tier-less cats (accessories, joining kits, arrheniux)
-- `/product/:id` (existing) — reads from new catalog
-- `/auth` (existing)
+Route registered in `src/App.tsx`.
 
-`Category.tsx` rewritten to branch on URL depth. New small page components: `CategoryTiers.tsx`, `SubcategoryList.tsx`, `ProductList.tsx` — all styled with existing tokens (cream, ink, font-display).
+## 8. Animations / graphics polish
 
-## 3. Mega Menu (`src/components/Navbar.tsx` + new `MegaMenu.tsx`)
+`src/index.css` — add utility classes: `.animate-float`, `.hover-lift`, `.img-zoom` (already have fade/scale). No structural changes.
+- Apply `.hover-lift` to product cards, `.img-zoom` wrapper on PDP hero image.
+- Dropdown menus already animated (Radix). Confirm `animate-fade-in` on modals.
 
-Hover trigger on "Categories" nav item. Panel layout:
+Skipping heavy new illustration assets to keep the design as-is; adding only CSS-level polish.
 
-```text
-┌─────────────┬──────────────┬──────────────────────┐
-│ Categories  │ Regular /    │ Subcategories        │
-│ (vertical)  │ Premium      │ (links to listing)   │
-└─────────────┴──────────────┴──────────────────────┘
-```
+## Technical details
 
-Three columns; left selects category (hover), middle shows tier tabs, right shows subcategories. Tier-less categories collapse middle column. Uses existing border/ink/cream tokens — no new theme.
+- Routes: `App.tsx` already handles `/category/:slug` etc. dynamically via catalog — new category picks up automatically. Add explicit `/my-addresses` route.
+- No schema/backend changes (localStorage store).
+- Typecheck after each large edit.
 
-Mobile: accordion fallback inside existing mobile sheet.
+## Files touched
 
-## 4. Product Details (`src/pages/ProductDetail.tsx` rewrite, same look)
-
-- Left: main image + 6-thumbnail gallery (vertical strip on desktop, horizontal scroll on mobile). Click thumb → swaps main.
-- Right: name, description, material, colors (if present).
-- **Per-size quantity table** — XS S M L XL XXL 3XL, each row with `[-] qty [+]`. Total auto-calculated.
-- MOQ banner = 20. Order button disabled with helper text when total < 20.
-- WhatsApp message includes product name + each selected size + qty per size + total + note "Send your custom logo as next message".
-- Share row: "Share via WhatsApp" (wa.me with product URL), "Copy Product Link" (navigator.clipboard + toast).
-- Login gate: if not logged in, Order button routes to `/auth?next=<current path>` instead.
-
-## 5. Latest Collection
-
-`Releases.tsx` removed from `Index.tsx`. Add `LatestCollection.tsx` showing last 9 products from catalog (sorted by `addedAt` desc, fallback to array order).
-
-## 6. Factory Page additions
-
-Append three sections to existing Factory section content — `WhoWeAre`, `WhatWeDo`, `WhyDifferent`. Card grid with lucide icons, existing border/ink palette, subtle hover animation (`transition-transform`). No theme changes.
-
-## 7. Reviews
-
-- Rename "Reviews"/"ClientReactions" heading to **Client Reactions**.
-- Convert to CSS-keyframe horizontal marquee (right→left, infinite, pause on hover). Duplicate list for seamless loop.
-- New `ReviewForm.tsx` — fields: rating (1–5 stars), subject (Company/Product/Service), text. Submitted reviews stored in `authStore` (`reviews[]` in localStorage) and merged into the marquee. Submission requires login → otherwise redirect `/auth?next=/#reviews`.
-
-## 8. Auth gating
-
-Helper in `authStore`: `requireAuth(navigate, currentPath)` → if no user, navigate `/auth?next=...`. `Auth.tsx` reads `next` query param and redirects there after login/signup (admins still go to `/admin`).
-
-Used only by: PDP Order button, Review submit. All other pages remain public.
-
-## 9. Files
-
-**New:** `src/data/catalog.ts`, `src/components/MegaMenu.tsx`, `src/components/sections/LatestCollection.tsx`, `src/components/sections/WhyWhatWho.tsx`, `src/components/ReviewForm.tsx`, `src/pages/CategoryTiers.tsx`, `src/pages/SubcategoryList.tsx`, `src/pages/ProductList.tsx`.
-
-**Edited:** `src/App.tsx` (routes), `src/components/Navbar.tsx` (mega menu hook-in), `src/pages/ProductDetail.tsx` (size matrix, share, login gate), `src/pages/Index.tsx` (swap Releases→LatestCollection, append Why/What/Who to Factory area), `src/components/sections/Reviews.tsx` or `ClientReactions.tsx` (marquee + form), `src/lib/authStore.ts` (reviews CRUD + requireAuth + `next` redirect support), `src/pages/Auth.tsx` (honor `?next=`).
-
-**Untouched:** index.css, tailwind.config, all UI primitives, Footer, Hero, Logo, all visual tokens.
-
-## 10. Notes / non-goals
-
-- OAuth stays demo (per earlier decision) — Google/Facebook buttons keep current behavior.
-- Product images: each product reuses its category hero image 6× as gallery placeholders until real images are supplied.
-- No backend changes — still localStorage-based.
-
-Confirm and I'll build it in one pass.
+- src/data/catalog.ts
+- src/components/PrintPicker.tsx (minor — support single-method dropdown label)
+- src/components/SampleDialog.tsx
+- src/pages/ProductDetail.tsx
+- src/pages/BulkOrder.tsx
+- src/pages/B2BShop.tsx
+- src/pages/MyAddresses.tsx (new)
+- src/components/UserMenu.tsx
+- src/lib/authStore.ts
+- src/lib/invoice.ts (courier line label)
+- src/App.tsx
+- src/index.css
