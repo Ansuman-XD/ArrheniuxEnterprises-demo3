@@ -236,7 +236,7 @@ const B2BShop = () => {
           <span className="text-xs font-bold uppercase tracking-widest text-primary">B2B</span>
           <h1 className="font-display text-5xl md:text-7xl leading-none mt-2">B2B SHOP</h1>
           <p className="mt-3 text-muted-foreground max-w-2xl">
-            Wholesale storefront for corporate buyers. Minimum order {B2B_MOQ} pieces per product · quantities in steps of {B2B_STEP} · auto {BULK_DISCOUNT_PCT}% bulk discount · ₹{COURIER_PER_PC}/pc courier · 5% GST.
+            Wholesale storefront for corporate buyers. Minimum order {B2B_MOQ} pieces per product · quantities in steps of {B2B_STEP} · auto {BULK_DISCOUNT_PCT}% bulk discount · Courier FREE · 5% GST.
           </p>
         </div>
       </section>
@@ -324,18 +324,7 @@ const B2BShop = () => {
                   </div>
                 </div>
 
-                {product.colors.length > 0 && (
-                  <div className="mt-4">
-                    <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Color</h4>
-                    <div className="flex gap-2">
-                      {product.colors.map((c) => (
-                        <button key={c} onClick={() => setColor(c)}
-                          className={`h-9 w-9 rounded-full border-2 transition ${(color || product.colors[0]) === c ? "border-ink scale-110" : "border-border"}`}
-                          style={{ backgroundColor: c }} aria-label={c} />
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {/* Color selection removed from B2B per spec */}
 
                 {/* Print type removed from B2B per spec */}
 
@@ -363,7 +352,7 @@ const B2BShop = () => {
                   {printCharge > 0 && <Row label={`Print (${printText})`} value={`+₹${printCharge}`} />}
                   <Row label="Subtotal" value={`₹${subtotal.toLocaleString("en-IN")}`} />
                   <Row label={`B2B Discount ${BULK_DISCOUNT_PCT}%`} value={`−₹${discountAmt.toLocaleString("en-IN")}`} />
-                  <Row label={`Courier (₹${COURIER_PER_PC}×${total})`} value={`₹${courier.toLocaleString("en-IN")}`} />
+                  <Row label="Courier" value="FREE" />
                   <Row label="GST 5%" value={`₹${gst.toLocaleString("en-IN")}`} />
                   <div className="flex justify-between px-4 py-3 bg-ink text-cream">
                     <span className="text-xs uppercase tracking-widest font-bold">Total</span>
