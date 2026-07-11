@@ -264,6 +264,19 @@ export const catalog: CatalogCategory[] = [
     ]),
   },
   {
+    slug: "customize-school-uniform",
+    name: "Customize School Uniform",
+    image: uniforms,
+    hasTiers: false,
+    blurb: "School uniform T-shirts and track pants — built per your specs.",
+    items: makeSubs("customize-school-uniform", uniforms, undefined, [
+      "Spun Matty 220 GSM",
+      "PC Matty 220 GSM",
+      "Track Pant Spun Poly Polyester",
+      "Track Pant Cotton PC Loop Knit",
+    ], 3),
+  },
+  {
     slug: "custom-accessories",
     name: "Custom Accessories",
     image: totes,
@@ -522,6 +535,27 @@ const ACCESSORY_RULES: Record<string, AccessoryRule> = {
   },
 };
 
+// Print options shared by all Customize School Uniform subcategories.
+const SCHOOL_UNIFORM_PRINT_METHODS = [
+  { id: "dtf" as const, label: "DTF Print", options: [
+    { id: "su-dtf-chest", label: "DTF Chest Logo", pricePerPc: 15 },
+    { id: "su-dtf-back", label: "Back Name Print", pricePerPc: 20 },
+  ]},
+  { id: "sublimation" as const, label: "Sublimation Print", options: [
+    { id: "su-sub-woven", label: "Woven Chest Logo", pricePerPc: 20 },
+    { id: "su-sub-back", label: "Back Name Print", pricePerPc: 20 },
+  ]},
+  { id: "embroidery" as const, label: "Embroidery Print", options: [
+    { id: "su-emb-chest", label: "Embroidery Chest Logo", pricePerPc: 20 },
+  ]},
+];
+["spun-matty-220-gsm", "pc-matty-220-gsm", "track-pant-spun-poly-polyester", "track-pant-cotton-pc-loop-knit"].forEach((slug) => {
+  ACCESSORY_RULES[slug] = {
+    moq: 50, max: 80, gstPct: 5, discountEnabled: true,
+    print: { kind: "custom", methods: SCHOOL_UNIFORM_PRINT_METHODS },
+  };
+});
+
 export const getAccessoryRules = (subSlug?: string): AccessoryRule | null => {
   if (!subSlug) return null;
   return ACCESSORY_RULES[subSlug] ?? null;
@@ -533,13 +567,8 @@ export const getGstPct = (p: Pick<CatalogProduct, "subSlug">) => {
   return rule ? rule.gstPct / 100 : GST_RATE;
 };
 
-// Courier per piece. Accessories & Welcome Kit (non-garment) = ₹0. Garment default = ₹30.
-export const getCourierPerPc = (p: Pick<CatalogProduct, "categorySlug" | "subSlug">) => {
-  const rule = getAccessoryRules(p.subSlug);
-  if (rule && typeof rule.courierPerPc === "number") return rule.courierPerPc;
-  if (isNonGarmentCategory(p.categorySlug)) return 0;
-  return COURIER_PER_PC;
-};
+// Courier per piece — FREE across the site.
+export const getCourierPerPc = (_p: Pick<CatalogProduct, "categorySlug" | "subSlug">) => 0;
 
 // Sample price = 1 pc at unit price + courier + GST (a small stand-alone charge)
 export const samplePrice = (p: CatalogProduct) => {

@@ -12,6 +12,7 @@ import ProductDetail from "./pages/ProductDetail.tsx";
 import BulkOrder from "./pages/BulkOrder.tsx";
 import B2BShop from "./pages/B2BShop.tsx";
 import MyOrders from "./pages/MyOrders.tsx";
+import MyAddresses from "./pages/MyAddresses.tsx";
 import Contact from "./pages/Contact.tsx";
 import ScrollToTop from "./components/ScrollToTop";
 import { VisitTracker } from "./components/VisitTracker";
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/bulk-order" element={<BulkOrder />} />
           <Route path="/b2b-shop" element={<B2BShop />} />
           <Route path="/my-orders" element={<MyOrders />} />
+          <Route path="/my-addresses" element={<MyAddresses />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/admin/*" element={<AdminApp />} />
           <Route path="*" element={<NotFound />} />
