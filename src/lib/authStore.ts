@@ -84,6 +84,8 @@ const PRODUCTS_KEY = "arr_products";
 const SETTINGS_KEY = "arr_settings";
 const REVIEWS_KEY = "arr_reviews";
 const ORDERS_KEY = "arr_orders";
+const ADDRESSES_KEY = "arr_addresses";
+const AGENTS_KEY = "arr_b2b_agents";
 
 export const DEFAULT_ADMIN_EMAIL = "admin@arrhenius.com";
 export const DEFAULT_ADMIN_PASSWORD = "admin123";
