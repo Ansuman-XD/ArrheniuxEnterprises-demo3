@@ -107,7 +107,7 @@ const B2BShop = () => {
     lines.push(`• B2B Subcategory: ${activeSub?.name}`);
     lines.push(`• Product: ${product.name}`);
     lines.push(`• Code: ${productCode(product)}`);
-    lines.push(`• Color: ${color || product.colors[0]}`);
+    if (agent) lines.push(`• Agent Code: ${agent.code} · ${agent.company}`);
     if (canPrint) lines.push(`• Print: ${printText}`);
     lines.push("• Sizes:");
     SIZES.filter((s) => sizeQty[s] > 0).forEach((s) => lines.push(`   - ${s}: ${sizeQty[s]} pcs`));
@@ -118,7 +118,7 @@ const B2BShop = () => {
     if (printCharge > 0) lines.push(`• Print Charge: ₹${printCharge}`);
     lines.push(`• Subtotal: ₹${subtotal}`);
     lines.push(`• B2B Discount ${BULK_DISCOUNT_PCT}%: −₹${discountAmt}`);
-    lines.push(`• Courier: ₹${courier}`);
+    lines.push(`• Courier: FREE`);
     lines.push(`• GST 5%: ₹${gst}`);
     lines.push(`• *Paid: ₹${grandTotal}*`);
     lines.push("");
