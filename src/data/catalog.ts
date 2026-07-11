@@ -546,13 +546,8 @@ export const getGstPct = (p: Pick<CatalogProduct, "subSlug">) => {
   return rule ? rule.gstPct / 100 : GST_RATE;
 };
 
-// Courier per piece. Accessories & Welcome Kit (non-garment) = ₹0. Garment default = ₹30.
-export const getCourierPerPc = (p: Pick<CatalogProduct, "categorySlug" | "subSlug">) => {
-  const rule = getAccessoryRules(p.subSlug);
-  if (rule && typeof rule.courierPerPc === "number") return rule.courierPerPc;
-  if (isNonGarmentCategory(p.categorySlug)) return 0;
-  return COURIER_PER_PC;
-};
+// Courier per piece — FREE across the site.
+export const getCourierPerPc = (_p: Pick<CatalogProduct, "categorySlug" | "subSlug">) => 0;
 
 // Sample price = 1 pc at unit price + courier + GST (a small stand-alone charge)
 export const samplePrice = (p: CatalogProduct) => {
