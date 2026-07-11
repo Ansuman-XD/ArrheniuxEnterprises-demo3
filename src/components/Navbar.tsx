@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, User as UserIcon, ChevronDown } from "lucide-react";
+import { Menu, X, User as UserIcon, ChevronDown, Home, Sparkles, Info, MessageSquare, Building2, Mail, ClipboardList, Shield, LayoutGrid, Package } from "lucide-react";
 import { Logo } from "./Logo";
 import { MegaMenu } from "./MegaMenu";
 import { BulkMegaMenu } from "./BulkMegaMenu";
@@ -64,35 +64,35 @@ export const Navbar = () => {
           <a
             href="#home"
             onClick={(e) => handleHashClick(e, "#home")}
-            className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink"
+            className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink inline-flex items-center gap-1.5"
           >
-            Home
+            <Home className="h-3.5 w-3.5" /> Home
           </a>
           <MegaMenu />
           <a
             href="#collection"
             onClick={(e) => handleHashClick(e, "#collection")}
-            className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink"
+            className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink inline-flex items-center gap-1.5"
           >
-            New Collection
+            <Sparkles className="h-3.5 w-3.5" /> New Collection
           </a>
           <BulkMegaMenu />
-          <NavLink to="/b2b-shop" className={navLinkClass}>B2B Shop</NavLink>
+          <NavLink to="/b2b-shop" className={navLinkClass}><span className="inline-flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5" /> B2B Shop</span></NavLink>
           <a
             href="#about-us"
             onClick={(e) => handleHashClick(e, "#about-us")}
-            className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink"
+            className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink inline-flex items-center gap-1.5"
           >
-            About Us
+            <Info className="h-3.5 w-3.5" /> About Us
           </a>
           <a
             href="#reviews"
             onClick={(e) => handleHashClick(e, "#reviews")}
-            className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink"
+            className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink inline-flex items-center gap-1.5"
           >
-            Client Reactions
+            <MessageSquare className="h-3.5 w-3.5" /> Client Reactions
           </a>
-          <NavLink to="/contact" className={navLinkClass}>Contact</NavLink>
+          <NavLink to="/contact" className={navLinkClass}><span className="inline-flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> Contact</span></NavLink>
         </nav>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -134,21 +134,21 @@ export const Navbar = () => {
               </div>
             )}
             {user && (
-              <Link to="/my-orders" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium">
-                My Orders
+              <Link to="/my-orders" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5">
+                <ClipboardList className="h-3.5 w-3.5" /> My Orders
               </Link>
             )}
             {user?.role === "admin" && (
-              <Link to="/admin" onClick={() => setOpen(false)} className="py-2 font-semibold uppercase text-sm tracking-wide text-primary">
-                Admin Panel →
+              <Link to="/admin" onClick={() => setOpen(false)} className="py-2 font-semibold uppercase text-sm tracking-wide text-primary inline-flex items-center gap-1.5">
+                <Shield className="h-3.5 w-3.5" /> Admin Panel →
               </Link>
             )}
-            <a href="#home" onClick={(e) => handleHashClick(e, "#home")} className="py-2 uppercase text-sm tracking-wide font-medium">Home</a>
+            <a href="#home" onClick={(e) => handleHashClick(e, "#home")} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><Home className="h-3.5 w-3.5" /> Home</a>
             <button
               onClick={() => setMobileCatOpen((v) => !v)}
               className="py-2 font-medium uppercase text-sm tracking-wide flex items-center justify-between"
             >
-              Categories <ChevronDown className={`h-4 w-4 transition ${mobileCatOpen ? "rotate-180" : ""}`} />
+              <span className="inline-flex items-center gap-1.5"><LayoutGrid className="h-3.5 w-3.5" /> Categories</span> <ChevronDown className={`h-4 w-4 transition ${mobileCatOpen ? "rotate-180" : ""}`} />
             </button>
             {mobileCatOpen && (
               <div className="pl-3 border-l border-border flex flex-col gap-1 mb-2">
@@ -164,12 +164,12 @@ export const Navbar = () => {
                 ))}
               </div>
             )}
-            <a href="#collection" onClick={(e) => handleHashClick(e, "#collection")} className="py-2 uppercase text-sm tracking-wide font-medium">New Collection</a>
+            <a href="#collection" onClick={(e) => handleHashClick(e, "#collection")} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" /> New Collection</a>
             <button
               onClick={() => setMobileBulkOpen((v) => !v)}
               className="py-2 font-medium uppercase text-sm tracking-wide flex items-center justify-between"
             >
-              Bulk Order <ChevronDown className={`h-4 w-4 transition ${mobileBulkOpen ? "rotate-180" : ""}`} />
+              <span className="inline-flex items-center gap-1.5"><Package className="h-3.5 w-3.5" /> Bulk Order</span> <ChevronDown className={`h-4 w-4 transition ${mobileBulkOpen ? "rotate-180" : ""}`} />
             </button>
             {mobileBulkOpen && (
               <div className="pl-3 border-l border-border flex flex-col gap-1 mb-2">
@@ -188,10 +188,10 @@ export const Navbar = () => {
                 ))}
               </div>
             )}
-            <Link to="/b2b-shop" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium">B2B Shop</Link>
-            <a href="#about-us" onClick={(e) => handleHashClick(e, "#about-us")} className="py-2 uppercase text-sm tracking-wide font-medium">About Us</a>
-            <a href="#reviews" onClick={(e) => handleHashClick(e, "#reviews")} className="py-2 uppercase text-sm tracking-wide font-medium">Client Reactions</a>
-            <Link to="/contact" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium">Contact</Link>
+            <Link to="/b2b-shop" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5" /> B2B Shop</Link>
+            <a href="#about-us" onClick={(e) => handleHashClick(e, "#about-us")} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><Info className="h-3.5 w-3.5" /> About Us</a>
+            <a href="#reviews" onClick={(e) => handleHashClick(e, "#reviews")} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5" /> Client Reactions</a>
+            <Link to="/contact" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> Contact</Link>
           </div>
         </div>
       )}

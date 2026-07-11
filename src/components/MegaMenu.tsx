@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, LayoutGrid } from "lucide-react";
 import { catalog, listingHref, type Tier } from "@/data/catalog";
 
 export const MegaMenu = () => {
@@ -36,7 +36,7 @@ export const MegaMenu = () => {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
       >
-        Categories <ChevronDown className="h-3.5 w-3.5" />
+        <LayoutGrid className="h-3.5 w-3.5" /> Categories <ChevronDown className="h-3.5 w-3.5" />
       </button>
 
       {open && (
