@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Package } from "lucide-react";
 import { catalog as fullCatalog, type Tier, isArrheniuxCategory } from "@/data/catalog";
 const catalog = fullCatalog.filter((c) => !isArrheniuxCategory(c.slug));
 
@@ -39,7 +39,7 @@ export const BulkMegaMenu = () => {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
       >
-        Bulk Order <ChevronDown className="h-3.5 w-3.5" />
+        <Package className="h-3.5 w-3.5" /> Bulk Order <ChevronDown className="h-3.5 w-3.5" />
       </button>
 
       {open && (
