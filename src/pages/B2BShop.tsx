@@ -9,7 +9,6 @@ import {
   getB2BProducts,
   priceValue,
   productCode,
-  COURIER_PER_PC,
   BULK_DISCOUNT_PCT,
   B2B_MOQ,
   B2B_STEP,
@@ -18,7 +17,7 @@ import {
 } from "@/data/catalog";
 import { emptyPrint, printPricePerPc, printLabel, type PrintSelection } from "@/data/printOptions";
 import { waLink } from "@/data/site";
-import { getSession, createOrder } from "@/lib/authStore";
+import { createOrder, saveAgentRegistration, type AgentRegistration } from "@/lib/authStore";
 import { openRazorpay } from "@/lib/razorpay";
 import { toast } from "@/hooks/use-toast";
 
@@ -28,36 +27,46 @@ const EMPTY_SIZES: Record<Size, number> = { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL:
 
 type View = { step: "subs" } | { step: "products"; subSlug: string } | { step: "detail"; subSlug: string; productId: string };
 
-const B2B_ACCESS_KEY = "arr_b2b_access_v1";
 const AGENT_CODES = ["AGENT2024", "ARR-B2B", "DEALER100"];
-const GST_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9A-Z]{3}$/i;
+
+type AgentForm = {
+  company: string; contactPerson: string; mobile: string; email: string;
+  gst: string; address: string; city: string; state: string; pincode: string;
+};
+const EMPTY_AGENT: AgentForm = { company: "", contactPerson: "", mobile: "", email: "", gst: "", address: "", city: "", state: "", pincode: "" };
 
 const B2BShop = () => {
   const navigate = useNavigate();
   const [view, setView] = useState<View>({ step: "subs" });
   const [sizeQty, setSizeQty] = useState<Record<Size, number>>({ ...EMPTY_SIZES });
-  const [color, setColor] = useState<string>("");
   const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
-  const [verified, setVerified] = useState<boolean>(() => {
-    try { return sessionStorage.getItem(B2B_ACCESS_KEY) === "1"; } catch { return false; }
-  });
-  const [mode, setMode] = useState<"agent" | "gst">("agent");
-  const [entry, setEntry] = useState("");
+  // Verification always starts unverified per session/window.
+  const [gateStep, setGateStep] = useState<"code" | "form">("code");
+  const [verifiedCode, setVerifiedCode] = useState<string>("");
+  const [agent, setAgent] = useState<AgentRegistration | null>(null);
+  const [codeInput, setCodeInput] = useState("");
+  const [agentForm, setAgentForm] = useState<AgentForm>(EMPTY_AGENT);
   const [gateError, setGateError] = useState("");
   const [sampleOpen, setSampleOpen] = useState(false);
 
-  const submitGate = () => {
-    const val = entry.trim();
-    if (!val) return setGateError("Please enter a value.");
-    if (mode === "agent") {
-      if (!AGENT_CODES.includes(val.toUpperCase())) return setGateError("Invalid marketing agent code.");
-    } else {
-      if (!GST_REGEX.test(val)) return setGateError("Enter a valid 15-character GST number.");
-    }
-    try { sessionStorage.setItem(B2B_ACCESS_KEY, "1"); } catch { /* ignore */ }
+  const verifyCode = () => {
+    const val = codeInput.trim().toUpperCase();
+    if (!val) return setGateError("Please enter your Marketing Agent Code.");
+    if (!AGENT_CODES.includes(val)) return setGateError("Invalid marketing agent code.");
+    setVerifiedCode(val);
     setGateError("");
-    setVerified(true);
+    setGateStep("form");
   };
+
+  const submitRegistration = () => {
+    const req: (keyof AgentForm)[] = ["company", "contactPerson", "mobile", "email", "gst", "address", "city", "state", "pincode"];
+    for (const k of req) if (!agentForm[k].trim()) return setGateError("Please complete all fields.");
+    const reg = saveAgentRegistration({ code: verifiedCode, ...agentForm });
+    setAgent(reg);
+    setGateError("");
+  };
+
+  const verified = agent !== null;
 
   const activeSub = view.step !== "subs" ? B2B_SUBCATEGORIES.find((s) => s.slug === view.subSlug) : null;
   const products = view.step !== "subs" ? getB2BProducts(view.subSlug) : [];
