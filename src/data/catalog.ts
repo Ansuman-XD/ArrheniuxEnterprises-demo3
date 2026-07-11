@@ -535,6 +535,27 @@ const ACCESSORY_RULES: Record<string, AccessoryRule> = {
   },
 };
 
+// Print options shared by all Customize School Uniform subcategories.
+const SCHOOL_UNIFORM_PRINT_METHODS = [
+  { id: "dtf" as const, label: "DTF Print", options: [
+    { id: "su-dtf-chest", label: "DTF Chest Logo", pricePerPc: 15 },
+    { id: "su-dtf-back", label: "Back Name Print", pricePerPc: 20 },
+  ]},
+  { id: "sublimation" as const, label: "Sublimation Print", options: [
+    { id: "su-sub-woven", label: "Woven Chest Logo", pricePerPc: 20 },
+    { id: "su-sub-back", label: "Back Name Print", pricePerPc: 20 },
+  ]},
+  { id: "embroidery" as const, label: "Embroidery Print", options: [
+    { id: "su-emb-chest", label: "Embroidery Chest Logo", pricePerPc: 20 },
+  ]},
+];
+["spun-matty-220-gsm", "pc-matty-220-gsm", "track-pant-spun-poly-polyester", "track-pant-cotton-pc-loop-knit"].forEach((slug) => {
+  ACCESSORY_RULES[slug] = {
+    moq: 50, max: 80, gstPct: 5, discountEnabled: true,
+    print: { kind: "custom", methods: SCHOOL_UNIFORM_PRINT_METHODS },
+  };
+});
+
 export const getAccessoryRules = (subSlug?: string): AccessoryRule | null => {
   if (!subSlug) return null;
   return ACCESSORY_RULES[subSlug] ?? null;
