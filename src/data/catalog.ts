@@ -264,6 +264,19 @@ export const catalog: CatalogCategory[] = [
     ]),
   },
   {
+    slug: "customize-school-uniform",
+    name: "Customize School Uniform",
+    image: uniforms,
+    hasTiers: false,
+    blurb: "School uniform T-shirts and track pants — built per your specs.",
+    items: makeSubs("customize-school-uniform", uniforms, undefined, [
+      "Spun Matty 220 GSM",
+      "PC Matty 220 GSM",
+      "Track Pant Spun Poly Polyester",
+      "Track Pant Cotton PC Loop Knit",
+    ], 3),
+  },
+  {
     slug: "custom-accessories",
     name: "Custom Accessories",
     image: totes,
