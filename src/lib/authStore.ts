@@ -294,3 +294,89 @@ export const markOrderReviewed = (id: string) => {
 
 export const hasPurchased = (userId: string, productId: string) =>
   getOrders().some((o) => o.userId === userId && o.productId === productId);
+
+// ---------- Addresses ----------
+export type Address = {
+  id: string;
+  userId: string;
+  name: string;
+  line1: string;
+  line2?: string;
+  landmark?: string;
+  mobile: string;
+  altMobile?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  isDefault?: boolean;
+};
+
+export const getAddresses = (userId: string): Address[] =>
+  read<Address[]>(ADDRESSES_KEY, []).filter((a) => a.userId === userId);
+
+const writeAddresses = (list: Address[]) => write(ADDRESSES_KEY, list);
+
+export const saveAddress = (a: Omit<Address, "id">): Address => {
+  const list = read<Address[]>(ADDRESSES_KEY, []);
+  const isFirst = !list.some((x) => x.userId === a.userId);
+  const addr: Address = { ...a, id: crypto.randomUUID(), isDefault: a.isDefault || isFirst };
+  if (addr.isDefault) list.forEach((x) => { if (x.userId === a.userId) x.isDefault = false; });
+  list.push(addr);
+  writeAddresses(list);
+  return addr;
+};
+
+export const updateAddress = (id: string, patch: Partial<Address>) => {
+  const list = read<Address[]>(ADDRESSES_KEY, []);
+  const a = list.find((x) => x.id === id);
+  if (!a) return;
+  if (patch.isDefault) list.forEach((x) => { if (x.userId === a.userId) x.isDefault = false; });
+  Object.assign(a, patch);
+  writeAddresses(list);
+};
+
+export const deleteAddress = (id: string) => {
+  const list = read<Address[]>(ADDRESSES_KEY, []).filter((x) => x.id !== id);
+  writeAddresses(list);
+};
+
+export const setDefaultAddress = (userId: string, id: string) => {
+  const list = read<Address[]>(ADDRESSES_KEY, []);
+  list.forEach((x) => { if (x.userId === userId) x.isDefault = x.id === id; });
+  writeAddresses(list);
+};
+
+export const getDefaultAddress = (userId: string): Address | null => {
+  const addrs = getAddresses(userId);
+  return addrs.find((a) => a.isDefault) || addrs[0] || null;
+};
+
+export const formatAddress = (a: Address): string =>
+  [a.line1, a.line2, a.landmark, `${a.city}, ${a.state} - ${a.pincode}`].filter(Boolean).join(", ");
+
+// ---------- B2B Agent registrations ----------
+export type AgentRegistration = {
+  id: string;
+  code: string;
+  company: string;
+  contactPerson: string;
+  mobile: string;
+  email: string;
+  gst: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  createdAt: string;
+};
+
+export const saveAgentRegistration = (a: Omit<AgentRegistration, "id" | "createdAt">): AgentRegistration => {
+  const list = read<AgentRegistration[]>(AGENTS_KEY, []);
+  const reg: AgentRegistration = { ...a, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
+  list.unshift(reg);
+  write(AGENTS_KEY, list);
+  return reg;
+};
+
+export const getAgentRegistrations = (): AgentRegistration[] => read<AgentRegistration[]>(AGENTS_KEY, []);
+
