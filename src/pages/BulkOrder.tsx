@@ -247,13 +247,24 @@ const BulkOrder = () => {
       if (rule?.namedColors) lines.push(`• Color / Variant: ${namedColor || rule.namedColors[0]}`);
       if (rule?.printColors) lines.push(`• Print Color: ${printColor || rule.printColors[0]}`);
     }
-    if (canPrint) lines.push(`• Print: ${printText}`);
+    if (isKit) {
+      const list = kitItems.map((id) => {
+        const it = WELCOME_KIT_ITEMS.find((k) => k.id === id);
+        return it ? `${it.label} (₹${it.price})` : id;
+      }).join(", ");
+      lines.push(`• Kit Items: ${list}`);
+      lines.push(`• Print: Company Logo Printing — FREE`);
+      lines.push(`• Free Custom Tote Bag included with every kit`);
+    } else if (canPrint) lines.push(`• Print: ${printText}`);
     lines.push(`• Artwork Files: ${artworkSummary(artwork)}`);
-    if (isGarment) {
+    if (isKit && kitIncludesTshirt) {
+      lines.push("• T-Shirt Sizes:");
+      SIZES.filter((s) => sizeQty[s] > 0).forEach((s) => lines.push(`   - ${s}: ${sizeQty[s]} pcs`));
+    } else if (!isKit && isGarment) {
       lines.push("• Sizes:");
       SIZES.filter((s) => sizeQty[s] > 0).forEach((s) => lines.push(`   - ${s}: ${sizeQty[s]} pcs`));
     }
-    lines.push(`• Total Quantity: ${total} pcs`);
+    lines.push(isKit ? `• Total Kits: ${total}` : `• Total Quantity: ${total} pcs`);
     lines.push("");
     lines.push("*Pricing*");
     lines.push(`• Unit Price: ₹${unitPrice}`);
