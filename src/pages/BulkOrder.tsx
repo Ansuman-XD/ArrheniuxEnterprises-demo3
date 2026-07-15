@@ -20,6 +20,9 @@ import {
   COURIER_PER_PC,
   BULK_DISCOUNT_PCT,
   BULK_THRESHOLD,
+  getSizesFor,
+  emptySizes,
+  APPAREL_SIZES,
   type Tier,
   type CatalogProduct,
 } from "@/data/catalog";
@@ -28,22 +31,19 @@ import { waLink } from "@/data/site";
 import { getSession, createOrder } from "@/lib/authStore";
 import { openRazorpay } from "@/lib/razorpay";
 import { toast } from "@/hooks/use-toast";
+import { SuccessDialog } from "@/components/SuccessDialog";
 
-const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"] as const;
-type Size = typeof SIZES[number];
 const SIZE_STEP = 2;
 
 // Bulk Order excludes ARRHENIUX line — standard categories only.
 const bulkCatalog = () => catalog.filter((c) => !isArrheniuxCategory(c.slug));
 
-const parseSizesParam = (raw: string | null): Record<Size, number> => {
-  const base: Record<Size, number> = { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0 };
+const parseSizesParam = (raw: string | null, allowed: readonly string[]): Record<string, number> => {
+  const base: Record<string, number> = Object.fromEntries(allowed.map((s) => [s, 0]));
   if (!raw) return base;
   raw.split(",").forEach((chunk) => {
     const [s, q] = chunk.split(":");
-    if ((SIZES as readonly string[]).includes(s)) {
-      (base as Record<string, number>)[s] = Math.max(0, Number(q) || 0);
-    }
+    if (allowed.includes(s)) base[s] = Math.max(0, Number(q) || 0);
   });
   return base;
 };
@@ -65,7 +65,6 @@ const EMPTY_CUSTOMER: DraftCustomer = {
   fullName: "", company: "", gst: "", phone: "", email: "",
   address: "", city: "", state: "", pincode: "", notes: "",
 };
-const EMPTY_SIZES: Record<Size, number> = { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0 };
 const DRAFT_KEY = "arr_bulk_draft";
 
 const loadDraft = () => {
@@ -84,13 +83,14 @@ const BulkOrder = () => {
     const urlTier = params.get("tier");
     const urlSub = params.get("sub");
     const urlColor = params.get("color") || "";
-    const urlSizes = parseSizesParam(params.get("sizes"));
     const urlPrint = decodePrint(params.get("print"));
-    const hasUrlSizes = Object.values(urlSizes).some((n) => n > 0);
     const draft = loadDraft();
     if (urlPid) {
       const p = findProduct(urlPid);
       if (p) {
+        const allowed = getSizesFor(p.categorySlug);
+        const urlSizes = parseSizesParam(params.get("sizes"), allowed);
+        const hasUrlSizes = Object.values(urlSizes).some((n) => n > 0);
         const seedQty = Math.max(BULK_THRESHOLD, urlQty);
         return {
           catSlug: p.categorySlug,
@@ -99,13 +99,16 @@ const BulkOrder = () => {
           productId: p.id,
           color: urlColor || p.colors[0] || "",
           unitQty: seedQty,
-          sizeQty: hasUrlSizes ? urlSizes : { ...EMPTY_SIZES },
+          sizeQty: hasUrlSizes ? urlSizes : emptySizes(p.categorySlug),
           customer: draft.customer || EMPTY_CUSTOMER,
           print: urlPrint.method ? urlPrint : (draft.print || emptyPrint()),
         };
       }
     }
     if (urlCat) {
+      const allowed = getSizesFor(urlCat);
+      const urlSizes = parseSizesParam(params.get("sizes"), allowed);
+      const hasUrlSizes = Object.values(urlSizes).some((n) => n > 0);
       return {
         catSlug: urlCat,
         tier: (urlTier as Tier) || "",
@@ -113,7 +116,7 @@ const BulkOrder = () => {
         productId: "",
         color: urlColor,
         unitQty: BULK_THRESHOLD,
-        sizeQty: hasUrlSizes ? urlSizes : { ...EMPTY_SIZES },
+        sizeQty: hasUrlSizes ? urlSizes : emptySizes(urlCat),
         customer: draft.customer || EMPTY_CUSTOMER,
         print: urlPrint.method ? urlPrint : emptyPrint(),
       };
@@ -128,12 +131,14 @@ const BulkOrder = () => {
   const [productId, setProductId] = useState<string>(initial.productId || "");
   const [color, setColor] = useState<string>(initial.color || "");
   const [unitQty, setUnitQty] = useState<number>(initial.unitQty ?? BULK_THRESHOLD);
-  const [sizeQty, setSizeQty] = useState<Record<Size, number>>(initial.sizeQty || { ...EMPTY_SIZES });
+  const [sizeQty, setSizeQty] = useState<Record<string, number>>(initial.sizeQty || emptySizes(initial.catSlug || catList[0].slug));
   const [customer, setCustomer] = useState<DraftCustomer>(initial.customer || EMPTY_CUSTOMER);
   const [printSel, setPrintSel] = useState<PrintSelection>(initial.print || emptyPrint());
   const [artwork, setArtwork] = useState<ArtworkFile[]>([]);
   const [namedColor, setNamedColor] = useState<string>("");
   const [printColor, setPrintColor] = useState<string>("");
+  const [successOrder, setSuccessOrder] = useState<{ id: string; amount: number } | null>(null);
+  const SIZES = getSizesFor(catSlug);
   const [error, setError] = useState("");
 
   const cat = findCategory(catSlug)!;
@@ -161,6 +166,12 @@ const BulkOrder = () => {
   useEffect(() => {
     if (!cat.hasTiers) setTier("");
     setSubSlug((prev) => (subs.find((s) => s.slug === prev) ? prev : ""));
+    // Reset size quantities when the applicable size set differs.
+    setSizeQty((prev) => {
+      const allowed = getSizesFor(catSlug);
+      const sameKeys = Object.keys(prev).length === allowed.length && allowed.every((k) => k in prev);
+      return sameKeys ? prev : emptySizes(catSlug);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [catSlug, tier]);
 
@@ -299,13 +310,13 @@ const BulkOrder = () => {
         if (o) {
           toast({ title: "Payment received", description: `Order #${o.id.slice(0, 8).toUpperCase()} placed.` });
           window.open(waLink(buildMessage(mode, amount)), "_blank", "noreferrer");
-          navigate("/my-orders");
+          setSuccessOrder({ id: o.id, amount });
         }
       },
     });
   };
 
-  const bumpSize = (s: Size, d: number) =>
+  const bumpSize = (s: string, d: number) =>
     setSizeQty((q) => ({ ...q, [s]: Math.max(0, (q[s] || 0) + d * SIZE_STEP) }));
 
   return (
@@ -537,6 +548,13 @@ const BulkOrder = () => {
           </p>
         </div>
       </form>
+      <SuccessDialog
+        open={!!successOrder}
+        onClose={() => { setSuccessOrder(null); navigate("/my-orders"); }}
+        orderId={successOrder?.id}
+        amount={successOrder?.amount}
+        title="Bulk Order Confirmed!"
+      />
     </Layout>
   );
 };

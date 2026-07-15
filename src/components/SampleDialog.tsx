@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { X, CreditCard, Package } from "lucide-react";
 import { PrintPicker } from "@/components/PrintPicker";
 import { ArtworkUpload, artworkSummary, type ArtworkFile } from "@/components/ArtworkUpload";
+import { SuccessDialog } from "@/components/SuccessDialog";
 import {
   type CatalogProduct,
   getAccessoryRules,
@@ -14,6 +15,7 @@ import {
   productCode,
   findCategory,
   findSubcategory,
+  getSizesFor,
 } from "@/data/catalog";
 import { emptyPrint, printPricePerPc, printLabel, type PrintSelection, type PrintMethod } from "@/data/printOptions";
 import { openRazorpay } from "@/lib/razorpay";
@@ -22,7 +24,6 @@ import { waLink } from "@/data/site";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 
-const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"] as const;
 const SAMPLE_QTY = 1;
 
 type Props = { product: CatalogProduct; open: boolean; onClose: () => void; isGarment: boolean };
@@ -35,13 +36,17 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
   const canPrint = supportsPrint(product.categorySlug) && rule?.print.kind !== "none";
   const cat = findCategory(product.categorySlug);
   const subcat = cat ? findSubcategory(cat, product.tier, product.subSlug) : undefined;
+  const SIZES = getSizesFor(product.categorySlug);
 
-  const [size, setSize] = useState<string>("M");
+  const defaultSize = SIZES[Math.floor(SIZES.length / 2)] || SIZES[0] || "";
+  const [size, setSize] = useState<string>(defaultSize);
+  useEffect(() => { setSize(defaultSize); }, [defaultSize]);
   const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
   const [artwork, setArtwork] = useState<ArtworkFile[]>([]);
   const [namedColor, setNamedColor] = useState<string>(rule?.namedColors?.[0] || "");
   const [printColor, setPrintColor] = useState<string>(rule?.printColors?.[0] || "");
   const [swatchColor, setSwatchColor] = useState<string>(product.colors[0] || "");
+  const [successOrder, setSuccessOrder] = useState<{ id: string; amount: number } | null>(null);
 
   const restrictedMethods: PrintMethod[] | undefined = rule?.print.kind === "custom"
     ? rule.print.methods.map((m) => ({
@@ -97,7 +102,7 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
     return lines.join("\n");
   }, [open, product, size, printText, canPrint, artwork, subtotal, courier, courierPerPc, gst, gstRate, total, isGarment, selectedColor, selectedPrintColor, cat, subcat, isArr, printCharge, unitPrice, qty]);
 
-  if (!open) return null;
+  if (!open && !successOrder) return null;
 
   const handlePay = () => {
     const user = getSession();
@@ -136,15 +141,18 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
         });
         toast({ title: "Sample ordered", description: `Sample #${o.id.slice(0, 8).toUpperCase()} placed.` });
         window.open(waLink(orderMsg), "_blank", "noreferrer");
-        onClose();
-        navigate("/my-orders");
+        setSuccessOrder({ id: o.id, amount: total });
       },
     });
   };
 
   return (
-    <div className="fixed inset-0 z-[60] bg-ink/70 flex items-center justify-center p-3 overflow-y-auto animate-fade-in">
-      <div className="bg-cream w-full max-w-2xl border border-border shadow-2xl my-6 animate-scale-in">
+    <>
+      {open && (
+        <div className="fixed inset-0 z-[60] bg-ink/70 flex items-center justify-center p-3 overflow-y-auto animate-fade-in">
+          <div className="bg-cream w-full max-w-2xl border border-border shadow-2xl my-6 animate-scale-in">
+
+
         <div className="flex items-center justify-between px-5 py-3 border-b border-border sticky top-0 bg-cream z-10">
           <div>
             <div className="text-[10px] uppercase tracking-widest text-primary font-bold flex items-center gap-1.5">
@@ -262,9 +270,18 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
           <p className="text-[11px] text-muted-foreground mt-2 text-center">
             Payment first · WhatsApp opens with full sample details · order saved to My Orders.
           </p>
+          </div>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+      <SuccessDialog
+        open={!!successOrder}
+        onClose={() => { setSuccessOrder(null); onClose(); navigate("/my-orders"); }}
+        orderId={successOrder?.id}
+        amount={successOrder?.amount}
+        title="Sample Order Placed!"
+      />
+    </>
   );
 };
 
