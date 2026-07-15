@@ -198,13 +198,21 @@ const BulkOrder = () => {
     saveDraft({ catSlug, tier, subSlug, productId, color, unitQty, sizeQty, customer, print: printSel });
   }, [catSlug, tier, subSlug, productId, color, unitQty, sizeQty, customer, printSel]);
 
-  const total = isGarment ? Object.values(sizeQty).reduce((a, b) => a + b, 0) : unitQty;
-  const unitPrice = product ? priceValue(product) : 0;
+  const kitIncludesTshirt = kitItems.includes("tshirt");
+  const kitSizeTotal = Object.values(sizeQty).reduce((a, b) => a + b, 0);
+  const kitQty = isKit ? (kitIncludesTshirt ? kitSizeTotal : kitQtyManual) : 0;
+  const kitEnoughItems = kitItems.length >= WELCOME_KIT_MIN_ITEMS;
+  const kitUnit = isKit ? welcomeKitUnitPrice(kitItems) : 0;
+
+  const total = isKit ? kitQty : (isGarment ? kitSizeTotal : unitQty);
+  const unitPrice = isKit ? kitUnit : (product ? priceValue(product) : 0);
   const perPcPrint = canPrint ? printPricePerPc(printSel, restrictedMethods) : 0;
   const printCharge = perPcPrint * total;
-  const printText = canPrint ? printLabel(printSel, restrictedMethods) : "N/A";
+  const printText = isKit
+    ? "Company Logo Printing — FREE"
+    : (canPrint ? printLabel(printSel, restrictedMethods) : "N/A");
   const subtotal = unitPrice * total + printCharge;
-  const bulkPct = rule && !rule.discountEnabled ? 0 : BULK_DISCOUNT_PCT;
+  const bulkPct = isKit ? 0 : (rule && !rule.discountEnabled ? 0 : BULK_DISCOUNT_PCT);
   const discountAmt = Math.round((subtotal * bulkPct) / 100);
   const afterDiscount = Math.max(0, subtotal - discountAmt);
   const courierPc = product ? getCourierPerPc(product) : COURIER_PER_PC;
@@ -214,7 +222,10 @@ const BulkOrder = () => {
 
   const validate = (): string | null => {
     if (!product) return "Please choose a product.";
-    if (total < BULK_THRESHOLD) return `Bulk orders require ${BULK_THRESHOLD}+ pcs. Current total: ${total}.`;
+    if (isKit) {
+      if (!kitEnoughItems) return `Please select at least ${WELCOME_KIT_MIN_ITEMS} products for the kit.`;
+      if (total < WELCOME_KIT_MIN) return `Welcome Kit minimum is ${WELCOME_KIT_MIN} kits. Current: ${total}.`;
+    } else if (total < BULK_THRESHOLD) return `Bulk orders require ${BULK_THRESHOLD}+ pcs. Current total: ${total}.`;
     const c = customer;
     if (!c.fullName || !c.company || !c.phone || !c.email || !c.address || !c.city || !c.state || !c.pincode)
       return "Please complete all required customer fields.";
