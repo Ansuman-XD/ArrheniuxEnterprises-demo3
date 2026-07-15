@@ -11,6 +11,7 @@ import {
   findProduct,
   isNonGarmentCategory,
   isArrheniuxCategory,
+  isWelcomeKitCategory,
   supportsPrint,
   getAccessoryRules,
   getGstPct,
@@ -23,6 +24,10 @@ import {
   getSizesFor,
   emptySizes,
   APPAREL_SIZES,
+  WELCOME_KIT_ITEMS,
+  WELCOME_KIT_MIN,
+  WELCOME_KIT_MIN_ITEMS,
+  welcomeKitUnitPrice,
   type Tier,
   type CatalogProduct,
 } from "@/data/catalog";
