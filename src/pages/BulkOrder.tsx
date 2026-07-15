@@ -11,6 +11,7 @@ import {
   findProduct,
   isNonGarmentCategory,
   isArrheniuxCategory,
+  isWelcomeKitCategory,
   supportsPrint,
   getAccessoryRules,
   getGstPct,
@@ -23,6 +24,10 @@ import {
   getSizesFor,
   emptySizes,
   APPAREL_SIZES,
+  WELCOME_KIT_ITEMS,
+  WELCOME_KIT_MIN,
+  WELCOME_KIT_MIN_ITEMS,
+  welcomeKitUnitPrice,
   type Tier,
   type CatalogProduct,
 } from "@/data/catalog";
@@ -138,6 +143,9 @@ const BulkOrder = () => {
   const [namedColor, setNamedColor] = useState<string>("");
   const [printColor, setPrintColor] = useState<string>("");
   const [successOrder, setSuccessOrder] = useState<{ id: string; amount: number } | null>(null);
+  // Welcome-kit builder state
+  const [kitItems, setKitItems] = useState<string[]>(["tshirt"]);
+  const [kitQtyManual, setKitQtyManual] = useState<number>(WELCOME_KIT_MIN);
   const SIZES = getSizesFor(catSlug);
   const [error, setError] = useState("");
 
@@ -147,9 +155,10 @@ const BulkOrder = () => {
   const subcat = subs.find((s) => s.slug === subSlug);
   const products: CatalogProduct[] = subcat?.products ?? [];
   const product = products.find((p) => p.id === productId);
+  const isKit = isWelcomeKitCategory(catSlug);
   const isGarment = product ? !isNonGarmentCategory(product.categorySlug) : !isNonGarmentCategory(catSlug);
   const rule = product ? getAccessoryRules(product.subSlug) : null;
-  const canPrint = supportsPrint(catSlug) && !isArrheniuxCategory(catSlug) && (rule?.print.kind !== "none");
+  const canPrint = !isKit && supportsPrint(catSlug) && !isArrheniuxCategory(catSlug) && (rule?.print.kind !== "none");
   const gstRate = product ? getGstPct(product) : 0.05;
   const gstPctLabel = Math.round(gstRate * 100);
 
@@ -189,13 +198,21 @@ const BulkOrder = () => {
     saveDraft({ catSlug, tier, subSlug, productId, color, unitQty, sizeQty, customer, print: printSel });
   }, [catSlug, tier, subSlug, productId, color, unitQty, sizeQty, customer, printSel]);
 
-  const total = isGarment ? Object.values(sizeQty).reduce((a, b) => a + b, 0) : unitQty;
-  const unitPrice = product ? priceValue(product) : 0;
+  const kitIncludesTshirt = kitItems.includes("tshirt");
+  const kitSizeTotal = Object.values(sizeQty).reduce((a, b) => a + b, 0);
+  const kitQty = isKit ? (kitIncludesTshirt ? kitSizeTotal : kitQtyManual) : 0;
+  const kitEnoughItems = kitItems.length >= WELCOME_KIT_MIN_ITEMS;
+  const kitUnit = isKit ? welcomeKitUnitPrice(kitItems) : 0;
+
+  const total = isKit ? kitQty : (isGarment ? kitSizeTotal : unitQty);
+  const unitPrice = isKit ? kitUnit : (product ? priceValue(product) : 0);
   const perPcPrint = canPrint ? printPricePerPc(printSel, restrictedMethods) : 0;
   const printCharge = perPcPrint * total;
-  const printText = canPrint ? printLabel(printSel, restrictedMethods) : "N/A";
+  const printText = isKit
+    ? "Company Logo Printing — FREE"
+    : (canPrint ? printLabel(printSel, restrictedMethods) : "N/A");
   const subtotal = unitPrice * total + printCharge;
-  const bulkPct = rule && !rule.discountEnabled ? 0 : BULK_DISCOUNT_PCT;
+  const bulkPct = isKit ? 0 : (rule && !rule.discountEnabled ? 0 : BULK_DISCOUNT_PCT);
   const discountAmt = Math.round((subtotal * bulkPct) / 100);
   const afterDiscount = Math.max(0, subtotal - discountAmt);
   const courierPc = product ? getCourierPerPc(product) : COURIER_PER_PC;
@@ -205,7 +222,10 @@ const BulkOrder = () => {
 
   const validate = (): string | null => {
     if (!product) return "Please choose a product.";
-    if (total < BULK_THRESHOLD) return `Bulk orders require ${BULK_THRESHOLD}+ pcs. Current total: ${total}.`;
+    if (isKit) {
+      if (!kitEnoughItems) return `Please select at least ${WELCOME_KIT_MIN_ITEMS} products for the kit.`;
+      if (total < WELCOME_KIT_MIN) return `Welcome Kit minimum is ${WELCOME_KIT_MIN} kits. Current: ${total}.`;
+    } else if (total < BULK_THRESHOLD) return `Bulk orders require ${BULK_THRESHOLD}+ pcs. Current total: ${total}.`;
     const c = customer;
     if (!c.fullName || !c.company || !c.phone || !c.email || !c.address || !c.city || !c.state || !c.pincode)
       return "Please complete all required customer fields.";
@@ -227,13 +247,24 @@ const BulkOrder = () => {
       if (rule?.namedColors) lines.push(`• Color / Variant: ${namedColor || rule.namedColors[0]}`);
       if (rule?.printColors) lines.push(`• Print Color: ${printColor || rule.printColors[0]}`);
     }
-    if (canPrint) lines.push(`• Print: ${printText}`);
+    if (isKit) {
+      const list = kitItems.map((id) => {
+        const it = WELCOME_KIT_ITEMS.find((k) => k.id === id);
+        return it ? `${it.label} (₹${it.price})` : id;
+      }).join(", ");
+      lines.push(`• Kit Items: ${list}`);
+      lines.push(`• Print: Company Logo Printing — FREE`);
+      lines.push(`• Free Custom Tote Bag included with every kit`);
+    } else if (canPrint) lines.push(`• Print: ${printText}`);
     lines.push(`• Artwork Files: ${artworkSummary(artwork)}`);
-    if (isGarment) {
+    if (isKit && kitIncludesTshirt) {
+      lines.push("• T-Shirt Sizes:");
+      SIZES.filter((s) => sizeQty[s] > 0).forEach((s) => lines.push(`   - ${s}: ${sizeQty[s]} pcs`));
+    } else if (!isKit && isGarment) {
       lines.push("• Sizes:");
       SIZES.filter((s) => sizeQty[s] > 0).forEach((s) => lines.push(`   - ${s}: ${sizeQty[s]} pcs`));
     }
-    lines.push(`• Total Quantity: ${total} pcs`);
+    lines.push(isKit ? `• Total Kits: ${total}` : `• Total Quantity: ${total} pcs`);
     lines.push("");
     lines.push("*Pricing*");
     lines.push(`• Unit Price: ₹${unitPrice}`);
@@ -429,13 +460,100 @@ const BulkOrder = () => {
                 </div>
               )}
 
+              {isKit && (
+                <div className="mt-5 border border-primary/40 bg-primary/5 p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold">Print Type: Company Logo Printing</span>
+                    <span className="text-[10px] font-mono uppercase text-primary">FREE</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">Free Custom Tote Bag included with every Welcome Kit.</p>
+                </div>
+              )}
+
               {!isArrheniuxCategory(product.categorySlug) && (
                 <ArtworkUpload value={artwork} onChange={setArtwork} />
               )}
 
+              {isKit ? (
+                <div className="mt-6 space-y-5">
+                  <div>
+                    <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Customize Combined Product</h4>
+                    <p className="text-[11px] text-muted-foreground mb-3">
+                      T-Shirt is mandatory. Select at least {WELCOME_KIT_MIN_ITEMS} products in total (T-Shirt + 2 more). Kit price is the sum of chosen items.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {WELCOME_KIT_ITEMS.map((it) => {
+                        const checked = kitItems.includes(it.id);
+                        const isTshirt = it.id === "tshirt";
+                        return (
+                          <label key={it.id} className={`flex items-center justify-between gap-2 border px-3 py-2 text-sm transition ${checked ? "border-ink bg-secondary" : "border-border"} ${isTshirt ? "" : "cursor-pointer"}`}>
+                            <span className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                disabled={isTshirt}
+                                onChange={() => {
+                                  if (isTshirt) return;
+                                  setKitItems((prev) => prev.includes(it.id) ? prev.filter((x) => x !== it.id) : [...prev, it.id]);
+                                }}
+                                className="h-4 w-4 accent-primary"
+                              />
+                              <span>{isTshirt ? "Custom T-Shirt (required)" : it.label}</span>
+                            </span>
+                            <span className="text-[10px] font-mono text-muted-foreground">₹{it.price}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {!kitEnoughItems && (
+                      <p className="text-xs text-destructive mt-2">Please select at least {WELCOME_KIT_MIN_ITEMS} products.</p>
+                    )}
+                    <div className="mt-3 flex items-center justify-between border border-border px-3 py-2 bg-secondary/50">
+                      <span className="text-[11px] uppercase tracking-widest text-muted-foreground">Kit Unit Price (sum of items)</span>
+                      <span className="font-display text-lg">₹{kitUnit}</span>
+                    </div>
+                  </div>
 
-
-              {isGarment ? (
+                  {kitIncludesTshirt ? (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-xs uppercase tracking-widest font-bold">T-Shirt Sizes</h4>
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                          Total kits = total shirts ({kitSizeTotal})
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {SIZES.map((s) => (
+                          <div key={s} className="flex items-center justify-between border border-border px-3 py-2">
+                            <span className="font-condensed text-lg w-10">{s}</span>
+                            <div className="inline-flex items-center border border-ink">
+                              <button type="button" onClick={() => setSizeQty((q) => ({ ...q, [s]: Math.max(0, (q[s] || 0) - 1) }))} className="px-2.5 py-1.5"><Minus className="h-3.5 w-3.5" /></button>
+                              <input type="number" min={0} value={sizeQty[s]}
+                                onChange={(e) => setSizeQty((q) => ({ ...q, [s]: Math.max(0, Number(e.target.value) || 0) }))}
+                                className="w-14 text-center text-sm bg-transparent border-x border-ink py-1.5 font-bold" />
+                              <button type="button" onClick={() => setSizeQty((q) => ({ ...q, [s]: (q[s] || 0) + 1 }))} className="px-2.5 py-1.5"><Plus className="h-3.5 w-3.5" /></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Kit Quantity (min {WELCOME_KIT_MIN})</h4>
+                      <div className="flex items-center justify-between border border-border px-3 py-3">
+                        <span className="font-condensed text-lg">Kits</span>
+                        <div className="inline-flex items-center border border-ink">
+                          <button type="button" onClick={() => setKitQtyManual((q) => Math.max(WELCOME_KIT_MIN, q - 1))} className="px-3 py-1.5"><Minus className="h-3.5 w-3.5" /></button>
+                          <input type="number" min={WELCOME_KIT_MIN} value={kitQtyManual}
+                            onChange={(e) => setKitQtyManual(Math.max(0, Number(e.target.value) || 0))}
+                            className="w-16 text-center text-sm bg-transparent border-x border-ink py-1.5 font-bold" />
+                          <button type="button" onClick={() => setKitQtyManual((q) => q + 1)} className="px-3 py-1.5"><Plus className="h-3.5 w-3.5" /></button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : isGarment ? (
                 <div className="mt-5">
                   <h4 className="text-xs uppercase tracking-widest font-bold mb-2">Sizes & Quantity (step of {SIZE_STEP})</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
