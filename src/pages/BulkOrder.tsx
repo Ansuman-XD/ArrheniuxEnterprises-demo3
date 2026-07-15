@@ -143,6 +143,9 @@ const BulkOrder = () => {
   const [namedColor, setNamedColor] = useState<string>("");
   const [printColor, setPrintColor] = useState<string>("");
   const [successOrder, setSuccessOrder] = useState<{ id: string; amount: number } | null>(null);
+  // Welcome-kit builder state
+  const [kitItems, setKitItems] = useState<string[]>(["tshirt"]);
+  const [kitQtyManual, setKitQtyManual] = useState<number>(WELCOME_KIT_MIN);
   const SIZES = getSizesFor(catSlug);
   const [error, setError] = useState("");
 
