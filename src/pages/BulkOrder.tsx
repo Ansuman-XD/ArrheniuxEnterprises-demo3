@@ -155,9 +155,10 @@ const BulkOrder = () => {
   const subcat = subs.find((s) => s.slug === subSlug);
   const products: CatalogProduct[] = subcat?.products ?? [];
   const product = products.find((p) => p.id === productId);
+  const isKit = isWelcomeKitCategory(catSlug);
   const isGarment = product ? !isNonGarmentCategory(product.categorySlug) : !isNonGarmentCategory(catSlug);
   const rule = product ? getAccessoryRules(product.subSlug) : null;
-  const canPrint = supportsPrint(catSlug) && !isArrheniuxCategory(catSlug) && (rule?.print.kind !== "none");
+  const canPrint = !isKit && supportsPrint(catSlug) && !isArrheniuxCategory(catSlug) && (rule?.print.kind !== "none");
   const gstRate = product ? getGstPct(product) : 0.05;
   const gstPctLabel = Math.round(gstRate * 100);
 
