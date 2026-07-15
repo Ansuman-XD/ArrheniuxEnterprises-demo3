@@ -393,6 +393,15 @@ const NON_GARMENT = new Set(["custom-accessories", "corporate-welcome-kit"]);
 export const isNonGarmentCategory = (slug: string) => NON_GARMENT.has(slug);
 export const isArrheniuxCategory = (slug: string) => slug === "arrheniux-t-shirts";
 export const isWelcomeKitCategory = (slug: string) => slug === "corporate-welcome-kit";
+export const isSchoolUniformCategory = (slug: string) => slug === "customize-school-uniform";
+
+// Size sets ---------------------------------------------------------
+export const APPAREL_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"] as const;
+export const SCHOOL_UNIFORM_SIZES = ["22", "24", "26", "28", "30", "32", "34"] as const;
+export const getSizesFor = (catSlug: string): readonly string[] =>
+  isSchoolUniformCategory(catSlug) ? SCHOOL_UNIFORM_SIZES : APPAREL_SIZES;
+export const emptySizes = (catSlug: string): Record<string, number> =>
+  Object.fromEntries(getSizesFor(catSlug).map((s) => [s, 0]));
 
 // Print type is offered on everything EXCEPT non-garment items and the ARRHENIUX line.
 export const supportsPrint = (catSlug: string) =>

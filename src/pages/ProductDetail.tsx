@@ -29,15 +29,16 @@ import {
   WELCOME_KIT_MIN,
   WELCOME_KIT_MIN_ITEMS,
   welcomeKitUnitPrice,
+  getSizesFor,
+  emptySizes,
+  APPAREL_SIZES,
 } from "@/data/catalog";
 import { emptyPrint, printPricePerPc, printLabel, encodePrint, type PrintSelection, type PrintMethod } from "@/data/printOptions";
 import { waLink } from "@/data/site";
 import { getSession, createOrder, getReviewsForProduct } from "@/lib/authStore";
 import { openRazorpay } from "@/lib/razorpay";
 import { toast } from "@/hooks/use-toast";
-
-const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"] as const;
-type Size = typeof SIZES[number];
+import { SuccessDialog } from "@/components/SuccessDialog";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -45,15 +46,17 @@ const ProductDetail = () => {
   const location = useLocation();
   const product = findProduct(id);
 
+  const SIZES = (product ? getSizesFor(product.categorySlug) : APPAREL_SIZES) as readonly string[];
+  type Size = string;
+
   const [activeImg, setActiveImg] = useState(0);
-  
-  const [sizeQty, setSizeQty] = useState<Record<Size, number>>({
-    XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL: 0, "3XL": 0,
-  });
+
+  const [sizeQty, setSizeQty] = useState<Record<string, number>>(() => emptySizes(product?.categorySlug ?? ""));
   const [unitQty, setUnitQty] = useState(1);
   const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
   const [artwork, setArtwork] = useState<ArtworkFile[]>([]);
   const [sampleOpen, setSampleOpen] = useState(false);
+  const [successOrder, setSuccessOrder] = useState<{ id: string; amount: number } | null>(null);
   // Welcome-kit config
   const [kitItems, setKitItems] = useState<string[]>(["tshirt"]);
   const [kitQtyManual, setKitQtyManual] = useState<number>(20);
@@ -259,7 +262,7 @@ const ProductDetail = () => {
         });
         toast({ title: "Payment successful", description: `Order #${o.id.slice(0, 8).toUpperCase()} placed.` });
         window.open(waLink(orderMessage()), "_blank", "noreferrer");
-        navigate("/my-orders");
+        setSuccessOrder({ id: o.id, amount: grandTotal });
       },
     });
   };
@@ -639,13 +642,15 @@ const ProductDetail = () => {
               Complete payment first. WhatsApp will auto-open with your order — attach logo, artwork or instructions there.
             </p>
 
-            {/* Sample */}
-            <button
-              onClick={handleSample}
-              className="mt-3 w-full inline-flex items-center justify-center gap-2 border border-ink py-3 text-xs uppercase tracking-widest font-semibold hover:bg-ink hover:text-cream transition"
-            >
-              <Package className="h-4 w-4" /> Order Sample Product — ₹{samplePriceValue}
-            </button>
+            {/* Sample — hidden for ARRHENIUX products */}
+            {!isArr && (
+              <button
+                onClick={handleSample}
+                className="mt-3 w-full inline-flex items-center justify-center gap-2 border border-ink py-3 text-xs uppercase tracking-widest font-semibold hover:bg-ink hover:text-cream transition"
+              >
+                <Package className="h-4 w-4" /> Order Sample Product — ₹{samplePriceValue}
+              </button>
+            )}
 
             {/* Share */}
             <div className="mt-6 flex gap-2">
@@ -708,6 +713,12 @@ const ProductDetail = () => {
       )}
 
       <SampleDialog product={product} open={sampleOpen} onClose={() => setSampleOpen(false)} isGarment={isGarment} />
+      <SuccessDialog
+        open={!!successOrder}
+        onClose={() => { setSuccessOrder(null); navigate("/my-orders"); }}
+        orderId={successOrder?.id}
+        amount={successOrder?.amount}
+      />
     </Layout>
   );
 };

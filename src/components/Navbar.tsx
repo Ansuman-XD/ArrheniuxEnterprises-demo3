@@ -66,7 +66,7 @@ export const Navbar = () => {
             onClick={(e) => handleHashClick(e, "#home")}
             className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink inline-flex items-center gap-1.5"
           >
-            <Home className="h-3.5 w-3.5" /> Home
+            <Home className="h-3.5 w-3.5" aria-hidden="true" /> Home
           </a>
           <MegaMenu />
           <a
@@ -74,25 +74,25 @@ export const Navbar = () => {
             onClick={(e) => handleHashClick(e, "#collection")}
             className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink inline-flex items-center gap-1.5"
           >
-            <Sparkles className="h-3.5 w-3.5" /> New Collection
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> New Collection
           </a>
           <BulkMegaMenu />
-          <NavLink to="/b2b-shop" className={navLinkClass}><span className="inline-flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5" /> B2B Shop</span></NavLink>
+          <NavLink to="/b2b-shop" className={navLinkClass}><span className="inline-flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5" aria-hidden="true" /> B2B Shop</span></NavLink>
           <a
             href="#about-us"
             onClick={(e) => handleHashClick(e, "#about-us")}
             className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink inline-flex items-center gap-1.5"
           >
-            <Info className="h-3.5 w-3.5" /> About Us
+            <Info className="h-3.5 w-3.5" aria-hidden="true" /> About Us
           </a>
           <a
             href="#reviews"
             onClick={(e) => handleHashClick(e, "#reviews")}
             className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink inline-flex items-center gap-1.5"
           >
-            <MessageSquare className="h-3.5 w-3.5" /> Client Reactions
+            <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" /> Client Reactions
           </a>
-          <NavLink to="/contact" className={navLinkClass}><span className="inline-flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> Contact</span></NavLink>
+          <NavLink to="/contact" className={navLinkClass}><span className="inline-flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" aria-hidden="true" /> Contact</span></NavLink>
         </nav>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -102,7 +102,7 @@ export const Navbar = () => {
             </div>
           ) : (
             <Link to="/auth" className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide border border-ink text-ink px-3 py-2 rounded-md hover:bg-ink hover:text-cream transition">
-              <UserIcon className="h-3.5 w-3.5" /> Log In
+              <UserIcon className="h-3.5 w-3.5" aria-hidden="true" /> Log In
             </Link>
           )}
           <button
@@ -120,7 +120,7 @@ export const Navbar = () => {
           <div className="container-x py-4 flex flex-col gap-3">
             {!user ? (
               <Link to="/auth" onClick={() => setOpen(false)} className="py-2 font-semibold uppercase text-sm tracking-wide flex items-center gap-2">
-                <UserIcon className="h-4 w-4" /> Log In / Sign Up
+                <UserIcon className="h-4 w-4" aria-hidden="true" /> Log In / Sign Up
               </Link>
             ) : (
               <div className="flex items-center justify-between py-2 gap-2">
@@ -135,20 +135,20 @@ export const Navbar = () => {
             )}
             {user && (
               <Link to="/my-orders" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5">
-                <ClipboardList className="h-3.5 w-3.5" /> My Orders
+                <ClipboardList className="h-3.5 w-3.5" aria-hidden="true" /> My Orders
               </Link>
             )}
             {user?.role === "admin" && (
               <Link to="/admin" onClick={() => setOpen(false)} className="py-2 font-semibold uppercase text-sm tracking-wide text-primary inline-flex items-center gap-1.5">
-                <Shield className="h-3.5 w-3.5" /> Admin Panel →
+                <Shield className="h-3.5 w-3.5" aria-hidden="true" /> Admin Panel →
               </Link>
             )}
-            <a href="#home" onClick={(e) => handleHashClick(e, "#home")} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><Home className="h-3.5 w-3.5" /> Home</a>
+            <a href="#home" onClick={(e) => handleHashClick(e, "#home")} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><Home className="h-3.5 w-3.5" aria-hidden="true" /> Home</a>
             <button
               onClick={() => setMobileCatOpen((v) => !v)}
               className="py-2 font-medium uppercase text-sm tracking-wide flex items-center justify-between"
             >
-              <span className="inline-flex items-center gap-1.5"><LayoutGrid className="h-3.5 w-3.5" /> Categories</span> <ChevronDown className={`h-4 w-4 transition ${mobileCatOpen ? "rotate-180" : ""}`} />
+              <span className="inline-flex items-center gap-1.5"><LayoutGrid className="h-3.5 w-3.5" aria-hidden="true" /> Categories</span> <ChevronDown className={`h-4 w-4 transition ${mobileCatOpen ? "rotate-180" : ""}`} />
             </button>
             {mobileCatOpen && (
               <div className="pl-3 border-l border-border flex flex-col gap-1 mb-2">
@@ -164,12 +164,12 @@ export const Navbar = () => {
                 ))}
               </div>
             )}
-            <a href="#collection" onClick={(e) => handleHashClick(e, "#collection")} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" /> New Collection</a>
+            <a href="#collection" onClick={(e) => handleHashClick(e, "#collection")} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> New Collection</a>
             <button
               onClick={() => setMobileBulkOpen((v) => !v)}
               className="py-2 font-medium uppercase text-sm tracking-wide flex items-center justify-between"
             >
-              <span className="inline-flex items-center gap-1.5"><Package className="h-3.5 w-3.5" /> Bulk Order</span> <ChevronDown className={`h-4 w-4 transition ${mobileBulkOpen ? "rotate-180" : ""}`} />
+              <span className="inline-flex items-center gap-1.5"><Package className="h-3.5 w-3.5" aria-hidden="true" /> Bulk Order</span> <ChevronDown className={`h-4 w-4 transition ${mobileBulkOpen ? "rotate-180" : ""}`} />
             </button>
             {mobileBulkOpen && (
               <div className="pl-3 border-l border-border flex flex-col gap-1 mb-2">
@@ -188,10 +188,10 @@ export const Navbar = () => {
                 ))}
               </div>
             )}
-            <Link to="/b2b-shop" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5" /> B2B Shop</Link>
-            <a href="#about-us" onClick={(e) => handleHashClick(e, "#about-us")} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><Info className="h-3.5 w-3.5" /> About Us</a>
-            <a href="#reviews" onClick={(e) => handleHashClick(e, "#reviews")} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5" /> Client Reactions</a>
-            <Link to="/contact" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" /> Contact</Link>
+            <Link to="/b2b-shop" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5" aria-hidden="true" /> B2B Shop</Link>
+            <a href="#about-us" onClick={(e) => handleHashClick(e, "#about-us")} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><Info className="h-3.5 w-3.5" aria-hidden="true" /> About Us</a>
+            <a href="#reviews" onClick={(e) => handleHashClick(e, "#reviews")} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5" aria-hidden="true" /> Client Reactions</a>
+            <Link to="/contact" onClick={() => setOpen(false)} className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"><Mail className="h-3.5 w-3.5" aria-hidden="true" /> Contact</Link>
           </div>
         </div>
       )}
