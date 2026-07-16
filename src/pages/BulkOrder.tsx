@@ -158,7 +158,7 @@ const BulkOrder = () => {
   const isKit = isWelcomeKitCategory(catSlug);
   const isGarment = product ? !isNonGarmentCategory(product.categorySlug) : !isNonGarmentCategory(catSlug);
   const rule = product ? getAccessoryRules(product.subSlug) : null;
-  const canPrint = !isKit && supportsPrint(catSlug) && !isArrheniuxCategory(catSlug) && (rule?.print.kind !== "none");
+  const canPrint = !isKit && !isArrheniuxCategory(catSlug) && (rule?.print.kind !== "none") && (supportsPrint(catSlug) || rule?.print.kind === "custom" || rule?.print.kind === "free");
   const gstRate = product ? getGstPct(product) : 0.05;
   const gstPctLabel = Math.round(gstRate * 100);
 

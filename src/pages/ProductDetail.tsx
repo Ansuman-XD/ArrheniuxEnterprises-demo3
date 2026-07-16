@@ -79,7 +79,8 @@ const ProductDetail = () => {
   const subcat = cat ? findSubcategory(cat, product.tier, product.subSlug) : undefined;
   const isGarment = !isNonGarmentCategory(product.categorySlug);
   const isKit = isWelcomeKitCategory(product.categorySlug);
-  const canPrint = supportsPrint(product.categorySlug);
+  const ruleForPrint = getAccessoryRules(product.subSlug);
+  const canPrint = supportsPrint(product.categorySlug) || ruleForPrint?.print.kind === "custom" || ruleForPrint?.print.kind === "free";
   const isArr = isArrheniuxCategory(product.categorySlug);
   const rule = getAccessoryRules(product.subSlug);
   const moq = isKit ? WELCOME_KIT_MIN : getMOQ(product);
