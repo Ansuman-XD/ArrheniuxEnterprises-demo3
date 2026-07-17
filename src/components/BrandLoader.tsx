@@ -24,7 +24,7 @@ export const BrandLoader = ({
         <span className="brand-loader-halo" />
         <img
           src={logo}
-          alt="Arrhenix"
+          alt="Arrheniux"
           className="brand-loader-logo"
           draggable={false}
         />

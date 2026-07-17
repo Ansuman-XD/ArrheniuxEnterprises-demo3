@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { Star } from "lucide-react";
 import { reviews as seedReviews } from "@/data/site";
 import { getReviews, type Review } from "@/lib/authStore";
-import { ReviewForm } from "@/components/ReviewForm";
+// import { ReviewForm } from "@/components/ReviewForm";
 
 type Item = { name: string; role?: string; rating: number; text: string };
 
@@ -31,7 +31,7 @@ export const Reviews = () => {
       <div className="container-x">
         <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
           <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-accent">07 — Reactions</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-accent">10 — Reactions</span>
             <h2 className="font-display text-5xl md:text-6xl mt-2">CLIENT REACTIONS</h2>
           </div>
           <div className="flex items-center gap-3">
@@ -81,9 +81,9 @@ export const Reviews = () => {
         </div>
       </div>
 
-      <div className="container-x mt-12 max-w-2xl">
+      {/* <div className="container-x mt-12 max-w-2xl">
         <ReviewForm onSubmitted={(r) => setUserReviews((prev) => [r, ...prev])} />
-      </div>
+      </div> */}
     </section>
   );
 };

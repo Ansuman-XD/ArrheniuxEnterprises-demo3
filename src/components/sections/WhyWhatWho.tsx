@@ -5,13 +5,13 @@ export const WhyWhatWho = () => (
     <section className="container-x py-20">
       <div className="grid lg:grid-cols-2 gap-10 items-start">
         <div>
-          <span className="text-xs font-bold uppercase tracking-widest text-primary">Who We Are</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-primary">06 — Who We Are</span>
           <h2 className="font-display text-5xl md:text-6xl mt-2 leading-none">
             BUILT FOR <span className="text-primary">BULK.</span><br/>OBSESSED WITH FIT.
           </h2>
         </div>
         <p className="text-muted-foreground text-base leading-relaxed">
-          Arrhenix is a Bhubaneswar-based apparel manufacturing house serving brands, corporates, institutions and event organizers across India. Our vision is simple — replace the inconsistent middleman supply chain with a single, transparent factory that delivers premium custom apparel on time, every time.
+          Arrheniux is a Bhubaneswar-based apparel manufacturing house serving brands, corporates, institutions and event organizers across India. Our vision is simple — replace the inconsistent middleman supply chain with a single, transparent factory that delivers premium custom apparel on time, every time.
         </p>
       </div>
     </section>
@@ -20,7 +20,7 @@ export const WhyWhatWho = () => (
       <div className="container-x">
         <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
           <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-primary">What We Do</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-primary">07 — What We Do</span>
             <h2 className="font-display text-5xl md:text-6xl mt-2">END-TO-END APPAREL.</h2>
           </div>
         </div>
@@ -44,7 +44,7 @@ export const WhyWhatWho = () => (
     <section className="container-x py-20">
       <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
         <div>
-          <span className="text-xs font-bold uppercase tracking-widest text-primary">Why We Are Different</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-primary">08 — Why We Are Different</span>
           <h2 className="font-display text-5xl md:text-6xl mt-2">OUR ADVANTAGE.</h2>
         </div>
       </div>

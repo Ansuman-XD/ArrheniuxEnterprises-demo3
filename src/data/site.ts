@@ -11,13 +11,13 @@ import totes from "@/assets/cat-totes.jpg";
 import uniforms from "@/assets/cat-uniforms.jpg";
 import corporate from "@/assets/cat-corporate.jpg";
 
-export const WHATSAPP_NUMBER = "918260368742";
-export const WHATSAPP_DISPLAY = "+91 82603 68742";
-export const EMAIL = "info@arrhenix.com";
-export const ADDRESS = "Niladri Vihar, Bhubaneswar, Odisha 751021";
+export const WHATSAPP_NUMBER = "919937864993";
+export const WHATSAPP_DISPLAY = "+91 99378 64993";
+export const EMAIL = "banamali08@gmail.com";
+export const ADDRESS = "Odisha, India 751021";
 export const MAPS_URL = "https://maps.app.goo.gl/oh4CuRvus1gfH4D49";
 
-export const waLink = (msg = "Hi Arrhenix, I'd like to enquire about your custom apparel.") =>
+export const waLink = (msg = "Hi Arrheniux, I'd like to enquire about your custom apparel.") =>
   `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
 
 export type Category = {
@@ -72,7 +72,7 @@ export const products: Product[] = [
 
 export const reviews = [
   { name: "Rahul Mishra", role: "Founder, Cubicle Co.", rating: 5, text: "Got 200 hoodies for our team. Quality, stitching, print — all on point. Delivered in 9 days." },
-  { name: "Anushka Patel", role: "Event Manager, IIT BBS", rating: 5, text: "Custom event tees for 500+ students. Arrhenix nailed the brief and the colours were spot-on." },
+  { name: "Anushka Patel", role: "Event Manager, IIT BBS", rating: 5, text: "Custom event tees for 500+ students. Arrheniux nailed the brief and the colours were spot-on." },
   { name: "Prakash Reddy", role: "Owner, GreenLeaf Cafe", rating: 5, text: "Branded aprons and tees for staff. Felt premium, washed beautifully. Reordered twice." },
   { name: "Sneha Iyer", role: "HR, Coastal Logistics", rating: 5, text: "Uniform rollout across 4 branches. Clean execution, factory-direct pricing was a big win." },
   { name: "Aman Kapoor", role: "Coach, FC Bhubaneswar", rating: 5, text: "Match jerseys with sublimation print — vivid colours, breathable fabric. Team loved it." },

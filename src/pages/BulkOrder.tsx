@@ -234,7 +234,7 @@ const BulkOrder = () => {
 
   const buildMessage = (mode: "full" | "advance-50", paid: number) => {
     const lines: string[] = [];
-    lines.push(`Hi Arrhenix, my payment (${mode === "full" ? "100% full" : "50% advance"}) is complete for a *BULK ORDER*:`);
+    lines.push(`Hi Arrheniux, my payment (${mode === "full" ? "100% full" : "50% advance"}) is complete for a *BULK ORDER*:`);
     lines.push("");
     lines.push("*Product Details*");
     lines.push(`• Category: ${cat.name}`);
@@ -333,7 +333,7 @@ const BulkOrder = () => {
     const amount = mode === "full" ? grandTotal : Math.round(grandTotal / 2);
     openRazorpay({
       amountInr: amount,
-      name: "Arrhenix — Bulk Order",
+      name: "Arrheniux — Bulk Order",
       description: product ? `${product.name} × ${total} pcs (${mode === "full" ? "Full" : "50% Advance"})` : "Bulk",
       prefill: { name: customer.fullName || user.name, email: customer.email || user.email, contact: customer.phone },
       onSuccess: (paymentId) => {

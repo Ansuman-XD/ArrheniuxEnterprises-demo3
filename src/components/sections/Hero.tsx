@@ -7,9 +7,9 @@ export const Hero = () => (
   <section className="relative bg-primary text-primary-foreground overflow-hidden">
     <div className="container-x grid lg:grid-cols-2 gap-8 py-12 md:py-20 relative">
       <div className="flex flex-col justify-center z-10 order-2 lg:order-1">
-        <span className="inline-flex items-center gap-2 bg-cream text-ink text-xs font-bold uppercase tracking-widest px-3 py-1.5 w-fit">
+        {/* <span className="inline-flex items-center gap-2 bg-cream text-ink text-xs font-bold uppercase tracking-widest px-3 py-1.5 w-fit">
           <Package className="h-3.5 w-3.5" /> Min order 20 pieces
-        </span>
+        </span> */}
         <h1 className="font-display text-[14vw] sm:text-[10vw] lg:text-[7.5vw] leading-[0.9] mt-6 tracking-tighter">
           CUSTOM<br />APPAREL<br />FOR YOUR<br /><span className="text-cream/60">BRAND.</span>
         </h1>
@@ -17,9 +17,9 @@ export const Hero = () => (
           Factory-direct t-shirts, hoodies, uniforms & merch — printed, embroidered and shipped from our Bhubaneswar facility.
         </p>
         <div className="flex flex-wrap gap-3 mt-8">
-          <Link to="/category/t-shirts" className="btn-bold !bg-cream !text-ink hover:!bg-accent hover:!text-cream">
+          {/* <Link to="/category/t-shirts" className="btn-bold !bg-cream !text-ink hover:!bg-accent hover:!text-cream">
             Browse Catalog <ArrowRight className="h-4 w-4" />
-          </Link>
+          </Link> */}
           <a href={waLink()} target="_blank" rel="noreferrer" className="btn-wa">
             <MessageCircle className="h-4 w-4" /> Order on WhatsApp
           </a>
@@ -33,7 +33,7 @@ export const Hero = () => (
       <div className="relative order-1 lg:order-2 min-h-[300px] lg:min-h-[600px] overflow-hidden">
         <img
           src={heroModel}
-          alt="Model wearing Arrhenix custom hoodie"
+          alt="Model wearing Arrheniux custom hoodie"
           width={1024}
           height={1024}
           className="absolute inset-0 w-full h-full object-cover object-top"

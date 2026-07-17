@@ -16,24 +16,24 @@ export const ProductCard = ({ p }: { p: Product }) => (
           New
         </span>
       )}
-      <span className="absolute top-3 right-3 bg-cream text-ink text-[10px] font-bold uppercase tracking-widest px-2 py-1 border border-ink">
+      {/* <span className="absolute top-3 right-3 bg-cream text-ink text-[10px] font-bold uppercase tracking-widest px-2 py-1 border border-ink">
         MOQ {p.moq}
-      </span>
+      </span> */}
     </Link>
     <div className="p-4 flex flex-col gap-2 flex-1">
       <Link to={`/product/${p.id}`}>
         <h3 className="font-condensed text-xl tracking-wide leading-tight">{p.name.toUpperCase()}</h3>
       </Link>
       <p className="text-xs text-muted-foreground">{p.fabric} · {p.gsm}</p>
-      <div className="flex gap-1.5 mt-1">
+      {/* <div className="flex gap-1.5 mt-1">
         {p.colors.map((c, i) => (
           <span key={i} className="h-4 w-4 rounded-full border border-border" style={{ backgroundColor: c }} />
         ))}
-      </div>
+      </div> */}
       <div className="flex items-center justify-between mt-auto pt-3">
         <span className="font-display text-lg">{p.price}<span className="text-xs font-sans text-muted-foreground">/pc</span></span>
         <a
-          href={waLink(`Hi Arrhenix, I'd like to order: ${p.name}. Quantity: 20+ pieces.`)}
+          href={waLink(`Hi Arrheniux, I'd like to order: ${p.name}. Quantity: 20+ pieces.`)}
           target="_blank"
           rel="noreferrer"
           className="text-[hsl(var(--whatsapp))] hover:text-ink transition"
