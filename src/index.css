@@ -217,4 +217,70 @@
     .animate-float { animation: none !important; }
     .hover-lift:hover { transform: none; }
   }
+
+  /* ============ Hero animated fallback ============ */
+  .hero-media { background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--ink, var(--primary))) 100%); }
+  .hero-fallback {
+    opacity: 1;
+    transition: opacity 700ms ease;
+    background:
+      radial-gradient(ellipse at 20% 30%, hsl(var(--accent) / 0.35), transparent 55%),
+      radial-gradient(ellipse at 80% 70%, hsl(var(--primary) / 0.55), transparent 60%),
+      linear-gradient(135deg, hsl(var(--primary)) 0%, #0a0a0a 100%);
+    overflow: hidden;
+  }
+  .hero-video-fade { opacity: 0; transition: opacity 900ms ease; }
+  .hero-video-fade.is-ready { opacity: 1; }
+  .hero-video-fade.is-ready ~ .hero-fallback,
+  .hero-media:has(.is-ready) .hero-fallback { opacity: 0; }
+
+  .hero-orb {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(40px);
+    opacity: 0.55;
+    will-change: transform;
+  }
+  .hero-orb-1 {
+    width: 55%; height: 55%;
+    left: -10%; top: -15%;
+    background: radial-gradient(circle, hsl(var(--accent)) 0%, transparent 70%);
+    animation: hero-float-a 9s ease-in-out infinite;
+  }
+  .hero-orb-2 {
+    width: 60%; height: 60%;
+    right: -15%; bottom: -20%;
+    background: radial-gradient(circle, hsl(var(--primary)) 0%, transparent 70%);
+    animation: hero-float-b 11s ease-in-out infinite;
+  }
+  .hero-orb-3 {
+    width: 40%; height: 40%;
+    left: 30%; top: 40%;
+    background: radial-gradient(circle, #ffffff33 0%, transparent 70%);
+    animation: hero-float-a 7s ease-in-out infinite reverse;
+  }
+  .hero-sheen {
+    position: absolute; inset: 0;
+    background: linear-gradient(115deg, transparent 30%, #ffffff22 50%, transparent 70%);
+    transform: translateX(-100%);
+    animation: hero-sheen 4.5s ease-in-out 0.4s infinite;
+  }
+
+  @keyframes hero-float-a {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(6%, 4%) scale(1.08); }
+  }
+  @keyframes hero-float-b {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-5%, -3%) scale(1.1); }
+  }
+  @keyframes hero-sheen {
+    0% { transform: translateX(-100%); }
+    60%, 100% { transform: translateX(120%); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-orb, .hero-sheen { animation: none !important; }
+  }
 }
+
