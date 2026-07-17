@@ -10,7 +10,7 @@ const steps = [
 export const HowItWorks = () => (
   <section className="container-x py-20">
     <div className="text-center max-w-2xl mx-auto mb-14">
-      <span className="text-xs font-bold uppercase tracking-widest text-primary">04 — Process</span>
+      <span className="text-xs font-bold uppercase tracking-widest text-primary">05 — Process</span>
       <h2 className="font-display text-5xl md:text-6xl mt-2">HOW IT WORKS</h2>
     </div>
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-border">

@@ -43,7 +43,7 @@ const MyOrders = () => {
     if (due <= 0) return;
     openRazorpay({
       amountInr: due,
-      name: "Arrhenix — Balance Payment",
+      name: "Arrheniux — Balance Payment",
       description: `Balance for order #${o.id.slice(0, 8).toUpperCase()}`,
       onSuccess: (ref) => {
         updateOrderPayment(o.id, due, ref);

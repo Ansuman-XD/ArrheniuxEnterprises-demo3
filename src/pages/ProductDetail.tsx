@@ -162,7 +162,7 @@ const ProductDetail = () => {
 
   const orderMessage = () => {
     const lines: string[] = [];
-    lines.push("Hi Arrhenix, my payment is complete — here is my order:");
+    lines.push("Hi Arrheniux, my payment is complete — here is my order:");
     lines.push("");
     lines.push("*Product Details*");
     if (cat) lines.push(`• Category: ${cat.name}`);
@@ -234,7 +234,7 @@ const ProductDetail = () => {
     }
     openRazorpay({
       amountInr: grandTotal,
-      name: "Arrhenix",
+      name: "Arrheniux",
       description: `${product.name} × ${total} pcs`,
       prefill: { name: user.name, email: user.email, contact: user.phone },
       onSuccess: (paymentId) => {
@@ -272,7 +272,7 @@ const ProductDetail = () => {
 
   const productUrl = typeof window !== "undefined" ? window.location.href : "";
   const handleShareWa = () => {
-    const msg = `Check out this product from Arrhenix: ${product.name} — ${productUrl}`;
+    const msg = `Check out this product from Arrheniux: ${product.name} — ${productUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank", "noreferrer");
   };
   const handleCopy = async () => {

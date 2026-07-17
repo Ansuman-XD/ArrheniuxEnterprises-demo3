@@ -75,7 +75,7 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
   const orderMsg = useMemo(() => {
     if (!open) return "";
     const lines: string[] = [];
-    lines.push("Hi Arrhenix — my *SAMPLE ORDER* payment is complete:");
+    lines.push("Hi Arrheniux — my *SAMPLE ORDER* payment is complete:");
     lines.push("");
     lines.push("*Product Details*");
     if (cat) lines.push(`• Category: ${cat.name}`);
@@ -112,7 +112,7 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
     }
     openRazorpay({
       amountInr: total,
-      name: "Arrhenix — Sample",
+      name: "Arrheniux — Sample",
       description: `Sample: ${product.name}`,
       prefill: { name: user.name, email: user.email, contact: user.phone },
       onSuccess: (paymentId) => {

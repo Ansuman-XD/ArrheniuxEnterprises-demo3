@@ -101,7 +101,7 @@ const B2BShop = () => {
   const buildMessage = () => {
     if (!product) return "";
     const lines: string[] = [];
-    lines.push("Hi Arrhenix, my payment is complete — *B2B ORDER*:");
+    lines.push("Hi Arrheniux, my payment is complete — *B2B ORDER*:");
     lines.push("");
     lines.push("*Product Details*");
     lines.push(`• B2B Subcategory: ${activeSub?.name}`);
@@ -131,7 +131,7 @@ const B2BShop = () => {
     if (total < B2B_MOQ) return;
     openRazorpay({
       amountInr: grandTotal,
-      name: "Arrhenix — B2B",
+      name: "Arrheniux — B2B",
       description: `${product.name} × ${total} pcs`,
       prefill: { name: agent.contactPerson, email: agent.email, contact: agent.mobile },
       onSuccess: (paymentId) => {

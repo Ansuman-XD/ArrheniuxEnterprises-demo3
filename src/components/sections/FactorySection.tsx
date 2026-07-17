@@ -18,7 +18,7 @@ export const FactorySection = () => (
         <img src={f3} alt="Quality check" loading="lazy" className="w-full h-full object-cover aspect-square" />
       </div>
       <div>
-        <span className="text-xs font-bold uppercase tracking-widest text-primary">06 — Our Factory</span>
+        <span className="text-xs font-bold uppercase tracking-widest text-primary">04 — Our Factory</span>
         <h2 className="font-display text-5xl md:text-6xl mt-2 leading-none">BUILT IN-HOUSE.<br /><span className="text-primary">SHIPPED ON TIME.</span></h2>
         <p className="mt-5 text-muted-foreground max-w-md">
           We own our production. From fabric sourcing to printing, embroidery, stitching and quality control — every step happens under one roof in Bhubaneswar.

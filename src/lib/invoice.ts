@@ -1,10 +1,10 @@
 import jsPDF from "jspdf";
 import type { Order } from "./authStore";
 
-const BRAND = "ARRHENIX";
+const BRAND = "ARRHENIUX";
 const ADDRESS = "Niladri Vihar, Bhubaneswar, Odisha 751021";
-const EMAIL = "info@arrhenix.com";
-const PHONE = "+91 82603 68742";
+const EMAIL = "banamali08@gmail.com.com";
+const PHONE = "+91 99378 64993";
 
 export const downloadInvoice = (order: Order) => {
   const doc = new jsPDF({ unit: "pt", format: "a4" });

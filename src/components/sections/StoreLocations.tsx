@@ -10,19 +10,19 @@ type Store = {
 
 const STORES: Store[] = [
   {
-    name: "Arrhenix HQ — Bhubaneswar",
+    name: "Arrheniux HQ — Bhubaneswar",
     address: "Niladri Vihar, Bhubaneswar, Odisha 751021",
     phone: "+91 82603 68742",
     mapsUrl: "https://maps.app.goo.gl/oh4CuRvus1gfH4D49",
   },
   {
-    name: "Arrhenix Factory — Cuttack",
+    name: "Arrheniux Factory — Cuttack",
     address: "Jagatpur Industrial Estate, Cuttack, Odisha 754021",
     phone: "+91 82603 68742",
     mapsUrl: "https://www.google.com/maps/search/?api=1&query=Jagatpur+Industrial+Estate+Cuttack",
   },
   {
-    name: "Arrhenix Studio — Kolkata",
+    name: "Arrheniux Studio — Kolkata",
     address: "Salt Lake Sector V, Kolkata, West Bengal 700091",
     phone: "+91 82603 68742",
     mapsUrl: "https://www.google.com/maps/search/?api=1&query=Salt+Lake+Sector+V+Kolkata",
@@ -33,11 +33,11 @@ export const StoreLocations = () => (
   <section className="container-x py-20">
     <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
       <div>
-        <span className="text-xs font-bold uppercase tracking-widest text-primary">Our Store Locations</span>
+        <span className="text-xs font-bold uppercase tracking-widest text-primary">09 — Our Store Locations</span>
         <h2 className="font-display text-5xl md:text-6xl mt-2">FIND US NEAR YOU.</h2>
       </div>
       <p className="text-muted-foreground max-w-md text-sm">
-        Walk into any Arrhenix location to see fabrics, samples and production in person. Our team is happy to help with custom briefs.
+        Walk into any Arrheniux location to see fabrics, samples and production in person. Our team is happy to help with custom briefs.
       </p>
     </div>
 
