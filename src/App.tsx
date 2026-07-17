@@ -15,6 +15,7 @@ import MyOrders from "./pages/MyOrders.tsx";
 import MyAddresses from "./pages/MyAddresses.tsx";
 import Contact from "./pages/Contact.tsx";
 import ScrollToTop from "./components/ScrollToTop";
+import RouteLoader from "./components/RouteLoader";
 import { VisitTracker } from "./components/VisitTracker";
 import Auth from "./pages/Auth";
 import AdminApp from "./admin/AdminApp";
@@ -28,6 +29,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ScrollToTop />
+        <RouteLoader />
         <VisitTracker />
         <Routes>
           <Route path="/" element={<Index />} />

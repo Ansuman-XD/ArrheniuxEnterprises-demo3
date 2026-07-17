@@ -30,7 +30,14 @@ export const Hero = () => (
           <span className="flex items-center gap-2"><Package className="h-4 w-4" /> 7–14 Day TAT</span>
         </div>
       </div>
-      <div className="relative order-1 lg:order-2 min-h-[300px] lg:min-h-[600px] overflow-hidden">
+      <div className="relative order-1 lg:order-2 min-h-[300px] lg:min-h-[600px] overflow-hidden hero-media">
+        {/* Lightweight animated fallback (visible instantly, hidden once video paints) */}
+        <div aria-hidden className="absolute inset-0 hero-fallback">
+          <div className="hero-orb hero-orb-1" />
+          <div className="hero-orb hero-orb-2" />
+          <div className="hero-orb hero-orb-3" />
+          <div className="hero-sheen" />
+        </div>
         <video
           autoPlay
           muted
@@ -38,8 +45,10 @@ export const Hero = () => (
           playsInline
           preload="metadata"
           poster={heroModel}
-          className="absolute inset-0 w-full h-full object-cover object-center"
+          className="absolute inset-0 w-full h-full object-cover object-center hero-video-fade"
           aria-hidden="true"
+          onLoadedData={(e) => e.currentTarget.classList.add("is-ready")}
+          onCanPlay={(e) => e.currentTarget.play().catch(() => {})}
         >
           <source src="https://cdn.pixabay.com/video/2020/04/07/35095-406773730_large.mp4" type="video/mp4" />
           <source src="https://cdn.pixabay.com/video/2023/09/23/181795-867103929_large.mp4" type="video/mp4" />
