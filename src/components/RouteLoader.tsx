@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
+import { BrandLoader } from "./BrandLoader";
 
 /**
- * Top progress bar + subtle overlay shown during route transitions
- * and initial page loads. Purely presentational; auto-dismisses.
+ * Route transition loader — shows the branded (logo) loader briefly on
+ * every navigation, plus a top progress bar for continuity.
  */
 export const RouteLoader = () => {
   const { pathname } = useLocation();
@@ -18,8 +19,8 @@ export const RouteLoader = () => {
     const t2 = setTimeout(() => setProgress(92), 260);
     const t3 = setTimeout(() => {
       setProgress(100);
-      setTimeout(() => setActive(false), 220);
-    }, 480);
+      setTimeout(() => setActive(false), 260);
+    }, 520);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -31,7 +32,7 @@ export const RouteLoader = () => {
     <>
       <div
         aria-hidden
-        className="fixed top-0 left-0 right-0 z-[100] h-[3px] pointer-events-none"
+        className="fixed top-0 left-0 right-0 z-[201] h-[3px] pointer-events-none"
         style={{ opacity: active ? 1 : 0, transition: "opacity 300ms ease" }}
       >
         <div
@@ -42,14 +43,14 @@ export const RouteLoader = () => {
           }}
         />
       </div>
-      <div
-        aria-hidden
-        className="fixed inset-0 z-[99] pointer-events-none bg-background/20 backdrop-blur-[1px]"
-        style={{
-          opacity: active ? 1 : 0,
-          transition: "opacity 260ms ease",
-        }}
-      />
+      {active && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-md pointer-events-none animate-fade-in"
+          aria-hidden={!active}
+        >
+          <BrandLoader label="Loading" size={88} />
+        </div>
+      )}
     </>
   );
 };
