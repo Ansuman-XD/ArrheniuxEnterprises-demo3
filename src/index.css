@@ -282,5 +282,91 @@
   @media (prefers-reduced-motion: reduce) {
     .hero-orb, .hero-sheen { animation: none !important; }
   }
+
+  /* ============ Brand loader (company logo) ============ */
+  .brand-loader-wrap {
+    position: relative;
+    display: grid;
+    place-items: center;
+    isolation: isolate;
+  }
+  .brand-loader-logo {
+    position: relative;
+    z-index: 2;
+    width: 62%;
+    height: 62%;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 18px hsl(var(--primary) / 0.35));
+    animation: brand-logo-pulse 1.8s ease-in-out infinite;
+  }
+  .brand-loader-ring {
+    position: absolute; inset: 0;
+    border-radius: 9999px;
+    background: conic-gradient(
+      from 0deg,
+      hsl(var(--accent)) 0deg,
+      hsl(var(--primary)) 120deg,
+      transparent 220deg,
+      hsl(var(--accent)) 360deg
+    );
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(50% - 4px), #000 calc(50% - 3px));
+            mask: radial-gradient(farthest-side, transparent calc(50% - 4px), #000 calc(50% - 3px));
+    animation: brand-ring-spin 1.6s linear infinite;
+    z-index: 1;
+  }
+  .brand-loader-halo {
+    position: absolute; inset: -10%;
+    border-radius: 9999px;
+    background: radial-gradient(circle, hsl(var(--primary) / 0.35) 0%, transparent 65%);
+    filter: blur(14px);
+    animation: brand-halo-breathe 2.4s ease-in-out infinite;
+    z-index: 0;
+  }
+  .brand-loader-sheen {
+    position: absolute; inset: 8%;
+    border-radius: 9999px;
+    background: linear-gradient(115deg, transparent 35%, #ffffff55 50%, transparent 65%);
+    mix-blend-mode: overlay;
+    animation: brand-sheen 2.2s ease-in-out infinite;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .brand-loader-dot {
+    width: 5px; height: 5px;
+    border-radius: 9999px;
+    background: hsl(var(--primary));
+    display: inline-block;
+    animation: brand-dot 1s ease-in-out infinite;
+  }
+
+  @keyframes brand-logo-pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.06); opacity: 0.9; }
+  }
+  @keyframes brand-ring-spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes brand-halo-breathe {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.08); }
+  }
+  @keyframes brand-sheen {
+    0% { transform: translateX(-40%) rotate(0deg); opacity: 0; }
+    40% { opacity: 1; }
+    100% { transform: translateX(40%) rotate(0deg); opacity: 0; }
+  }
+  @keyframes brand-dot {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+    40% { transform: translateY(-3px); opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .brand-loader-logo,
+    .brand-loader-ring,
+    .brand-loader-halo,
+    .brand-loader-sheen,
+    .brand-loader-dot { animation: none !important; }
+  }
 }
+
 
