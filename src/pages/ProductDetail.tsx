@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Minus, Plus, Share2, Link2, PackageOpen, CreditCard, Star, Package } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
@@ -139,7 +139,7 @@ const ProductDetail = () => {
     return u + c + g;
   })();
 
-  const bumpSize = (s: Size, d: number) =>
+  const bumpSize = useCallback((s: Size, d: number) =>
     setSizeQty((q) => {
       let next = Math.max(0, (q[s] || 0) + d);
       if (isArr) {
@@ -152,7 +152,7 @@ const ProductDetail = () => {
         }
       }
       return { ...q, [s]: next };
-    });
+    }), [isArr, SIZES]);
 
   // Color: default = first product color; named accessories override
   const selectedColor = rule?.namedColors
@@ -221,7 +221,7 @@ const ProductDetail = () => {
     return `/bulk-order?${p.toString()}`;
   };
 
-  const handlePay = () => {
+  const handlePay = useCallback(() => {
     if (isBulk) {
       navigate(bulkRedirectHref());
       return;
@@ -266,23 +266,23 @@ const ProductDetail = () => {
         setSuccessOrder({ id: o.id, amount: grandTotal });
       },
     });
-  };
+  }, [isBulk, canOrder, grandTotal, product, total, code, unitPrice, subtotal, discountPct, discountAmt, printTypeText, printCharge, courier, gst, isGarment, sizeQty, navigate, location.pathname]);
 
-  const handleSample = () => setSampleOpen(true);
+  const handleSample = useCallback(() => setSampleOpen(true), []);
 
   const productUrl = typeof window !== "undefined" ? window.location.href : "";
-  const handleShareWa = () => {
+  const handleShareWa = useCallback(() => {
     const msg = `Check out this product from Arrheniux: ${product.name} — ${productUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank", "noreferrer");
-  };
-  const handleCopy = async () => {
+  }, [product.name, productUrl]);
+  const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(productUrl);
       toast({ title: "Link copied", description: "Product link copied to clipboard." });
     } catch {
       toast({ title: "Copy failed", description: "Please copy the URL manually." });
     }
-  };
+  }, [productUrl]);
 
   const related = allProducts()
     .filter((p) => p.categorySlug === product.categorySlug && p.id !== product.id)

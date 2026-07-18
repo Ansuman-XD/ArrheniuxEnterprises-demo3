@@ -16,6 +16,17 @@
     <!-- <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@Lovable" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" /> -->
+
+    <!-- Non-blocking font loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap"
+    />
+
+    <!-- Hero image preload (dev path; Vite fingerprints in prod) -->
+    <link rel="preload" as="image" href="/src/assets/hero-model.jpg" fetchpriority="high" />
   </head>
 
   <body>
