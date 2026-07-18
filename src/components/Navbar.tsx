@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, User as UserIcon, ChevronDown, Home, Sparkles, Info, MessageSquare, Building2, Mail, ClipboardList, Shield, LayoutGrid, Package } from "lucide-react";
 import { Logo } from "./Logo";
@@ -28,7 +28,7 @@ export const Navbar = () => {
     setUser(getSession());
   }, [location.pathname]);
 
-  const handleHashClick = (e: React.MouseEvent, hash: string) => {
+  const handleHashClick = useCallback((e: React.MouseEvent, hash: string) => {
     e.preventDefault();
     setOpen(false);
     if (location.pathname !== "/") {
@@ -38,13 +38,13 @@ export const Navbar = () => {
     const el = document.querySelector(hash);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     history.replaceState(null, "", hash);
-  };
+  }, [location.pathname, navigate]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     clearSession();
     setUser(null);
     navigate("/");
-  };
+  }, [navigate]);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `text-sm font-medium uppercase tracking-wide transition hover:text-primary ${
