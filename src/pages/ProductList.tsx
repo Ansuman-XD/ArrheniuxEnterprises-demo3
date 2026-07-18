@@ -1,19 +1,34 @@
 import { useParams, Link, Navigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
+import { Skeleton } from "@/components/ui/skeleton";
 import { findCategory, findSubcategory } from "@/data/catalog";
+
+const PAGE_SIZE = 12;
 
 const ProductList = () => {
   const { cat: catSlug, tier: tierParam, sub } = useParams();
   const cat = findCategory(catSlug);
   if (!cat) return <Navigate to="/" replace />;
 
-  // "_" is the placeholder we use for non-tiered categories.
   const tier = tierParam === "_" ? undefined : tierParam;
   const subcat = findSubcategory(cat, tier, sub);
   if (!subcat) return <Navigate to={`/category/${cat.slug}`} replace />;
 
   const items = subcat.products;
+  const [visible, setVisible] = useState(PAGE_SIZE);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  useEffect(() => { setVisible(PAGE_SIZE); }, [subcat.slug]);
+
+  const shown = useMemo(() => items.slice(0, visible), [items, visible]);
+  const hasMore = visible < items.length;
 
   return (
     <Layout>
@@ -31,14 +46,39 @@ const ProductList = () => {
       </section>
 
       <section className="container-x py-12">
-        {items.length === 0 ? (
-          <p className="text-muted-foreground">No products yet in this subcategory.</p>
-        ) : (
+        {!ready ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {items.map((p) => (
-              <ProductCard key={p.id} p={p as any} />
+            {Array.from({ length: Math.min(PAGE_SIZE, items.length || PAGE_SIZE) }).map((_, i) => (
+              <div key={i} className="flex flex-col bg-card border border-border">
+                <Skeleton className="w-full aspect-square" />
+                <div className="p-4 space-y-2">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <Skeleton className="h-6 w-1/3 mt-2" />
+                </div>
+              </div>
             ))}
           </div>
+        ) : items.length === 0 ? (
+          <p className="text-muted-foreground">No products yet in this subcategory.</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {shown.map((p) => (
+                <ProductCard key={p.id} p={p as any} />
+              ))}
+            </div>
+            {hasMore && (
+              <div className="mt-10 flex justify-center">
+                <button
+                  onClick={() => setVisible((v) => v + PAGE_SIZE)}
+                  className="btn-bold"
+                >
+                  Load More ({items.length - visible} remaining)
+                </button>
+              </div>
+            )}
+          </>
         )}
       </section>
     </Layout>
