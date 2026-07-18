@@ -1,24 +1,27 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
-import CategoryTiers from "./pages/CategoryTiers.tsx";
-import SubcategoryList from "./pages/SubcategoryList.tsx";
-import ProductList from "./pages/ProductList.tsx";
-import ProductDetail from "./pages/ProductDetail.tsx";
-import BulkOrder from "./pages/BulkOrder.tsx";
-import B2BShop from "./pages/B2BShop.tsx";
-import MyOrders from "./pages/MyOrders.tsx";
-import MyAddresses from "./pages/MyAddresses.tsx";
-import Contact from "./pages/Contact.tsx";
 import ScrollToTop from "./components/ScrollToTop";
 import RouteLoader from "./components/RouteLoader";
 import { VisitTracker } from "./components/VisitTracker";
-import Auth from "./pages/Auth";
-import AdminApp from "./admin/AdminApp";
+import { BrandLoader } from "./components/BrandLoader";
+
+const Index = lazy(() => import("./pages/Index.tsx"));
+const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+const CategoryTiers = lazy(() => import("./pages/CategoryTiers.tsx"));
+const SubcategoryList = lazy(() => import("./pages/SubcategoryList.tsx"));
+const ProductList = lazy(() => import("./pages/ProductList.tsx"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail.tsx"));
+const BulkOrder = lazy(() => import("./pages/BulkOrder.tsx"));
+const B2BShop = lazy(() => import("./pages/B2BShop.tsx"));
+const MyOrders = lazy(() => import("./pages/MyOrders.tsx"));
+const MyAddresses = lazy(() => import("./pages/MyAddresses.tsx"));
+const Contact = lazy(() => import("./pages/Contact.tsx"));
+const Auth = lazy(() => import("./pages/Auth"));
+const AdminApp = lazy(() => import("./admin/AdminApp"));
 
 const queryClient = new QueryClient();
 
@@ -31,24 +34,26 @@ const App = () => (
         <ScrollToTop />
         <RouteLoader />
         <VisitTracker />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          {/* Category navigation: /category/:cat → tier picker (or subcat list when no tiers) */}
-          <Route path="/category/:cat" element={<CategoryTiers />} />
-          {/* /category/:cat/:tier → subcategories for that tier (regular|premium) */}
-          <Route path="/category/:cat/:tier" element={<SubcategoryList />} />
-          {/* /category/:cat/:tier/:sub → product listing */}
-          <Route path="/category/:cat/:tier/:sub" element={<ProductList />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/bulk-order" element={<BulkOrder />} />
-          <Route path="/b2b-shop" element={<B2BShop />} />
-          <Route path="/my-orders" element={<MyOrders />} />
-          <Route path="/my-addresses" element={<MyAddresses />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/admin/*" element={<AdminApp />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<BrandLoader fullscreen />}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            {/* Category navigation: /category/:cat → tier picker (or subcat list when no tiers) */}
+            <Route path="/category/:cat" element={<CategoryTiers />} />
+            {/* /category/:cat/:tier → subcategories for that tier (regular|premium) */}
+            <Route path="/category/:cat/:tier" element={<SubcategoryList />} />
+            {/* /category/:cat/:tier/:sub → product listing */}
+            <Route path="/category/:cat/:tier/:sub" element={<ProductList />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/bulk-order" element={<BulkOrder />} />
+            <Route path="/b2b-shop" element={<B2BShop />} />
+            <Route path="/my-orders" element={<MyOrders />} />
+            <Route path="/my-addresses" element={<MyAddresses />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/admin/*" element={<AdminApp />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
