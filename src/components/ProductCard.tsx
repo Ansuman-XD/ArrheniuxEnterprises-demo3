@@ -45,4 +45,6 @@ export const ProductCard = memo(({ p }: { p: Product }) => (
       </div>
     </div>
   </div>
-);
+));
+ProductCard.displayName = "ProductCard";
+
