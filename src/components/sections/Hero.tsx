@@ -36,6 +36,7 @@ export const Hero = () => (
           alt="Model wearing Arrheniux custom hoodie"
           width={1024}
           height={1024}
+          fetchPriority="high"
           className="absolute inset-0 w-full h-full object-cover object-top"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/40 via-transparent to-transparent pointer-events-none" />
