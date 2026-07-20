@@ -283,7 +283,7 @@
     .hero-orb, .hero-sheen { animation: none !important; }
   }
 
-  /* ============ Brand loader (company logo) — smooth premium edition ============ */
+  /* ============ Simple smooth spinner loader ============ */
   .brand-loader-wrap {
     position: relative;
     display: grid;
