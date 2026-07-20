@@ -32,7 +32,7 @@ export const BrandLoader = ({
         <span className="brand-loader-sheen" aria-hidden />
       </div>
       <div className="brand-loader-text">
-        <span className="font-display tracking-[0.3em] text-xs text-ink/80 uppercase">
+        <span className="font-display tracking-[0.3em] text-xs text-ink uppercase">
           {label}
         </span>
         <span className="brand-loader-dot" />
