@@ -302,8 +302,8 @@
   .brand-loader-plate {
     position: absolute; inset: -4%;
     border-radius: 9999px;
-    background: radial-gradient(circle, hsl(var(--background)) 0%, transparent 70%);
-    box-shadow: 0 0 40px hsl(var(--primary) / 0.08), inset 0 0 20px hsl(var(--primary) / 0.04);
+    background: radial-gradient(circle, hsl(var(--background) / 0.85) 0%, transparent 72%);
+    box-shadow: 0 0 34px hsl(var(--primary) / 0.07), inset 0 0 18px hsl(var(--primary) / 0.04);
     z-index: -1;
   }
   .brand-loader-orbit {
