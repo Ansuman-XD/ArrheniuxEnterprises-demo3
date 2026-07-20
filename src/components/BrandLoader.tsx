@@ -20,6 +20,7 @@ export const BrandLoader = ({
         className="brand-loader-wrap"
         style={{ width: size, height: size }}
       >
+        <span className="brand-loader-plate" aria-hidden />
         <span className="brand-loader-orbit brand-loader-orbit--outer" aria-hidden />
         <span className="brand-loader-orbit brand-loader-orbit--inner" aria-hidden />
         <span className="brand-loader-halo" aria-hidden />
