@@ -15,13 +15,15 @@ export const BrandLoader = ({
   size?: number;
 }) => {
   const content = (
-    <div className="flex flex-col items-center gap-5" role="status" aria-live="polite">
+    <div className="flex flex-col items-center gap-6" role="status" aria-live="polite">
       <div
         className="brand-loader-wrap"
         style={{ width: size, height: size }}
       >
-        <span className="brand-loader-ring" />
-        <span className="brand-loader-halo" />
+        <span className="brand-loader-plate" aria-hidden />
+        <span className="brand-loader-orbit brand-loader-orbit--outer" aria-hidden />
+        <span className="brand-loader-orbit brand-loader-orbit--inner" aria-hidden />
+        <span className="brand-loader-halo" aria-hidden />
         <img
           src={logo}
           alt="Arrheniux"
@@ -30,13 +32,13 @@ export const BrandLoader = ({
         />
         <span className="brand-loader-sheen" aria-hidden />
       </div>
-      <div className="flex items-center gap-1.5">
-        <span className="font-display tracking-[0.35em] text-xs text-ink/80 uppercase">
+      <div className="brand-loader-text">
+        <span className="font-display tracking-[0.3em] text-xs text-ink uppercase">
           {label}
         </span>
         <span className="brand-loader-dot" />
-        <span className="brand-loader-dot" style={{ animationDelay: "0.15s" }} />
-        <span className="brand-loader-dot" style={{ animationDelay: "0.3s" }} />
+        <span className="brand-loader-dot" style={{ animationDelay: "0.14s" }} />
+        <span className="brand-loader-dot" style={{ animationDelay: "0.28s" }} />
       </div>
       <span className="sr-only">{label}…</span>
     </div>
