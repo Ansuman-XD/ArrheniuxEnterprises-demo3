@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Star } from "lucide-react";
-import { addReview, getSession, type Review } from "@/lib/authStore";
+import { getSession } from "@/lib/session";
+import { useCreateReview } from "@/hooks/api";
+import type { StorefrontReview } from "@/lib/orderMappers";
 
-export const ReviewForm = ({ onSubmitted }: { onSubmitted?: (r: Review) => void }) => {
+export const ReviewForm = ({ onSubmitted }: { onSubmitted?: (r: StorefrontReview) => void }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const createReviewMut = useCreateReview();
   const [rating, setRating] = useState(5);
-  const [subject, setSubject] = useState<Review["subject"]>("Company");
+  const [subject, setSubject] = useState<StorefrontReview["subject"]>("Company");
   const [text, setText] = useState("");
   const [done, setDone] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const user = getSession();
     if (!user) {
@@ -19,11 +22,29 @@ export const ReviewForm = ({ onSubmitted }: { onSubmitted?: (r: Review) => void 
       return;
     }
     if (text.trim().length < 5) return;
-    const r = addReview({ name: user.name, subject, rating, text: text.trim() });
-    setDone(true);
-    setText("");
-    onSubmitted?.(r);
-    setTimeout(() => setDone(false), 3000);
+    try {
+      const row = await createReviewMut.mutateAsync({
+        customer: user.name,
+        product: subject,
+        rating,
+        comment: text.trim(),
+        status: "Approved",
+      });
+      const r: StorefrontReview = {
+        id: row.id,
+        name: user.name,
+        subject,
+        rating,
+        text: text.trim(),
+        createdAt: row.date,
+      };
+      setDone(true);
+      setText("");
+      onSubmitted?.(r);
+      setTimeout(() => setDone(false), 3000);
+    } catch {
+      // silent — user sees no done state
+    }
   };
 
   return (
@@ -68,8 +89,8 @@ export const ReviewForm = ({ onSubmitted }: { onSubmitted?: (r: Review) => void 
       />
       <div className="flex items-center justify-between mt-3 gap-3">
         <p className="text-[11px] text-cream/50">Login required to submit a review.</p>
-        <button className="bg-cream text-ink px-5 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-accent hover:text-cream transition">
-          Submit Review
+        <button disabled={createReviewMut.isPending} className="bg-cream text-ink px-5 py-2 text-xs font-semibold uppercase tracking-wide hover:bg-accent hover:text-cream transition disabled:opacity-60">
+          {createReviewMut.isPending ? "Submitting…" : "Submit Review"}
         </button>
       </div>
       {done && <p className="text-xs text-accent mt-3">Thanks — your reaction is live.</p>}

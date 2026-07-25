@@ -1,13 +1,18 @@
-import { useEffect, useState } from "react";
 import { Star, CheckCircle2 } from "lucide-react";
-import { getReviewsForProduct, type Review } from "@/lib/authStore";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useProductReviews } from "@/hooks/api";
 
 export const ProductReviews = ({ productId }: { productId: string }) => {
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const { data: reviews = [], isLoading } = useProductReviews(productId);
 
-  useEffect(() => {
-    setReviews(getReviewsForProduct(productId));
-  }, [productId]);
+  if (isLoading) {
+    return (
+      <section className="container-x py-16 border-t border-border">
+        <Skeleton className="h-10 w-64 mb-4" />
+        <Skeleton className="h-4 w-full max-w-lg" />
+      </section>
+    );
+  }
 
   if (reviews.length === 0) {
     return (

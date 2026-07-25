@@ -7,12 +7,11 @@ import { ProductReviews } from "@/components/ProductReviews";
 import { PrintPicker } from "@/components/PrintPicker";
 import { ArtworkUpload, artworkSummary, type ArtworkFile } from "@/components/ArtworkUpload";
 import { SampleDialog } from "@/components/SampleDialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   ARR_SIZE_MAX,
-  findProduct,
   findCategory,
   findSubcategory,
-  allProducts,
   isNonGarmentCategory,
   isArrheniuxCategory,
   priceValue,
@@ -32,21 +31,67 @@ import {
   getSizesFor,
   emptySizes,
   APPAREL_SIZES,
+  type CatalogProduct,
 } from "@/data/catalog";
 import { emptyPrint, printPricePerPc, printLabel, encodePrint, type PrintSelection, type PrintMethod } from "@/data/printOptions";
 import { waLink } from "@/data/site";
-import { getSession, createOrder, getReviewsForProduct } from "@/lib/authStore";
+import { getSession } from "@/lib/session";
+import { mapApiProductToCatalog } from "@/lib/productMappers";
 import { openRazorpay } from "@/lib/razorpay";
 import { toast } from "@/hooks/use-toast";
 import { SuccessDialog } from "@/components/SuccessDialog";
+import { useCreateOrder, useProduct, useProductReviews, useProducts } from "@/hooks/api";
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const { data: product, isLoading, isError } = useProduct(id);
+  const { data: apiProducts = [] } = useProducts({ status: "Active" });
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container-x py-10 space-y-6">
+          <Skeleton className="h-4 w-64" />
+          <div className="grid lg:grid-cols-2 gap-10">
+            <Skeleton className="aspect-square w-full" />
+            <div className="space-y-4">
+              <Skeleton className="h-12 w-3/4" />
+              <Skeleton className="h-6 w-1/2" />
+              <Skeleton className="h-40 w-full" />
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (isError || !product) {
+    return (
+      <Layout>
+        <div className="container-x py-32 text-center">
+          <h1 className="font-display text-4xl">Product not found</h1>
+          <Link to="/" className="btn-bold mt-6 inline-flex">Back home</Link>
+        </div>
+      </Layout>
+    );
+  }
+
+  return <ProductDetailView product={product} apiProducts={apiProducts} />;
+};
+
+const ProductDetailView = ({
+  product,
+  apiProducts,
+}: {
+  product: CatalogProduct;
+  apiProducts: import("@/lib/api").ApiProduct[];
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const product = findProduct(id);
+  const { data: reviews = [] } = useProductReviews(product.id);
+  const createOrderMut = useCreateOrder();
 
-  const SIZES = (product ? getSizesFor(product.categorySlug) : APPAREL_SIZES) as readonly string[];
+  const SIZES = getSizesFor(product.categorySlug) as readonly string[];
   type Size = string;
 
   const [activeImg, setActiveImg] = useState(0);
@@ -64,17 +109,6 @@ const ProductDetail = () => {
   const [namedColor, setNamedColor] = useState<string>("");
   const [printColor, setPrintColor] = useState<string>("");
 
-  if (!product) {
-    return (
-      <Layout>
-        <div className="container-x py-32 text-center">
-          <h1 className="font-display text-4xl">Product not found</h1>
-          <Link to="/" className="btn-bold mt-6 inline-flex">Back home</Link>
-        </div>
-      </Layout>
-    );
-  }
-
   const cat = findCategory(product.categorySlug);
   const subcat = cat ? findSubcategory(cat, product.tier, product.subSlug) : undefined;
   const isGarment = !isNonGarmentCategory(product.categorySlug);
@@ -91,8 +125,7 @@ const ProductDetail = () => {
   const gstPctLabel = Math.round(gstRate * 100);
   const courierPerPc = getCourierPerPc(product);
 
-  // Reviews aggregate
-  const reviews = getReviewsForProduct(product.id);
+  // Reviews aggregate (approved reviews from API)
   const reviewCount = reviews.length;
   const avgRating = reviewCount ? reviews.reduce((s, r) => s + r.rating, 0) / reviewCount : 0;
 
@@ -237,36 +270,41 @@ const ProductDetail = () => {
       name: "Arrheniux",
       description: `${product.name} × ${total} pcs`,
       prefill: { name: user.name, email: user.email, contact: user.phone },
-      onSuccess: (paymentId) => {
-        const o = createOrder({
-          userId: user.id,
-          productId: product.id,
-          productName: product.name,
-          productCode: code,
-          productImage: product.image,
-          qty: total,
-          unitPrice,
-          subtotal,
-          discountPct,
-          discountAmt,
-          printType: printTypeText,
-          printCharge,
-          courier,
-          gst,
-          total: grandTotal,
-          paid: grandTotal,
-          paymentMode: "full",
-          paymentRef: paymentId,
-          kind: "retail",
-          sizes: isGarment ? sizeQty : undefined,
-          customer: { fullName: user.name, email: user.email, phone: user.phone || "" },
-        });
-        toast({ title: "Payment successful", description: `Order #${o.id.slice(0, 8).toUpperCase()} placed.` });
-        window.open(waLink(orderMessage()), "_blank", "noreferrer");
-        setSuccessOrder({ id: o.id, amount: grandTotal });
+      onSuccess: async (paymentId) => {
+        try {
+          const o = await createOrderMut.mutateAsync({
+            kind: "retail",
+            customerId: user.id,
+            customerName: user.name,
+            phone: user.phone || "",
+            email: user.email,
+            address: "",
+            productId: product.id,
+            productCode: code,
+            productName: product.name,
+            category: cat?.name ?? "",
+            productType: product.tier === "premium" ? "Premium" : product.tier === "regular" ? "Regular" : "",
+            subCategory: subcat?.name ?? "",
+            material: product.material,
+            printType: printTypeText,
+            sizes: isGarment ? sizeQty : undefined,
+            qty: total,
+            unitPrice,
+            gstPct: gstPctLabel,
+            shipping: courier,
+            total: grandTotal,
+            paid: grandTotal,
+            paymentMode: "full",
+          });
+          toast({ title: "Payment successful", description: `Order #${o.id.slice(0, 8).toUpperCase()} placed.` });
+          window.open(waLink(orderMessage()), "_blank", "noreferrer");
+          setSuccessOrder({ id: o.id, amount: grandTotal });
+        } catch {
+          toast({ title: "Order failed", description: "Payment received but order could not be saved. Contact support.", variant: "destructive" });
+        }
       },
     });
-  }, [isBulk, canOrder, grandTotal, product, total, code, unitPrice, subtotal, discountPct, discountAmt, printTypeText, printCharge, courier, gst, isGarment, sizeQty, navigate, location.pathname]);
+  }, [isBulk, canOrder, grandTotal, product, total, code, unitPrice, subtotal, discountPct, discountAmt, printTypeText, printCharge, courier, gst, isGarment, sizeQty, navigate, location.pathname, cat, subcat, createOrderMut, gstPctLabel]);
 
   const handleSample = useCallback(() => setSampleOpen(true), []);
 
@@ -284,9 +322,13 @@ const ProductDetail = () => {
     }
   }, [productUrl]);
 
-  const related = allProducts()
-    .filter((p) => p.categorySlug === product.categorySlug && p.id !== product.id)
-    .slice(0, 4);
+  const related = useMemo(() => {
+    if (!product) return [] as CatalogProduct[];
+    return apiProducts
+      .map((p) => mapApiProductToCatalog(p))
+      .filter((p) => p.categorySlug === product.categorySlug && p.id !== product.id)
+      .slice(0, 4);
+  }, [product, apiProducts]);
 
   return (
     <Layout>

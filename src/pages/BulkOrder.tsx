@@ -8,7 +8,6 @@ import {
   catalog,
   findCategory,
   getSubsForTier,
-  findProduct,
   isNonGarmentCategory,
   isArrheniuxCategory,
   isWelcomeKitCategory,
@@ -33,10 +32,12 @@ import {
 } from "@/data/catalog";
 import { emptyPrint, printPricePerPc, printLabel, decodePrint, type PrintSelection, type PrintMethod } from "@/data/printOptions";
 import { waLink } from "@/data/site";
-import { getSession, createOrder } from "@/lib/authStore";
+import { getSession } from "@/lib/session";
+import { filterProductsForSubcategory } from "@/lib/productMappers";
 import { openRazorpay } from "@/lib/razorpay";
 import { toast } from "@/hooks/use-toast";
 import { SuccessDialog } from "@/components/SuccessDialog";
+import { useCreateOrder, useProduct, useProducts } from "@/hooks/api";
 
 const SIZE_STEP = 2;
 
@@ -80,9 +81,12 @@ const saveDraft = (d: unknown) => localStorage.setItem(DRAFT_KEY, JSON.stringify
 const BulkOrder = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const createOrderMut = useCreateOrder();
+  const { data: apiProducts = [] } = useProducts({ status: "Active" });
+  const urlPid = params.get("product");
+  const { data: urlProduct } = useProduct(urlPid ?? undefined);
 
   const initial = useMemo(() => {
-    const urlPid = params.get("product");
     const urlQty = Number(params.get("qty")) || 0;
     const urlCat = params.get("cat");
     const urlTier = params.get("tier");
@@ -90,26 +94,6 @@ const BulkOrder = () => {
     const urlColor = params.get("color") || "";
     const urlPrint = decodePrint(params.get("print"));
     const draft = loadDraft();
-    if (urlPid) {
-      const p = findProduct(urlPid);
-      if (p) {
-        const allowed = getSizesFor(p.categorySlug);
-        const urlSizes = parseSizesParam(params.get("sizes"), allowed);
-        const hasUrlSizes = Object.values(urlSizes).some((n) => n > 0);
-        const seedQty = Math.max(BULK_THRESHOLD, urlQty);
-        return {
-          catSlug: p.categorySlug,
-          tier: (p.tier as Tier) || "",
-          subSlug: p.subSlug,
-          productId: p.id,
-          color: urlColor || p.colors[0] || "",
-          unitQty: seedQty,
-          sizeQty: hasUrlSizes ? urlSizes : emptySizes(p.categorySlug),
-          customer: draft.customer || EMPTY_CUSTOMER,
-          print: urlPrint.method ? urlPrint : (draft.print || emptyPrint()),
-        };
-      }
-    }
     if (urlCat) {
       const allowed = getSizesFor(urlCat);
       const urlSizes = parseSizesParam(params.get("sizes"), allowed);
@@ -118,16 +102,17 @@ const BulkOrder = () => {
         catSlug: urlCat,
         tier: (urlTier as Tier) || "",
         subSlug: urlSub || "",
-        productId: "",
+        productId: urlPid || "",
         color: urlColor,
         unitQty: BULK_THRESHOLD,
         sizeQty: hasUrlSizes ? urlSizes : emptySizes(urlCat),
         customer: draft.customer || EMPTY_CUSTOMER,
         print: urlPrint.method ? urlPrint : emptyPrint(),
+        seedQty: urlQty,
       };
     }
-    return draft;
-  }, [params]);
+    return { ...draft, seedQty: urlQty };
+  }, [params, urlPid]);
 
   const catList = bulkCatalog();
   const [catSlug, setCatSlug] = useState<string>(initial.catSlug || catList[0].slug);
@@ -149,11 +134,33 @@ const BulkOrder = () => {
   const SIZES = getSizesFor(catSlug);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    if (!urlProduct) return;
+    const urlQty = Number(params.get("qty")) || 0;
+    const urlColor = params.get("color") || "";
+    const urlPrint = decodePrint(params.get("print"));
+    const allowed = getSizesFor(urlProduct.categorySlug);
+    const urlSizes = parseSizesParam(params.get("sizes"), allowed);
+    const hasUrlSizes = Object.values(urlSizes).some((n) => n > 0);
+    const seedQty = Math.max(BULK_THRESHOLD, urlQty);
+    setCatSlug(urlProduct.categorySlug);
+    setTier((urlProduct.tier as Tier) || "");
+    setSubSlug(urlProduct.subSlug);
+    setProductId(urlProduct.id);
+    setColor(urlColor || urlProduct.colors[0] || "");
+    setUnitQty(seedQty);
+    setSizeQty(hasUrlSizes ? urlSizes : emptySizes(urlProduct.categorySlug));
+    if (urlPrint.method) setPrintSel(urlPrint);
+  }, [urlProduct, params]);
+
   const cat = findCategory(catSlug)!;
   const showsTierStep = cat.hasTiers;
   const subs = cat.hasTiers ? getSubsForTier(cat, tier || undefined) : (cat.items ?? []);
   const subcat = subs.find((s) => s.slug === subSlug);
-  const products: CatalogProduct[] = subcat?.products ?? [];
+  const products: CatalogProduct[] = useMemo(
+    () => (subSlug ? filterProductsForSubcategory(apiProducts, catSlug, tier || undefined, subSlug) : []),
+    [apiProducts, catSlug, tier, subSlug],
+  );
   const product = products.find((p) => p.id === productId);
   const isKit = isWelcomeKitCategory(catSlug);
   const isGarment = product ? !isNonGarmentCategory(product.categorySlug) : !isNonGarmentCategory(catSlug);
@@ -293,31 +300,32 @@ const BulkOrder = () => {
     return lines.join("\n");
   };
 
-  const persistOrder = (mode: "full" | "advance-50", paid: number, ref: string) => {
+  const persistOrder = async (mode: "full" | "advance-50", paid: number) => {
     const user = getSession();
     if (!user || !product) return null;
-    return createOrder({
-      userId: user.id,
+    return createOrderMut.mutateAsync({
+      kind: "bulk",
+      customerId: user.id,
+      customerName: customer.fullName || user.name,
+      phone: customer.phone || user.phone || "",
+      email: customer.email || user.email,
+      address: `${customer.address}, ${customer.city}, ${customer.state} - ${customer.pincode}`,
       productId: product.id,
-      productName: product.name,
       productCode: productCode(product),
-      productImage: product.image,
+      productName: product.name,
+      category: cat.name,
+      productType: product.tier === "premium" ? "Premium" : product.tier === "regular" ? "Regular" : "",
+      subCategory: subcat?.name ?? "",
+      material: product.material,
+      printType: printText,
+      sizes: isGarment ? sizeQty : undefined,
       qty: total,
       unitPrice,
-      subtotal,
-      discountPct: bulkPct,
-      discountAmt,
-      printType: printText,
-      printCharge,
-      courier,
-      gst,
+      gstPct: gstPctLabel,
+      shipping: courier,
       total: grandTotal,
       paid,
       paymentMode: mode,
-      paymentRef: ref,
-      kind: "bulk",
-      customer: customer as unknown as Record<string, string>,
-      sizes: isGarment ? sizeQty : undefined,
     });
   };
 
@@ -336,12 +344,16 @@ const BulkOrder = () => {
       name: "Arrheniux — Bulk Order",
       description: product ? `${product.name} × ${total} pcs (${mode === "full" ? "Full" : "50% Advance"})` : "Bulk",
       prefill: { name: customer.fullName || user.name, email: customer.email || user.email, contact: customer.phone },
-      onSuccess: (paymentId) => {
-        const o = persistOrder(mode, amount, paymentId);
-        if (o) {
-          toast({ title: "Payment received", description: `Order #${o.id.slice(0, 8).toUpperCase()} placed.` });
-          window.open(waLink(buildMessage(mode, amount)), "_blank", "noreferrer");
-          setSuccessOrder({ id: o.id, amount });
+      onSuccess: async () => {
+        try {
+          const o = await persistOrder(mode, amount);
+          if (o) {
+            toast({ title: "Payment received", description: `Order #${o.id.slice(0, 8).toUpperCase()} placed.` });
+            window.open(waLink(buildMessage(mode, amount)), "_blank", "noreferrer");
+            setSuccessOrder({ id: o.id, amount });
+          }
+        } catch {
+          toast({ title: "Order failed", description: "Payment received but order could not be saved.", variant: "destructive" });
         }
       },
     });

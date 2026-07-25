@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { MapPin, Plus, Trash2, Star, Edit2, X } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import {
-  getSession,
   getAddresses,
   saveAddress,
   updateAddress,
@@ -11,6 +10,7 @@ import {
   setDefaultAddress,
   type Address,
 } from "@/lib/authStore";
+import { getSession } from "@/lib/session";
 import { toast } from "@/hooks/use-toast";
 
 const empty = () => ({

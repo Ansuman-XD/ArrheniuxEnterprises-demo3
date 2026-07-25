@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { User as UserIcon, LogOut, Package, ShieldCheck, ChevronDown, MapPin } from "lucide-react";
-import { clearSession, type User } from "@/lib/authStore";
+import { clearSession, type SessionUser } from "@/lib/session";
 
-export const UserMenu = ({ user, onChange }: { user: User; onChange: () => void }) => {
+export const UserMenu = ({ user, onChange }: { user: SessionUser; onChange: () => void }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();

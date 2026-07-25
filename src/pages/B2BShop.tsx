@@ -6,7 +6,6 @@ import { PrintPicker } from "@/components/PrintPicker";
 import { SampleDialog } from "@/components/SampleDialog";
 import {
   B2B_SUBCATEGORIES,
-  getB2BProducts,
   priceValue,
   productCode,
   BULK_DISCOUNT_PCT,
@@ -17,9 +16,9 @@ import {
 } from "@/data/catalog";
 import { emptyPrint, printPricePerPc, printLabel, type PrintSelection } from "@/data/printOptions";
 import { waLink } from "@/data/site";
-import { createOrder, saveAgentRegistration, type AgentRegistration } from "@/lib/authStore";
 import { openRazorpay } from "@/lib/razorpay";
 import { toast } from "@/hooks/use-toast";
+import { useB2BProducts, useCreateOrder, useRegisterAgent, useVerifyAgentCode, type AgentRegistrationResult } from "@/hooks/api";
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"] as const;
 type Size = typeof SIZES[number];
@@ -37,13 +36,16 @@ const EMPTY_AGENT: AgentForm = { company: "", contactPerson: "", mobile: "", ema
 
 const B2BShop = () => {
   const navigate = useNavigate();
+  const createOrderMut = useCreateOrder();
+  const registerAgentMut = useRegisterAgent();
+  const { verify, isLoading: agentsLoading } = useVerifyAgentCode();
   const [view, setView] = useState<View>({ step: "subs" });
   const [sizeQty, setSizeQty] = useState<Record<Size, number>>({ ...EMPTY_SIZES });
   const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
   // Verification always starts unverified per session/window.
   const [gateStep, setGateStep] = useState<"code" | "form">("code");
   const [verifiedCode, setVerifiedCode] = useState<string>("");
-  const [agent, setAgent] = useState<AgentRegistration | null>(null);
+  const [agent, setAgent] = useState<AgentRegistrationResult | null>(null);
   const [codeInput, setCodeInput] = useState("");
   const [agentForm, setAgentForm] = useState<AgentForm>(EMPTY_AGENT);
   const [gateError, setGateError] = useState("");
@@ -52,24 +54,36 @@ const B2BShop = () => {
   const verifyCode = () => {
     const val = codeInput.trim().toUpperCase();
     if (!val) return setGateError("Please enter your Marketing Agent Code.");
-    if (!AGENT_CODES.includes(val)) return setGateError("Invalid marketing agent code.");
+    if (agentsLoading) return setGateError("Loading agent codes…");
+    const matched = verify(val);
+    if (!matched && !AGENT_CODES.includes(val)) return setGateError("Invalid marketing agent code.");
     setVerifiedCode(val);
     setGateError("");
     setGateStep("form");
   };
 
-  const submitRegistration = () => {
+  const submitRegistration = async () => {
     const req: (keyof AgentForm)[] = ["company", "contactPerson", "mobile", "email", "gst", "address", "city", "state", "pincode"];
     for (const k of req) if (!agentForm[k].trim()) return setGateError("Please complete all fields.");
-    const reg = saveAgentRegistration({ code: verifiedCode, ...agentForm });
-    setAgent(reg);
-    setGateError("");
+    try {
+      const matched = verify(verifiedCode);
+      const reg = await registerAgentMut.mutateAsync({
+        code: verifiedCode,
+        ...agentForm,
+        existingAgentId: matched?.id,
+      });
+      setAgent(reg);
+      setGateError("");
+    } catch {
+      setGateError("Registration failed. Check your connection.");
+    }
   };
 
   const verified = agent !== null;
 
   const activeSub = view.step !== "subs" ? B2B_SUBCATEGORIES.find((s) => s.slug === view.subSlug) : null;
-  const products = view.step !== "subs" ? getB2BProducts(view.subSlug) : [];
+  const { products: b2bProductsForSub } = useB2BProducts(activeSub?.name);
+  const products = view.step !== "subs" ? b2bProductsForSub : [];
   const product: CatalogProduct | undefined = view.step === "detail" ? products.find((p) => p.id === view.productId) : undefined;
   const canPrint = product ? supportsPrint(product.categorySlug) : false;
 
@@ -134,41 +148,36 @@ const B2BShop = () => {
       name: "Arrheniux — B2B",
       description: `${product.name} × ${total} pcs`,
       prefill: { name: agent.contactPerson, email: agent.email, contact: agent.mobile },
-      onSuccess: (paymentId) => {
-        const o = createOrder({
-          userId: `agent:${agent.id}`,
-          productId: product.id,
-          productName: product.name,
-          productCode: productCode(product),
-          productImage: product.image,
-          qty: total,
-          unitPrice,
-          subtotal,
-          discountPct: BULK_DISCOUNT_PCT,
-          discountAmt,
-          printType: printText,
-          printCharge,
-          courier,
-          gst,
-          total: grandTotal,
-          paid: grandTotal,
-          paymentMode: "full",
-          paymentRef: paymentId,
-          kind: "b2b",
-          sizes: sizeQty,
-          customer: {
-            fullName: agent.contactPerson,
-            email: agent.email,
+      onSuccess: async () => {
+        try {
+          const o = await createOrderMut.mutateAsync({
+            kind: "b2b",
+            customerId: null,
+            customerName: agent.contactPerson,
             phone: agent.mobile,
-            company: agent.company,
-            gst: agent.gst,
-            agentCode: agent.code,
+            email: agent.email,
             address: `${agent.address}, ${agent.city}, ${agent.state} - ${agent.pincode}`,
-          },
-        });
-        toast({ title: "Payment successful", description: `B2B order #${o.id.slice(0, 8).toUpperCase()} placed.` });
-        window.open(waLink(buildMessage()), "_blank", "noreferrer");
-        navigate("/");
+            productId: product.id,
+            productCode: productCode(product),
+            productName: product.name,
+            subCategory: activeSub?.name ?? "",
+            material: product.material,
+            printType: printText,
+            sizes: sizeQty,
+            qty: total,
+            unitPrice,
+            gstPct: 5,
+            shipping: courier,
+            total: grandTotal,
+            paid: grandTotal,
+            paymentMode: "full",
+          });
+          toast({ title: "Payment successful", description: `B2B order #${o.id.slice(0, 8).toUpperCase()} placed.` });
+          window.open(waLink(buildMessage()), "_blank", "noreferrer");
+          navigate("/");
+        } catch {
+          toast({ title: "Order failed", description: "Payment received but order could not be saved.", variant: "destructive" });
+        }
       },
     });
   };

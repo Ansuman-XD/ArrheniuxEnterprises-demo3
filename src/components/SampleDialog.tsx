@@ -19,10 +19,11 @@ import {
 } from "@/data/catalog";
 import { emptyPrint, printPricePerPc, printLabel, type PrintSelection, type PrintMethod } from "@/data/printOptions";
 import { openRazorpay } from "@/lib/razorpay";
-import { getSession, createOrder } from "@/lib/authStore";
+import { getSession } from "@/lib/session";
 import { waLink } from "@/data/site";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useCreateOrder } from "@/hooks/api";
 
 const SAMPLE_QTY = 1;
 
@@ -30,6 +31,7 @@ type Props = { product: CatalogProduct; open: boolean; onClose: () => void; isGa
 
 export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
   const navigate = useNavigate();
+  const createOrderMut = useCreateOrder();
   const rule = getAccessoryRules(product.subSlug);
   const isArr = isArrheniuxCategory(product.categorySlug);
   const isNonGarment = isNonGarmentCategory(product.categorySlug);
@@ -115,33 +117,37 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
       name: "Arrheniux — Sample",
       description: `Sample: ${product.name}`,
       prefill: { name: user.name, email: user.email, contact: user.phone },
-      onSuccess: (paymentId) => {
-        const o = createOrder({
-          userId: user.id,
-          productId: product.id,
-          productName: `${product.name} (Sample)`,
-          productCode: productCode(product),
-          productImage: product.image,
-          qty,
-          unitPrice,
-          subtotal,
-          discountPct: 0,
-          discountAmt: 0,
-          printType: printText,
-          printCharge,
-          courier,
-          gst,
-          total,
-          paid: total,
-          paymentMode: "full",
-          paymentRef: paymentId,
-          kind: "retail",
-          sizes: isGarment ? ({ [size]: qty } as Record<string, number>) : undefined,
-          customer: { fullName: user.name, email: user.email, phone: user.phone || "" },
-        });
-        toast({ title: "Sample ordered", description: `Sample #${o.id.slice(0, 8).toUpperCase()} placed.` });
-        window.open(waLink(orderMsg), "_blank", "noreferrer");
-        setSuccessOrder({ id: o.id, amount: total });
+      onSuccess: async () => {
+        try {
+          const o = await createOrderMut.mutateAsync({
+            kind: "retail",
+            isSample: true,
+            customerId: user.id,
+            customerName: user.name,
+            phone: user.phone || "",
+            email: user.email,
+            productId: product.id,
+            productCode: productCode(product),
+            productName: `${product.name} (Sample)`,
+            category: cat?.name ?? "",
+            subCategory: subcat?.name ?? "",
+            material: product.material,
+            printType: printText,
+            sizes: isGarment ? ({ [size]: qty } as Record<string, number>) : undefined,
+            qty,
+            unitPrice,
+            gstPct: Math.round(gstRate * 100),
+            shipping: courier,
+            total,
+            paid: total,
+            paymentMode: "full",
+          });
+          toast({ title: "Sample ordered", description: `Sample #${o.id.slice(0, 8).toUpperCase()} placed.` });
+          window.open(waLink(orderMsg), "_blank", "noreferrer");
+          setSuccessOrder({ id: o.id, amount: total });
+        } catch {
+          toast({ title: "Order failed", description: "Payment received but sample order could not be saved.", variant: "destructive" });
+        }
       },
     });
   };
