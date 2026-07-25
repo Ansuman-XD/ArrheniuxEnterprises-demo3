@@ -6,7 +6,7 @@ import { MegaMenu } from "./MegaMenu";
 import { BulkMegaMenu } from "./BulkMegaMenu";
 import { UserMenu } from "./UserMenu";
 import { catalog } from "@/data/catalog";
-import { getSession, clearSession } from "@/lib/authStore";
+import { getSession, clearSession } from "@/lib/session";
 
 // Final order: Home, Categories, New Collection, Bulk Order, B2B Shop, About Us, Client Reactions, Contact
 export const Navbar = () => {

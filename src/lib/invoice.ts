@@ -1,12 +1,18 @@
 import jsPDF from "jspdf";
-import type { Order } from "./authStore";
+import type { StorefrontOrder } from "./orderMappers";
+
+export type InvoiceOrder = StorefrontOrder & {
+  customer?: Record<string, string>;
+  paymentRef?: string;
+  printCharge?: number;
+};
 
 const BRAND = "ARRHENIUX";
 const ADDRESS = "Niladri Vihar, Bhubaneswar, Odisha 751021";
 const EMAIL = "banamali08@gmail.com.com";
 const PHONE = "+91 99378 64993";
 
-export const downloadInvoice = (order: Order) => {
+export const downloadInvoice = (order: InvoiceOrder) => {
   const doc = new jsPDF({ unit: "pt", format: "a4" });
   const w = doc.internal.pageSize.getWidth();
   let y = 40;

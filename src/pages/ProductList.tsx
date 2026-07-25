@@ -4,6 +4,7 @@ import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { findCategory, findSubcategory } from "@/data/catalog";
+import { useCatalogProducts } from "@/hooks/api";
 
 const PAGE_SIZE = 12;
 
@@ -16,14 +17,8 @@ const ProductList = () => {
   const subcat = findSubcategory(cat, tier, sub);
   if (!subcat) return <Navigate to={`/category/${cat.slug}`} replace />;
 
-  const items = subcat.products;
+  const { products: items, isLoading, isError } = useCatalogProducts(cat.slug, tier, subcat.slug);
   const [visible, setVisible] = useState(PAGE_SIZE);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setReady(true));
-    return () => cancelAnimationFrame(id);
-  }, []);
 
   useEffect(() => { setVisible(PAGE_SIZE); }, [subcat.slug]);
 
@@ -46,9 +41,9 @@ const ProductList = () => {
       </section>
 
       <section className="container-x py-12">
-        {!ready ? (
+        {isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {Array.from({ length: Math.min(PAGE_SIZE, items.length || PAGE_SIZE) }).map((_, i) => (
+            {Array.from({ length: PAGE_SIZE }).map((_, i) => (
               <div key={i} className="flex flex-col bg-card border border-border">
                 <Skeleton className="w-full aspect-square" />
                 <div className="p-4 space-y-2">
@@ -59,6 +54,8 @@ const ProductList = () => {
               </div>
             ))}
           </div>
+        ) : isError ? (
+          <p className="text-muted-foreground">Could not load products. Check your API connection.</p>
         ) : items.length === 0 ? (
           <p className="text-muted-foreground">No products yet in this subcategory.</p>
         ) : (

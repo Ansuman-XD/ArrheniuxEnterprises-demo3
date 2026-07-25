@@ -2,80 +2,97 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Package, Check, Circle, Download, CreditCard, Star, MessageSquare } from "lucide-react";
 import { Layout } from "@/components/Layout";
-import {
-  getSession,
-  getUserOrders,
-  advanceOrder,
-  updateOrderPayment,
-  markOrderReviewed,
-  addReview,
-  ORDER_STATUSES,
-  type Order,
-} from "@/lib/authStore";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getSession } from "@/lib/session";
+import { apiOrderToStorefront, type StorefrontOrder } from "@/lib/orderMappers";
 import { downloadInvoice } from "@/lib/invoice";
 import { openRazorpay } from "@/lib/razorpay";
 import { toast } from "@/hooks/use-toast";
+import { useCreateReview, useCustomerOrders } from "@/hooks/api";
+import { createPayment, patchOrder } from "@/lib/api";
+
+const ORDER_STATUSES = ["Placed", "Confirmed", "In Production", "Shipped", "Delivered"] as const;
 
 const MyOrders = () => {
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [tick, setTick] = useState(0);
-  const [reviewFor, setReviewFor] = useState<Order | null>(null);
+  const user = getSession();
+  const { data: apiOrders = [], isLoading, refetch } = useCustomerOrders(user?.id);
+  const createReviewMut = useCreateReview();
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem("arr_reviewed_orders") || "[]") as string[]);
+    } catch {
+      return new Set();
+    }
+  });
+  const [reviewFor, setReviewFor] = useState<StorefrontOrder | null>(null);
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
 
   useEffect(() => {
-    const u = getSession();
-    if (!u) {
-      navigate("/auth?next=/my-orders");
-      return;
-    }
-    setOrders(getUserOrders(u.id));
-  }, [navigate, tick]);
+    if (!user) navigate("/auth?next=/my-orders");
+  }, [user, navigate]);
 
-  const bump = (id: string) => {
-    advanceOrder(id);
-    setTick((t) => t + 1);
-  };
+  const orders = useMemo(
+    () => (user ? apiOrders.map((o) => apiOrderToStorefront(o, user.id)) : []),
+    [apiOrders, user],
+  );
 
-  const payRemaining = (o: Order) => {
+  const payRemaining = (o: StorefrontOrder) => {
     const due = o.total - o.paid;
     if (due <= 0) return;
     openRazorpay({
       amountInr: due,
       name: "Arrheniux — Balance Payment",
       description: `Balance for order #${o.id.slice(0, 8).toUpperCase()}`,
-      onSuccess: (ref) => {
-        updateOrderPayment(o.id, due, ref);
-        toast({ title: "Balance paid", description: "Your invoice has been updated." });
-        setTick((t) => t + 1);
+      onSuccess: async () => {
+        try {
+          await createPayment({
+            orderId: o.id,
+            customer: user?.name ?? "",
+            amount: due,
+            status: "Paid",
+          });
+          await patchOrder(o.id, { paymentStatus: "Paid" });
+          toast({ title: "Balance paid", description: "Your invoice has been updated." });
+          refetch();
+        } catch {
+          toast({ title: "Payment failed", description: "Could not record payment.", variant: "destructive" });
+        }
       },
     });
   };
 
-  const submitReview = () => {
-    if (!reviewFor) return;
-    const user = getSession();
-    if (!user) return;
+  const submitReview = async () => {
+    if (!reviewFor || !user) return;
     if (reviewText.trim().length < 5) {
       toast({ title: "Add a bit more detail", description: "Reviews need at least 5 characters." });
       return;
     }
-    addReview({
-      name: user.name,
-      subject: "Product Quality",
-      rating,
-      text: reviewText.trim(),
-      productId: reviewFor.productId,
-      userId: user.id,
-    });
-    markOrderReviewed(reviewFor.id);
-    toast({ title: "Thanks!", description: "Your review is live on the product page." });
-    setReviewFor(null);
-    setReviewText("");
-    setRating(5);
-    setTick((t) => t + 1);
+    try {
+      await createReviewMut.mutateAsync({
+        customer: user.name,
+        product: reviewFor.productName,
+        productId: reviewFor.productId,
+        orderId: reviewFor.id,
+        rating,
+        comment: reviewText.trim(),
+        status: "Approved",
+        verified: true,
+      });
+      const next = new Set(reviewedIds).add(reviewFor.id);
+      setReviewedIds(next);
+      localStorage.setItem("arr_reviewed_orders", JSON.stringify([...next]));
+      toast({ title: "Thanks!", description: "Your review is live on the product page." });
+      setReviewFor(null);
+      setReviewText("");
+      setRating(5);
+    } catch {
+      toast({ title: "Review failed", description: "Could not submit review.", variant: "destructive" });
+    }
   };
+
+  if (!user) return null;
 
   return (
     <Layout>
@@ -83,7 +100,13 @@ const MyOrders = () => {
         <span className="text-xs font-bold uppercase tracking-widest text-primary">Your Account</span>
         <h1 className="font-display text-5xl md:text-6xl mt-2">MY ORDERS</h1>
 
-        {orders.length === 0 ? (
+        {isLoading ? (
+          <div className="mt-8 space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-48 w-full" />
+            ))}
+          </div>
+        ) : orders.length === 0 ? (
           <div className="mt-10 border border-dashed border-border p-10 text-center">
             <Package className="h-10 w-10 mx-auto text-muted-foreground" />
             <p className="mt-3 text-muted-foreground">No orders yet.</p>
@@ -96,14 +119,10 @@ const MyOrders = () => {
               const due = Math.max(0, o.total - o.paid);
               const paymentPaid = due === 0;
               const delivered = o.status === "Delivered";
+              const reviewed = reviewedIds.has(o.id);
               return (
                 <div key={o.id} className="border border-border bg-card p-5">
                   <div className="flex flex-col md:flex-row gap-4">
-                    {o.productImage && (
-                      <div className="w-full md:w-32 h-32 shrink-0 bg-secondary overflow-hidden">
-                        <img src={o.productImage} alt={o.productName} className="w-full h-full object-cover" />
-                      </div>
-                    )}
                     <div className="flex-1">
                       <div className="flex items-start justify-between flex-wrap gap-3">
                         <div>
@@ -177,7 +196,7 @@ const MyOrders = () => {
                           <CreditCard className="h-3.5 w-3.5" /> Pay Remaining ₹{due.toLocaleString("en-IN")}
                         </button>
                       )}
-                      {delivered && !o.reviewedAt && (
+                      {delivered && !reviewed && (
                         <button
                           onClick={() => { setReviewFor(o); setRating(5); setReviewText(""); }}
                           className="text-[11px] uppercase tracking-widest bg-ink text-cream px-3 py-1.5 inline-flex items-center gap-1"
@@ -185,20 +204,12 @@ const MyOrders = () => {
                           <MessageSquare className="h-3.5 w-3.5" /> Write Review
                         </button>
                       )}
-                      {delivered && o.reviewedAt && (
+                      {delivered && reviewed && (
                         <span className="text-[11px] uppercase tracking-widest text-primary inline-flex items-center gap-1">
                           <Check className="h-3.5 w-3.5" /> Review Submitted
                         </span>
                       )}
                     </div>
-                    {o.status !== "Delivered" && (
-                      <button
-                        onClick={() => bump(o.id)}
-                        className="text-[11px] uppercase tracking-widest text-muted-foreground hover:text-ink"
-                      >
-                        Advance status (demo)
-                      </button>
-                    )}
                   </div>
                 </div>
               );
@@ -206,7 +217,6 @@ const MyOrders = () => {
           </div>
         )}
 
-        {/* Review modal */}
         {reviewFor && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setReviewFor(null)}>
             <div className="bg-card border border-border p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>

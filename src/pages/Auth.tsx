@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Logo } from "@/components/Logo";
-import { signup, login, socialLogin } from "@/lib/authStore";
+import { socialLogin } from "@/lib/authStore";
+import { useLogin, useSignup } from "@/hooks/api";
 
 const Auth = () => {
   const [tab, setTab] = useState<"login" | "signup">("login");
@@ -9,12 +10,11 @@ const Auth = () => {
   const [params] = useSearchParams();
   const next = params.get("next");
   const [error, setError] = useState("");
+  const signupMut = useSignup();
+  const loginMut = useLogin();
 
-  // login fields
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  // signup fields
   const [s, setS] = useState({ name: "", email: "", phone: "", company: "", password: "" });
 
   const afterAuth = (role: "admin" | "customer") => {
@@ -23,30 +23,44 @@ const Auth = () => {
     else navigate("/");
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const r = login(email, password);
-    if (r.ok && r.user) afterAuth(r.user.role);
-    else setError(r.error || "Login failed");
+    try {
+      const r = await loginMut.mutateAsync({ email, password });
+      if (r.ok && r.user) afterAuth(r.user.role);
+      else setError(r.error || "Login failed");
+    } catch {
+      setError("Login failed. Check your connection.");
+    }
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (!s.name || !s.email || !s.password) {
       setError("Name, email and password required");
       return;
     }
-    const r = signup(s);
-    if (r.ok && r.user) afterAuth(r.user.role);
-    else setError(r.error || "Signup failed");
+    try {
+      const r = await signupMut.mutateAsync({
+        name: s.name,
+        email: s.email,
+        phone: s.phone,
+      });
+      if (r.ok && r.user) afterAuth(r.user.role);
+      else setError(r.error || "Signup failed");
+    } catch {
+      setError("Signup failed. Check your connection.");
+    }
   };
 
   const handleSocial = (provider: "google" | "facebook") => {
     const r = socialLogin(provider);
     afterAuth(r.user.role);
   };
+
+  const pending = signupMut.isPending || loginMut.isPending;
 
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center p-4">
@@ -75,8 +89,8 @@ const Auth = () => {
             <Field label="Email" type="email" value={email} onChange={setEmail} />
             <Field label="Password" type="password" value={password} onChange={setPassword} />
             {error && <p className="text-sm text-red-600">{error}</p>}
-            <button className="w-full bg-ink hover:bg-ink/90 text-cream font-medium py-2.5 rounded-md transition">
-              Log In
+            <button disabled={pending} className="w-full bg-ink hover:bg-ink/90 text-cream font-medium py-2.5 rounded-md transition disabled:opacity-60">
+              {pending ? "Logging in…" : "Log In"}
             </button>
           </form>
         ) : (
@@ -87,8 +101,8 @@ const Auth = () => {
             <Field label="Company (optional)" value={s.company} onChange={(v) => setS({ ...s, company: v })} />
             <Field label="Password" type="password" value={s.password} onChange={(v) => setS({ ...s, password: v })} />
             {error && <p className="text-sm text-red-600">{error}</p>}
-            <button className="w-full bg-ink hover:bg-ink/90 text-cream font-medium py-2.5 rounded-md transition">
-              Create Account
+            <button disabled={pending} className="w-full bg-ink hover:bg-ink/90 text-cream font-medium py-2.5 rounded-md transition disabled:opacity-60">
+              {pending ? "Creating account…" : "Create Account"}
             </button>
           </form>
         )}
@@ -135,7 +149,7 @@ const Field = ({ label, type = "text", value, onChange }: { label: string; type?
 );
 
 const GoogleIcon = () => (
-  <svg className="h-4 w-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.27c0-.79-.07-1.55-.2-2.27H12v4.3h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.75h3.57c2.09-1.93 3.22-4.77 3.22-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.75c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.12A6.99 6.99 0 0 1 5.47 12c0-.74.13-1.45.36-2.12V7.04H2.18A11 11 0 0 0 1 12c0 1.78.42 3.46 1.18 4.96l3.66-2.84z"/><path fill="#EA4335" d="M12 5.4c1.62 0 3.07.56 4.21 1.64l3.16-3.16C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.04l3.66 2.84C6.71 7.33 9.14 5.4 12 5.4z"/></svg>
+  <svg className="h-4 w-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.27c0-.79-.07-1.55-.2-2.27H12v4.3h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.75h3.57c2.09-1.93 3.22-4.77 3.22-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.75c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.12A6.99 6.99 0 0 1 5.47 12c0-.74.13-1.45.36-2.12V7.04H2.18A11 11 0 0 0 1 12c0 1.78.42 3.46 1.18 4.96l3.66-2.84C6.71 7.33 9.14 5.4 12 5.4z"/><path fill="#EA4335" d="M12 5.4c1.62 0 3.07.56 4.21 1.64l3.16-3.16C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.04l3.66 2.84C6.71 7.33 9.14 5.4 12 5.4z"/></svg>
 );
 const FacebookIcon = () => (
   <svg className="h-4 w-4" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12a12 12 0 1 0-13.88 11.85v-8.38H7.08V12h3.04V9.36c0-3 1.79-4.67 4.53-4.67 1.31 0 2.69.24 2.69.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.88V12h3.33l-.53 3.47h-2.8v8.38A12 12 0 0 0 24 12z"/></svg>
