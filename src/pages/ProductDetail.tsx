@@ -710,35 +710,23 @@ const ProductDetailView = ({
         {/* Product info sections */}
         <div className="mt-16 grid md:grid-cols-2 gap-6">
           <InfoBlock title="Product Overview">
-            <p>{product.name} is engineered for corporate, institutional and event orders. Built in-house with strict QC, pre-shrunk fabric, and bio-washed for a premium hand-feel. Made to hold up to daily wash cycles while retaining color and shape.</p>
-          </InfoBlock>
-          <InfoBlock title="Product Specifications">
-            <ul className="space-y-1 list-disc pl-4">
-              <li>Material: {product.material}</li>
-              <li>Build: {product.gsm}</li>
-              <li>Product Code: {code}</li>
-              {product.tier && <li>Tier: {product.tier === "premium" ? "Premium" : "Regular"}</li>}
-              <li>Minimum Order Quantity: {moq} pcs</li>
-              <li>Maximum Order Quantity: {maxQty} pcs</li>
-              <li>GST: {gstPctLabel}%</li>
-            </ul>
-          </InfoBlock>
-          <InfoBlock title="Design Guidelines">
-            <ul className="space-y-1 list-disc pl-4">
-              <li>Submit artwork in vector (AI/EPS/SVG) or 300 DPI PNG with transparent background.</li>
-              <li>Chest logo max area 4×4 inch · Back print max A3.</li>
-              <li>Provide Pantone codes for exact color matching wherever possible.</li>
-              <li>Embroidery supports 1–3 thread colors; complex gradients render better in DTF.</li>
-            </ul>
-          </InfoBlock>
-          <InfoBlock title="Wash Care Instructions">
-            <ul className="space-y-1 list-disc pl-4">
-              <li>Machine wash cold with similar colors. Do not bleach.</li>
-              <li>Wash inside-out to protect prints and embroidery.</li>
-              <li>Tumble dry low. Warm iron; do not iron directly on print area.</li>
-              <li>Do not dry-clean.</li>
-            </ul>
-          </InfoBlock>
+  <p>{product.overview?.trim() || `${product.name} is engineered for corporate, institutional and event orders...`}</p>
+</InfoBlock>
+<InfoBlock title="Product Specifications">
+  <ul className="space-y-1 list-disc pl-4">
+    {(product.specifications?.length ? product.specifications : [`Material: ${product.material}`, `Build: ${product.gsm}`]).map((s, i) => <li key={i}>{s}</li>)}
+  </ul>
+</InfoBlock>
+<InfoBlock title="Design Guidelines">
+  <ul className="space-y-1 list-disc pl-4">
+    {(product.designGuidelines?.length ? product.designGuidelines : ["Submit artwork in vector or 300 DPI PNG."]).map((s, i) => <li key={i}>{s}</li>)}
+  </ul>
+</InfoBlock>
+<InfoBlock title="Wash Care Instructions">
+  <ul className="space-y-1 list-disc pl-4">
+    {(product.washCare?.length ? product.washCare : ["Machine wash cold. Do not bleach."]).map((s, i) => <li key={i}>{s}</li>)}
+  </ul>
+</InfoBlock>
         </div>
       </section>
 

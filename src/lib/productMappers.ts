@@ -53,6 +53,7 @@ export function mapApiProductToCatalog(
 
   return {
     id: p.id,
+    code: p.code,   // ← added this
     name: p.name,
     categorySlug,
     subSlug,
@@ -68,6 +69,10 @@ export function mapApiProductToCatalog(
     material: p.material,
     isNew: false,
     addedAt: new Date(p.createdAt).getTime(),
+    overview: p.overview,
+specifications: p.specifications,
+designGuidelines: p.designGuidelines,
+washCare: p.washCare,
   };
 }
 
@@ -78,6 +83,7 @@ export function mapB2BProductToCatalog(p: ApiB2BProduct, catSlug = "b2b"): Catal
 
   return {
     id: p.id,
+    code: p.code,   // ← added this
     name: p.name,
     categorySlug: catSlug,
     subSlug,
@@ -92,6 +98,10 @@ export function mapB2BProductToCatalog(p: ApiB2BProduct, catSlug = "b2b"): Catal
     description: p.description,
     material: p.material,
     addedAt: new Date(p.createdAt).getTime(),
+    overview: p.overview,
+specifications: p.specifications,
+designGuidelines: p.designGuidelines,
+washCare: p.washCare,
   };
 }
 
@@ -101,6 +111,7 @@ export function mapNewCollectionToCatalog(p: ApiNewCollectionProduct): CatalogPr
 
   return {
     id: p.id,
+    code: p.code,   // ← added this
     name: p.name,
     categorySlug: "new-collection",
     subSlug: slugify(p.name),
@@ -115,6 +126,10 @@ export function mapNewCollectionToCatalog(p: ApiNewCollectionProduct): CatalogPr
     material: p.material,
     isNew: true,
     addedAt: new Date(p.createdAt).getTime(),
+    overview: p.overview,
+specifications: p.specifications,
+designGuidelines: p.designGuidelines,
+washCare: p.washCare,
   };
 }
 

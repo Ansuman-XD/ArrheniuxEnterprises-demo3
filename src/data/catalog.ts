@@ -15,6 +15,7 @@ export type Tier = "regular" | "premium";
 
 export type CatalogProduct = {
   id: string;
+   code: string;   // ← added  this
   name: string;
   categorySlug: string;
   subSlug: string;
@@ -30,6 +31,10 @@ export type CatalogProduct = {
   material: string;
   isNew?: boolean;
   addedAt: number;
+  overview?: string;
+  specifications?: string[];
+  designGuidelines?: string[];
+  washCare?: string[];
 };
 
 export type Subcategory = {
@@ -79,6 +84,8 @@ const makeProducts = (
     const price = priceBase + i * 30;
     out.push({
       id: `c${__id}`,
+      code: `ARR-${catSlug.substring(0, 3).toUpperCase()}-${String(__id).padStart(4, "0")}`,
+
       name: count > 1 ? `${baseName} — Style ${i}` : baseName,
       categorySlug: catSlug,
       subSlug,
@@ -449,12 +456,9 @@ export const getDiscountPct = (qty: number, p?: Pick<CatalogProduct, "subSlug">)
 };
 
 // Human-friendly product code
-export const productCode = (p: Pick<CatalogProduct, "id" | "categorySlug">) => {
-  const catInitials = p.categorySlug
-    .split("-")
-    .map((w) => w[0]?.toUpperCase() || "")
-    .join("")
-    .slice(0, 3);
+export const productCode = (p: Pick<CatalogProduct, "id" | "code" | "categorySlug">) => {
+  if (p.code) return p.code;
+  const catInitials = p.categorySlug.split("-").map((w) => w[0]?.toUpperCase() || "").join("").slice(0, 3);
   return `ARR-${catInitials}-${p.id.toUpperCase()}`;
 };
 

@@ -6,6 +6,7 @@ import { PrintPicker } from "@/components/PrintPicker";
 import { SampleDialog } from "@/components/SampleDialog";
 import {
   B2B_SUBCATEGORIES,
+  getB2BProducts,        // ← add this
   priceValue,
   productCode,
   BULK_DISCOUNT_PCT,
