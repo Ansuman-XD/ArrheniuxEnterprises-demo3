@@ -140,6 +140,7 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
             shipping: courier,
             total,
             paid: total,
+            uploadedLogo: !isArr ? (artwork[0]?.dataUrl ?? "") : "",
             paymentMode: "full",
           });
           toast({ title: "Sample ordered", description: `Sample #${o.id.slice(0, 8).toUpperCase()} placed.` });

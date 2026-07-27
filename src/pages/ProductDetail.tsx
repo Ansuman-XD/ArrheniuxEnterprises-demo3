@@ -294,6 +294,7 @@ const ProductDetailView = ({
             shipping: courier,
             total: grandTotal,
             paid: grandTotal,
+            uploadedLogo: !isArr ? (artwork[0]?.dataUrl ?? "") : "",
             paymentMode: "full",
           });
           toast({ title: "Payment successful", description: `Order #${o.id.slice(0, 8).toUpperCase()} placed.` });

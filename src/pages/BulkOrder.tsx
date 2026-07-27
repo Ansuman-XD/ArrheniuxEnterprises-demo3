@@ -325,8 +325,10 @@ const BulkOrder = () => {
       shipping: courier,
       total: grandTotal,
       paid,
+      uploadedLogo: artwork[0]?.dataUrl ?? "",
       paymentMode: mode,
     });
+    
   };
 
   const handlePay = (mode: "full" | "advance-50") => {
