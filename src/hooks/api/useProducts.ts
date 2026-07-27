@@ -19,7 +19,7 @@ export function useCatalogProducts(
 
   const products =
     catSlug && subSlug
-      ? filterProductsForSubcategory(query.data ?? [], catSlug, tier, subSlug)
+            ? filterProductsForSubcategory(query.data ?? [], catSlug, tier, subSlug, "category")
       : [];
 
   return { ...query, products };

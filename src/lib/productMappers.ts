@@ -139,6 +139,7 @@ export function filterProductsForSubcategory(
   catSlug: string,
   tier: string | undefined,
   subSlug: string,
+  context: "category" | "bulk" = "category",
 ): CatalogProduct[] {
   const cat = findCategory(catSlug);
   if (!cat) return [];
@@ -158,8 +159,11 @@ export function filterProductsForSubcategory(
   const apiType = apiTypeFromTier(tier);
 
   return products
-    .filter((p) => {
+   .filter((p) => {
       if (p.status !== "Active") return false;
+      const vis = p.visibility ?? "Both";
+      if (context === "bulk" && vis !== "Bulk" && vis !== "Both") return false;
+      if (context === "category" && vis !== "Category" && vis !== "Both") return false;
       if (p.category.toLowerCase() !== cat.name.toLowerCase()) return false;
       if (apiType && p.type !== apiType) return false;
       if (p.subCategory && sub.name) {
@@ -170,6 +174,7 @@ export function filterProductsForSubcategory(
       }
       return true;
     })
+
     .map((p) =>
       mapApiProductToCatalog(p, sub.image),
     );

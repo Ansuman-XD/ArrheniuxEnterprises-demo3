@@ -158,9 +158,9 @@ const BulkOrder = () => {
   const subs = cat.hasTiers ? getSubsForTier(cat, tier || undefined) : (cat.items ?? []);
   const subcat = subs.find((s) => s.slug === subSlug);
   const products: CatalogProduct[] = useMemo(
-    () => (subSlug ? filterProductsForSubcategory(apiProducts, catSlug, tier || undefined, subSlug) : []),
-    [apiProducts, catSlug, tier, subSlug],
-  );
+  () => (subSlug ? filterProductsForSubcategory(apiProducts, catSlug, tier || undefined, subSlug, "bulk") : []),
+  [apiProducts, catSlug, tier, subSlug],
+);
   const product = products.find((p) => p.id === productId);
   const isKit = isWelcomeKitCategory(catSlug);
   const isGarment = product ? !isNonGarmentCategory(product.categorySlug) : !isNonGarmentCategory(catSlug);
