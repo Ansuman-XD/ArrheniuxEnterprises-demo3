@@ -92,10 +92,10 @@ export function useCustomerOrders(customerId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.orders(customerId),
     queryFn: async () => {
-      const { fetchOrders } = await import("@/lib/api");
-      const orders = await fetchOrders();
+      const { fetchOrders, fetchSampleOrders } = await import("@/lib/api");
+      const [orders, samples] = await Promise.all([fetchOrders(), fetchSampleOrders()]);
       if (!customerId) return [];
-      return orders.filter((o) => o.customerId === customerId);
+      return [...orders, ...samples].filter((o) => o.customerId === customerId);
     },
     enabled: !!customerId,
   });

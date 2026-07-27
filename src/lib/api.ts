@@ -9,6 +9,9 @@ export class ApiError extends Error {
     this.status = status;
   }
 }
+export function fetchSampleOrders() {
+  return request<ApiOrder[]>("sample-orders");
+}
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const url = `${BASE}/${path.replace(/^\//, "")}`;
