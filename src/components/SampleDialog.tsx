@@ -3,6 +3,7 @@ import { X, CreditCard, Package } from "lucide-react";
 import { PrintPicker } from "@/components/PrintPicker";
 import { ArtworkUpload, artworkSummary, type ArtworkFile } from "@/components/ArtworkUpload";
 import { SuccessDialog } from "@/components/SuccessDialog";
+import { getDefaultAddress, formatAddress } from "@/lib/authStore";
 import {
   type CatalogProduct,
   getAccessoryRules,
@@ -112,11 +113,17 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
       navigate(`/auth?next=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
+    const defaultAddr = getDefaultAddress(user.id);
+    if (!defaultAddr) {
+      toast({ title: "Add a delivery address", description: "Please save an address before ordering a sample." });
+      navigate(`/my-addresses?next=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
     openRazorpay({
       amountInr: total,
       name: "Arrheniux — Sample",
       description: `Sample: ${product.name}`,
-      prefill: { name: user.name, email: user.email, contact: user.phone },
+      prefill: { name: user.name, email: user.email, contact: defaultAddr.mobile || user.phone },
       onSuccess: async () => {
         try {
           const o = await createOrderMut.mutateAsync({
@@ -124,8 +131,9 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
             isSample: true,
             customerId: user.id,
             customerName: user.name,
-            phone: user.phone || "",
+            phone: defaultAddr.mobile || user.phone || "",
             email: user.email,
+            address: formatAddress(defaultAddr),
             productId: product.id,
             productCode: productCode(product),
             productName: `${product.name} (Sample)`,

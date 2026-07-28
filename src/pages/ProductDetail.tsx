@@ -8,6 +8,7 @@ import { PrintPicker } from "@/components/PrintPicker";
 import { ArtworkUpload, artworkSummary, type ArtworkFile } from "@/components/ArtworkUpload";
 import { SampleDialog } from "@/components/SampleDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getDefaultAddress, formatAddress } from "@/lib/authStore";
 import {
   ARR_SIZE_MAX,
   findCategory,
@@ -254,7 +255,8 @@ const ProductDetailView = ({
     return `/bulk-order?${p.toString()}`;
   };
 
-  const handlePay = useCallback(() => {
+
+const handlePay = useCallback(() => {
     if (isBulk) {
       navigate(bulkRedirectHref());
       return;
@@ -265,20 +267,32 @@ const ProductDetailView = ({
       navigate(`/auth?next=${encodeURIComponent(location.pathname)}`);
       return;
     }
+
+    // Require a saved address before checkout — no manual typing needed after first time.
+    const defaultAddr = getDefaultAddress(user.id);
+    if (!defaultAddr) {
+      toast({
+        title: "Add a delivery address",
+        description: "Please save an address before placing your order.",
+      });
+      navigate(`/my-addresses?next=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
+
     openRazorpay({
       amountInr: grandTotal,
       name: "Arrheniux",
       description: `${product.name} × ${total} pcs`,
-      prefill: { name: user.name, email: user.email, contact: user.phone },
+      prefill: { name: user.name, email: user.email, contact: defaultAddr.mobile || user.phone },
       onSuccess: async (paymentId) => {
         try {
           const o = await createOrderMut.mutateAsync({
             kind: "retail",
             customerId: user.id,
             customerName: user.name,
-            phone: user.phone || "",
+            phone: defaultAddr.mobile || user.phone || "",
             email: user.email,
-            address: "",
+            address: formatAddress(defaultAddr),
             productId: product.id,
             productCode: code,
             productName: product.name,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { MapPin, Plus, Trash2, Star, Edit2, X } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import {
@@ -27,6 +27,8 @@ const empty = () => ({
 
 const MyAddresses = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const next = params.get("next");
   const [user, setUser] = useState(getSession());
   const [list, setList] = useState<Address[]>([]);
   const [editing, setEditing] = useState<Address | null>(null);
@@ -35,9 +37,15 @@ const MyAddresses = () => {
 
   useEffect(() => {
     const u = getSession();
-    if (!u) { navigate("/auth?next=/my-addresses"); return; }
+    if (!u) { navigate(`/auth?next=${encodeURIComponent(next ? `/my-addresses?next=${encodeURIComponent(next)}` : "/my-addresses")}`); return; }
     setUser(u);
-    setList(getAddresses(u.id));
+    const addrs = getAddresses(u.id);
+    setList(addrs);
+    // If arriving here to complete checkout and an address already exists, bounce straight back.
+    if (next && addrs.length > 0) {
+      navigate(next);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const refresh = () => user && setList(getAddresses(user.id));
@@ -56,14 +64,25 @@ const MyAddresses = () => {
     if (!user) return;
     const req = ["name", "line1", "mobile", "city", "state", "pincode"] as const;
     for (const k of req) if (!draft[k].trim()) { toast({ title: "Missing field", description: `Please fill ${k}.` }); return; }
+    const wasEmpty = list.length === 0;
     if (editing) updateAddress(editing.id, draft);
     else saveAddress({ ...draft, userId: user.id });
     toast({ title: editing ? "Address updated" : "Address added" });
-    setShowForm(false); refresh();
+    setShowForm(false);
+    refresh();
+
+    // First address just saved while coming from checkout — send them back to finish the order.
+    if (next && wasEmpty && !editing) {
+      navigate(next);
+    }
   };
 
   const remove = (id: string) => { deleteAddress(id); refresh(); toast({ title: "Address removed" }); };
   const makeDefault = (id: string) => { if (user) { setDefaultAddress(user.id, id); refresh(); } };
+
+  const finishCheckout = () => {
+    if (next) navigate(next);
+  };
 
   return (
     <Layout>
@@ -72,13 +91,24 @@ const MyAddresses = () => {
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-primary">Profile</span>
             <h1 className="font-display text-4xl md:text-5xl mt-1">MY ADDRESSES</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage your delivery addresses.</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {next
+                ? "Save a delivery address to continue with your order — you won't need to re-enter it next time."
+                : "Manage your delivery addresses."}
+            </p>
           </div>
           <div className="flex gap-2">
             <Link to="/my-orders" className="text-xs uppercase tracking-widest border border-border px-3 py-2 hover:border-ink transition">My Orders</Link>
             <button onClick={openNew} className="btn-bold text-sm !py-2.5"><Plus className="h-4 w-4" /> Add Address</button>
           </div>
         </div>
+
+        {next && list.length > 0 && (
+          <div className="mb-6 flex items-center justify-between gap-3 border border-primary/40 bg-primary/5 p-4">
+            <p className="text-sm text-ink/80">You have a saved address ready — continue to finish your order.</p>
+            <button onClick={finishCheckout} className="btn-bold text-sm !py-2.5 shrink-0">Continue to checkout</button>
+          </div>
+        )}
 
         {list.length === 0 ? (
           <div className="border border-dashed border-border p-10 text-center bg-secondary/40">
