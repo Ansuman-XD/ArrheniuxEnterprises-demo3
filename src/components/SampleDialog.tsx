@@ -61,7 +61,7 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
   const printFreeLabel = rule?.print.kind === "free" ? rule.print.label : null;
 
   const qty = SAMPLE_QTY;
-  const unitPrice = priceValue(product);
+  const unitPrice = product.samplePrice;   // ← was priceValue(product)
   const printPerPc = canPrint ? printPricePerPc(printSel, restrictedMethods) : 0;
   const printCharge = printPerPc * qty;
   const gstRate = getGstPct(product);

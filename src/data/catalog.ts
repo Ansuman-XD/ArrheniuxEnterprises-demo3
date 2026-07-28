@@ -24,6 +24,7 @@ export type CatalogProduct = {
   gsm: string;
   moq: number;
   price: string;
+  samplePrice: number;
   image: string;
   gallery: string[];
   colors: string[];
@@ -94,6 +95,7 @@ const makeProducts = (
       gsm: tier === "premium" ? "Premium" : "Standard",
       moq: 20,
       price: `₹${price}`,
+      samplePrice: price,
       image,
       gallery: [image, image, image, image, image, image],
       colors: DEFAULT_COLORS,

@@ -62,6 +62,7 @@ export function mapApiProductToCatalog(
     gsm: p.type === "Premium" ? "Premium" : "Standard",
     moq: 20,
     price: formatPrice(p.originalPrice),
+     samplePrice: p.samplePrice ?? 0,   // ← add this
     image,
     gallery,
     colors: (p.colors ?? []).map(colorHex),
@@ -92,6 +93,7 @@ export function mapB2BProductToCatalog(p: ApiB2BProduct, catSlug = "b2b"): Catal
     gsm: "Standard",
     moq: 14,
     price: formatPrice(p.originalPrice),
+    samplePrice: p.samplePrice ?? 0,
     image,
     gallery,
     colors: [],
@@ -119,6 +121,7 @@ export function mapNewCollectionToCatalog(p: ApiNewCollectionProduct): CatalogPr
     gsm: "Standard",
     moq: 5,
     price: formatPrice(p.originalPrice),
+    samplePrice: p.samplePrice ?? 0,
     image,
     gallery,
     colors: [],

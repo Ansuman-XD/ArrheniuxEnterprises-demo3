@@ -167,7 +167,8 @@ const ProductDetailView = ({
   const meetsMoq = total >= moq;
   const canOrder = meetsMoq && total <= maxQty && (!isKit || kitEnoughItems);
   const samplePriceValue = (() => {
-    const u = priceValue(product);
+    const u = product.samplePrice;   // ← use actual samplePrice, not priceValue()
+    // const u = priceValue(product);
     const c = getCourierPerPc(product);
     const g = Math.round((u + c) * gstRate);
     return u + c + g;
