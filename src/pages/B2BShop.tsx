@@ -82,9 +82,9 @@ const B2BShop = () => {
 
   const verified = agent !== null;
 
-  const activeSub = view.step !== "subs" ? B2B_SUBCATEGORIES.find((s) => s.slug === view.subSlug) : null;
-  const { products: b2bProductsForSub } = useB2BProducts(activeSub?.name);
-  const products = view.step !== "subs" ? b2bProductsForSub : [];
+ const activeSub = view.step !== "subs" ? B2B_SUBCATEGORIES.find((s) => s.slug === view.subSlug) : null;
+const { products: b2bProductsForSub, refetch: refetchB2B, isFetching: refreshingB2B } = useB2BProducts(activeSub?.name);
+const products = view.step !== "subs" ? b2bProductsForSub : [];
   const product: CatalogProduct | undefined = view.step === "detail" ? products.find((p) => p.id === view.productId) : undefined;
   const canPrint = product ? supportsPrint(product.categorySlug) : false;
 

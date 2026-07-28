@@ -612,15 +612,14 @@ export type B2BSub = {
   name: string;
   catSlug: string;
   tier?: Tier;
-  subName: string;
 };
 export const B2B_SUBCATEGORIES: B2BSub[] = [
-  { slug: "oversized-tshirt", name: "Oversized T-Shirt", catSlug: "oversized-t-shirts", tier: "premium", subName: "Cotton Oversized T-Shirts" },
-  { slug: "dryfit-collar", name: "Dry Fit Collar Neck T-Shirt", catSlug: "corporate-wear", tier: "premium", subName: "Drifit SAP Matty Collar Neck T-Shirts" },
-  { slug: "american-fleece", name: "American Fleece Hoodies", catSlug: "hoodies", tier: "premium", subName: "American Fleece Hoodies" },
-  { slug: "solid-collar", name: "Solid Collar Neck T-Shirt", catSlug: "corporate-wear", tier: "regular", subName: "Spun Collar Neck T-Shirt" },
-  { slug: "dryfit-solid-collar", name: "Dry Fit Solid Collar Neck T-Shirt", catSlug: "corporate-wear", tier: "premium", subName: "Drifit SAP Matty Collar Neck T-Shirts" },
-  { slug: "round-neck", name: "Round Neck T-Shirt", catSlug: "custom-round-neck-t-shirts", tier: "regular", subName: "Spun Round Neck T-Shirt" },
+  { slug: "oversized-tshirt", name: "Oversized T-Shirt", catSlug: "oversized-t-shirts", tier: "premium" },
+  { slug: "dryfit-collar", name: "Dry Fit Collar Neck T-Shirt", catSlug: "corporate-wear", tier: "premium" },
+  { slug: "american-fleece", name: "American Fleece Hoodies", catSlug: "hoodies", tier: "premium" },
+  { slug: "solid-collar", name: "Solid Collar Neck T-Shirt", catSlug: "corporate-wear", tier: "regular" },
+  { slug: "dryfit-solid-collar", name: "Dry Fit Solid Collar Neck T-Shirt", catSlug: "corporate-wear", tier: "premium" },
+  { slug: "round-neck", name: "Round Neck T-Shirt", catSlug: "custom-round-neck-t-shirts", tier: "regular" },
 ];
 
 export const getB2BProducts = (b2bSlug: string): CatalogProduct[] => {
@@ -629,7 +628,7 @@ export const getB2BProducts = (b2bSlug: string): CatalogProduct[] => {
   const cat = findCategory(b.catSlug);
   if (!cat) return [];
   const subs = cat.hasTiers ? (b.tier === "regular" ? cat.regular : cat.premium) ?? [] : cat.items ?? [];
-  const sub = subs.find((s) => s.name === b.subName) || subs[0];
+  const sub = subs.find((s) => s.name === b.name) || subs[0];
   return sub?.products ?? [];
 };
 
