@@ -437,7 +437,12 @@ export function createSampleOrder(body: CreateOrderInput) {
 export function createPayment(body: CreatePaymentInput) {
   return request<ApiPayment>("payments", { method: "POST", body: JSON.stringify(body) });
 }
-
+export function patchCustomer(
+  id: string,
+  body: Partial<Pick<ApiCustomer, "address" | "totalOrders" | "totalSpend">>,
+) {
+  return request<ApiCustomer>(`customers/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+}
 export function patchOrder(
   id: string,
   body: Partial<CreateOrderInput> & { paymentStatus?: ApiPaymentStatus },

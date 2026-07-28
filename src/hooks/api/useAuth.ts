@@ -82,7 +82,24 @@ export function useCreateOrder() {
         });
       }
 
+      // Keep the customer's aggregate stats in sync
+      if (payload.customerId) {
+        try {
+          const { fetchCustomer, patchCustomer } = await import("@/lib/api");
+          const customer = await fetchCustomer(payload.customerId);
+          await patchCustomer(payload.customerId, {
+            totalOrders: (customer.totalOrders ?? 0) + 1,
+            totalSpend: (customer.totalSpend ?? 0) + payload.total,
+            address: customer.address?.trim() ? customer.address : (payload.address ?? ""),
+          });
+          qc.invalidateQueries({ queryKey: queryKeys.customer(payload.customerId) });
+        } catch (err) {
+          console.error("Failed to sync customer stats:", err);
+        }
+      }
+
       await qc.invalidateQueries({ queryKey: ["orders"] });
+      qc.invalidateQueries({ queryKey: queryKeys.customers });
       return order;
     },
   });
