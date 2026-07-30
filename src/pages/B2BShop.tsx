@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Minus, Plus, CreditCard, ChevronLeft, Package } from "lucide-react";
+import { Minus, Plus, CreditCard, ChevronLeft, Package, LogOut } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { PrintPicker } from "@/components/PrintPicker";
 import { SampleDialog } from "@/components/SampleDialog";
@@ -20,6 +20,11 @@ import { waLink } from "@/data/site";
 import { openRazorpay } from "@/lib/razorpay";
 import { toast } from "@/hooks/use-toast";
 import { useB2BProducts, useCreateOrder, useRegisterAgent, useVerifyAgentCode, type AgentRegistrationResult } from "@/hooks/api";
+import {
+  saveB2BAgentSession,
+  loadB2BAgentSession,
+  clearB2BAgentSession,
+} from "@/lib/b2bAgentSession";
 
 const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"] as const;
 type Size = typeof SIZES[number];
@@ -28,6 +33,9 @@ const EMPTY_SIZES: Record<Size, number> = { XS: 0, S: 0, M: 0, L: 0, XL: 0, XXL:
 type View = { step: "subs" } | { step: "products"; subSlug: string } | { step: "detail"; subSlug: string; productId: string };
 
 const AGENT_CODES = ["AGENT2024", "ARR-B2B", "DEALER100"];
+
+// How often to poll for silent session expiry while the tab stays open.
+const SESSION_CHECK_INTERVAL_MS = 60 * 1000;
 
 type AgentForm = {
   company: string; contactPerson: string; mobile: string; email: string;
@@ -43,14 +51,62 @@ const B2BShop = () => {
   const [view, setView] = useState<View>({ step: "subs" });
   const [sizeQty, setSizeQty] = useState<Record<Size, number>>({ ...EMPTY_SIZES });
   const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
-  // Verification always starts unverified per session/window.
+  // Verification restored from sessionStorage on mount if a valid, unexpired
+  // session exists; otherwise it starts fresh (agent must re-verify).
   const [gateStep, setGateStep] = useState<"code" | "form">("code");
   const [verifiedCode, setVerifiedCode] = useState<string>("");
   const [agent, setAgent] = useState<AgentRegistrationResult | null>(null);
+  const [restoringSession, setRestoringSession] = useState(true);
   const [codeInput, setCodeInput] = useState("");
   const [agentForm, setAgentForm] = useState<AgentForm>(EMPTY_AGENT);
   const [gateError, setGateError] = useState("");
   const [sampleOpen, setSampleOpen] = useState(false);
+
+  // Restore verified agent session on mount (survives refresh, expires after 1hr,
+  // and clears automatically when the tab/browser is closed).
+  useEffect(() => {
+    const restored = loadB2BAgentSession();
+    if (restored) {
+      setAgent(restored.agent);
+      setVerifiedCode(restored.verifiedCode);
+      setGateStep("form");
+    }
+    setRestoringSession(false);
+  }, []);
+
+  // Poll for mid-tab expiry (agent leaves tab open past the 1hr TTL without
+  // refreshing) so they aren't silently trusted past the cutoff.
+  useEffect(() => {
+    if (!agent) return;
+    const interval = setInterval(() => {
+      const current = loadB2BAgentSession();
+      if (!current) {
+        toast({
+          title: "Session expired",
+          description: "Your agent verification expired after 1 hour. Please re-verify to continue.",
+        });
+        setAgent(null);
+        setVerifiedCode("");
+        setGateStep("code");
+        setCodeInput("");
+        setAgentForm(EMPTY_AGENT);
+        setView({ step: "subs" });
+      }
+    }, SESSION_CHECK_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [agent]);
+
+  const exitAndSwitchAgent = () => {
+    clearB2BAgentSession();
+    setAgent(null);
+    setVerifiedCode("");
+    setGateStep("code");
+    setCodeInput("");
+    setAgentForm(EMPTY_AGENT);
+    setGateError("");
+    setView({ step: "subs" });
+    resetSelections();
+  };
 
   const verifyCode = () => {
     const val = codeInput.trim().toUpperCase();
@@ -74,6 +130,7 @@ const B2BShop = () => {
         existingAgentId: matched?.id,
       });
       setAgent(reg);
+      saveB2BAgentSession(reg, verifiedCode);
       setGateError("");
     } catch {
       setGateError("Registration failed. Check your connection.");
@@ -183,6 +240,17 @@ const products = view.step !== "subs" ? b2bProductsForSub : [];
     });
   };
 
+  // Avoid a flash of the verification gate while we check sessionStorage.
+  if (restoringSession) {
+    return (
+      <Layout>
+        <section className="container-x py-16 min-h-[60vh] flex items-center justify-center">
+          <p className="text-sm text-muted-foreground uppercase tracking-widest">Loading…</p>
+        </section>
+      </Layout>
+    );
+  }
+
   if (!verified) {
     return (
       <Layout>
@@ -231,6 +299,12 @@ const products = view.step !== "subs" ? b2bProductsForSub : [];
                 <button onClick={submitRegistration} className="btn-bold mt-4 w-full justify-center !py-3">
                   Complete Registration & Enter B2B Shop
                 </button>
+                <button
+                  onClick={() => { setGateStep("code"); setGateError(""); }}
+                  className="mt-2 w-full text-center text-[11px] uppercase tracking-widest text-muted-foreground hover:text-ink transition"
+                >
+                  ← Back to code entry
+                </button>
               </>
             )}
           </div>
@@ -243,11 +317,26 @@ const products = view.step !== "subs" ? b2bProductsForSub : [];
     <Layout>
       <section className="bg-secondary">
         <div className="container-x py-12">
-          <span className="text-xs font-bold uppercase tracking-widest text-primary">B2B</span>
-          <h1 className="font-display text-5xl md:text-7xl leading-none mt-2">B2B SHOP</h1>
-          <p className="mt-3 text-muted-foreground max-w-2xl">
-            Wholesale storefront for corporate buyers. Minimum order {B2B_MOQ} pieces per product · quantities in steps of {B2B_STEP} · auto {BULK_DISCOUNT_PCT}% bulk discount · Courier FREE · 5% GST.
-          </p>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-widest text-primary">B2B</span>
+              <h1 className="font-display text-5xl md:text-7xl leading-none mt-2">B2B SHOP</h1>
+              <p className="mt-3 text-muted-foreground max-w-2xl">
+                Wholesale storefront for corporate buyers. Minimum order {B2B_MOQ} pieces per product · quantities in steps of {B2B_STEP} · auto {BULK_DISCOUNT_PCT}% bulk discount · Courier FREE · 5% GST.
+              </p>
+            </div>
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              <div className="text-xs text-muted-foreground">
+                Verified as <span className="font-semibold text-ink">{agent?.contactPerson}</span> · {agent?.company}
+              </div>
+              <button
+                onClick={exitAndSwitchAgent}
+                className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-muted-foreground hover:text-destructive transition"
+              >
+                <LogOut className="h-3.5 w-3.5" /> Exit / Switch Agent
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
