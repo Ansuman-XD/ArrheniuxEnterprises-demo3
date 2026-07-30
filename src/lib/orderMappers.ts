@@ -24,6 +24,7 @@ export type PlaceOrderPayload = {
   sizes?: Record<string, number>;
   qty: number;
   unitPrice: number;
+  printingPrice?: number;
   gstPct?: number;
   shipping?: number;
   total: number;
@@ -72,6 +73,7 @@ export function toCreateOrderInput(payload: PlaceOrderPayload): CreateOrderInput
     sizes: payload.sizes ?? {},
     qty: payload.qty,
     unitPrice: payload.unitPrice,
+    printingPrice: payload.printingPrice ?? 0,
     gstPct: payload.gstPct ?? 5,
     shipping: payload.shipping ?? 0,
     discountPct: payload.discountPct ?? 0,
@@ -95,11 +97,11 @@ export type StorefrontOrder = {
   productCode?: string;
   qty: number;
   unitPrice: number;
+  printingPrice?: number;
   subtotal: number;
   discountPct: number;
   discountAmt: number;
   printType?: string;
-  printCharge?: number;
   courier: number;
   gst: number;
   total: number;
@@ -144,6 +146,7 @@ export function apiOrderToStorefront(o: ApiOrder, userId: string): StorefrontOrd
     productCode: o.productCode,
     qty: o.qty,
     unitPrice: o.unitPrice,
+    printingPrice: o.printingPrice,
     subtotal,
     discountPct: o.discountPct ?? 0,
     discountAmt: o.discountAmt ?? 0,

@@ -4,6 +4,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 
 interface InfoModalProps {
   open: boolean;
@@ -18,6 +19,7 @@ export function InfoModal({
   title,
   content,
 }: InfoModalProps) {
+   useLockBodyScroll(open); 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto rounded-xl">

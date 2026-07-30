@@ -1,5 +1,6 @@
 import { CheckCircle2, Package, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 
 type Props = {
   open: boolean;
@@ -18,6 +19,8 @@ export const SuccessDialog = ({
   title = "Payment Successful!",
   description = "Your order has been placed. WhatsApp is opening with your order details — please share your artwork or notes there.",
 }: Props) => {
+    useLockBodyScroll(open);   // ← add this line
+
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[70] bg-ink/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">

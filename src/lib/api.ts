@@ -155,6 +155,7 @@ export type ApiOrder = {
   sizes: Record<string, number>;
   qty: number;
   unitPrice: number;
+  printingPrice?: number;
   gstPct: number;
   shipping: number;
   type: ApiOrderType;
@@ -253,6 +254,7 @@ export type CreateOrderInput = {
   sizes?: Record<string, number>;
   qty: number;
   unitPrice: number;
+  printingPrice?: number;
   gstPct?: number;
   shipping?: number;
   type?: ApiOrderType;
