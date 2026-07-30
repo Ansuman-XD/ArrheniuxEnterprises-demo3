@@ -163,6 +163,10 @@ export type ApiOrder = {
   paymentMethod: ApiPaymentMethod;
   isSample: boolean;
   date: string;
+  discountPct: number;
+  discountAmt: number;
+  totalAmount: number;
+  paidAmount: number;
   timeline: Array<{ status: ApiOrderStatus; at: string }>;
 };
 
@@ -256,6 +260,10 @@ export type CreateOrderInput = {
   paymentStatus?: ApiPaymentStatus;
   paymentMethod?: ApiPaymentMethod;
   date?: string;
+   discountPct?: number;
+  discountAmt?: number;
+  total?: number;
+  paid?: number;
   timeline?: Array<{ status: ApiOrderStatus; at: string }>;
 };
 

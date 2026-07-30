@@ -29,6 +29,8 @@ export type PlaceOrderPayload = {
   total: number;
   paid: number;
   paymentMode: "full" | "advance-50" | "cod";
+  discountPct?: number; 
+  discountAmt?: number;
   paymentRef?: string;
 };
 
@@ -51,7 +53,7 @@ function paymentStatus(paid: number, total: number): CreateOrderInput["paymentSt
 
 export function toCreateOrderInput(payload: PlaceOrderPayload): CreateOrderInput {
   return {
-    customerId: payload.customerId ?? null,
+     customerId: payload.customerId ?? null,
     customer: payload.customerName,
     phone: payload.phone,
     email: payload.email,
@@ -72,6 +74,10 @@ export function toCreateOrderInput(payload: PlaceOrderPayload): CreateOrderInput
     unitPrice: payload.unitPrice,
     gstPct: payload.gstPct ?? 5,
     shipping: payload.shipping ?? 0,
+    discountPct: payload.discountPct ?? 0,
+    discountAmt: payload.discountAmt ?? 0,
+    total: payload.total,
+    paid: payload.paid,
     type: KIND_TO_TYPE[payload.kind],
     status: "Placed",
     paymentStatus: paymentStatus(payload.paid, payload.total),
@@ -110,8 +116,8 @@ export type StorefrontOrder = {
 
 export function apiOrderToStorefront(o: ApiOrder, userId: string): StorefrontOrder {
   const subtotal = o.unitPrice * o.qty;
-  const gst = Math.round((subtotal + o.shipping) * (o.gstPct / 100));
-  const total = subtotal + o.shipping + gst;
+  const gst = Math.round((subtotal - o.discountAmt + o.shipping) * (o.gstPct / 100));
+  const total = o.totalAmount > 0 ? o.totalAmount : subtotal - o.discountAmt + o.shipping + gst;
   const kind: StorefrontOrderKind =
     o.type === "Bulk" ? "bulk" : o.type === "B2B" ? "b2b" : "retail";
 
@@ -119,12 +125,16 @@ export function apiOrderToStorefront(o: ApiOrder, userId: string): StorefrontOrd
   if (o.paymentMethod === "COD") paymentMode = "cod";
   else if (o.paymentStatus === "Partial") paymentMode = "advance-50";
 
+  // Prefer the stored paid_amount (set at checkout / payment time) over
+  // deriving it from paymentStatus, which is lossy (Partial → guessed 50%).
   const paid =
-    o.paymentStatus === "Paid"
-      ? total
-      : o.paymentStatus === "Partial"
-        ? Math.round(total / 2)
-        : 0;
+    o.paidAmount > 0
+      ? o.paidAmount
+      : o.paymentStatus === "Paid"
+        ? total
+        : o.paymentStatus === "Partial"
+          ? Math.round(total / 2)
+          : 0;
 
   return {
     id: o.id,
@@ -135,8 +145,8 @@ export function apiOrderToStorefront(o: ApiOrder, userId: string): StorefrontOrd
     qty: o.qty,
     unitPrice: o.unitPrice,
     subtotal,
-    discountPct: 0,
-    discountAmt: 0,
+    discountPct: o.discountPct ?? 0,
+    discountAmt: o.discountAmt ?? 0,
     printType: o.printType,
     courier: o.shipping,
     gst,

@@ -310,6 +310,8 @@ const handlePay = useCallback(() => {
             total: grandTotal,
             paid: grandTotal,
             uploadedLogo: !isArr ? (artwork[0]?.dataUrl ?? "") : "",
+            discountPct,
+            discountAmt,
             paymentMode: "full",
           });
           toast({ title: "Payment successful", description: `Order #${o.id.slice(0, 8).toUpperCase()} placed.` });

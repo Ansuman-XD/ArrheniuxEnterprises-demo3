@@ -326,6 +326,8 @@ const BulkOrder = () => {
       total: grandTotal,
       paid,
       uploadedLogo: artwork[0]?.dataUrl ?? "",
+      discountPct: bulkPct,
+      discountAmt,
       paymentMode: mode,
     });
     
