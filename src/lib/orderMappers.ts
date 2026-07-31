@@ -104,6 +104,7 @@ export type StorefrontOrder = {
   printType?: string;
   courier: number;
   gst: number;
+    gstPct?: number;              // ← NEW
   total: number;
   paid: number;
   paymentMode: "full" | "advance-50" | "cod";
@@ -114,6 +115,13 @@ export type StorefrontOrder = {
   expectedDelivery?: string;
   kind: StorefrontOrderKind;
   sizes?: Record<string, number>;
+  customerName?: string;        // ← NEW
+  phone?: string;                // ← NEW
+  email?: string;                // ← NEW
+  address?: string;              // ← NEW
+  category?: string;             // ← NEW
+  subCategory?: string;          // ← NEW
+  material?: string;    
 };
 
 export function apiOrderToStorefront(o: ApiOrder, userId: string): StorefrontOrder {
@@ -153,6 +161,7 @@ export function apiOrderToStorefront(o: ApiOrder, userId: string): StorefrontOrd
     printType: o.printType,
     courier: o.shipping,
     gst,
+    gstPct: o.gstPct,             // ← NEW
     total,
     paid,
     paymentMode,
@@ -162,6 +171,13 @@ export function apiOrderToStorefront(o: ApiOrder, userId: string): StorefrontOrd
     expectedDelivery: new Date(Date.parse(o.date) + 10 * 86400000).toISOString(),
     kind,
     sizes: o.sizes,
+     customerName: o.customer,     // ← NEW
+    phone: o.phone,               // ← NEW
+    email: o.email,               // ← NEW
+    address: o.address,           // ← NEW
+    category: o.category,         // ← NEW
+    subCategory: o.subCategory,   // ← NEW
+    material: o.material,  
   };
 }
 

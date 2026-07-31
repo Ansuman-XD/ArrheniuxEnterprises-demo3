@@ -7,6 +7,7 @@ import { useLogin, useSignup } from "@/hooks/api";
 const Auth = () => {
   const [tab, setTab] = useState<"login" | "signup">("login");
   const navigate = useNavigate();
+  
   const [params] = useSearchParams();
   const next = params.get("next");
   const [error, setError] = useState("");
@@ -18,10 +19,15 @@ const Auth = () => {
   const [s, setS] = useState({ name: "", email: "", phone: "", company: "", password: "" });
 
   const afterAuth = (role: "admin" | "customer") => {
-    if (role === "admin") navigate("/admin");
-    else if (next) navigate(next);
-    else navigate("/");
-  };
+  if (role === "admin") {
+    navigate("/admin", { replace: true });
+    return;
+  }
+
+  navigate(next || "/", {
+    replace: true,
+  });
+};
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

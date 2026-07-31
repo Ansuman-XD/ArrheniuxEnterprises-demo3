@@ -43,6 +43,21 @@ import { useCreateOrder, useProduct, useProducts } from "@/hooks/api";
 
 const SIZE_STEP = 2;
 
+const PDP_DRAFT_KEY = "arr_pdp_draft";
+
+const loadPdpDraft = (productId: string) => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PDP_DRAFT_KEY) || "{}");
+    return raw.productId === productId ? raw : null;
+  } catch {
+    return null;
+  }
+};
+const savePdpDraft = (data: unknown) => {
+  try { localStorage.setItem(PDP_DRAFT_KEY, JSON.stringify(data)); } catch {}
+};
+const clearPdpDraft = () => localStorage.removeItem(PDP_DRAFT_KEY);
+
 // Bulk Order excludes ARRHENIUX line — standard categories only.
 const bulkCatalog = () => catalog.filter((c) => !isArrheniuxCategory(c.slug));
 
