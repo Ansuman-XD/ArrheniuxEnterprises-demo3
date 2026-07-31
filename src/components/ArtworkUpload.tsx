@@ -10,7 +10,7 @@ type Props = {
 };
 
 const ACCEPT = "image/png,image/jpeg,image/jpg,image/webp,application/pdf,.ai,.eps,.svg";
-const MAX_MB = 8;
+const MAX_MB = 2;
 
 export const ArtworkUpload = ({ value, onChange, title = "Upload Your Logo / Artwork / Text Design" }: Props) => {
   const inputRef = useRef<HTMLInputElement>(null);

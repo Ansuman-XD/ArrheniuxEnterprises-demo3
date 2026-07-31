@@ -82,12 +82,9 @@ const MyOrders = () => {
             amount: due,
             status: "Paid",
           });
-          await patchOrder(o.id, { paymentStatus: "Paid" });
-          toast({
-            title: "Balance paid",
-            description: "Your invoice has been updated.",
-          });
-          refetch();
+          await patchOrder(o.id, { paid: o.total, paymentStatus: "Paid" });
+        toast({ title: "Balance paid", description: "Your invoice has been updated." });
+        refetch();
         } catch {
           toast({
             title: "Payment failed",

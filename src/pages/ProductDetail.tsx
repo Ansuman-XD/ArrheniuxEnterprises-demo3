@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Minus, Plus, Share2, Link2, PackageOpen, CreditCard, Star, Package } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { ProductCard } from "@/components/ProductCard";
@@ -43,7 +43,40 @@ import { openRazorpay } from "@/lib/razorpay";
 import { toast } from "@/hooks/use-toast";
 import { SuccessDialog } from "@/components/SuccessDialog";
 import { useCreateOrder, useProduct, useProductReviews, useProducts } from "@/hooks/api";
+const PDP_DRAFT_KEY = (id: string) => `arr_pdp_draft_${id}`;
+type ProductDraft = {
+  productId: string;
+  sizeQty: Record<string, number>;
+  unitQty: number;
+  printSel: PrintSelection;
+  kitItems: string[];
+  kitQtyManual: number;
+  namedColor: string;
+  printColor: string;
+  artwork: ArtworkFile[];
+};
 
+const loadPdpDraft = (productId: string): ProductDraft | null => {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PDP_DRAFT_KEY(productId)) || "null");
+
+    if (!raw) return null;
+
+    return raw.productId === productId ? raw : null;
+  } catch {
+    return null;
+  }
+};
+
+const savePdpDraft = (draft: ProductDraft) => {
+localStorage.setItem(
+    PDP_DRAFT_KEY(draft.productId),
+    JSON.stringify(draft)
+);};
+
+const clearPdpDraft = (productId: string) => {
+  localStorage.removeItem(PDP_DRAFT_KEY(productId));
+};
 const ProductDetail = () => {
   const { id } = useParams();
   const { data: product, isLoading, isError } = useProduct(id);
@@ -98,18 +131,81 @@ const ProductDetailView = ({
 
   const [activeImg, setActiveImg] = useState(0);
 const [isPaying, setIsPaying] = useState(false);
-  const [sizeQty, setSizeQty] = useState<Record<string, number>>(() => emptySizes(product?.categorySlug ?? ""));
-  const [unitQty, setUnitQty] = useState(1);
-  const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
-  const [artwork, setArtwork] = useState<ArtworkFile[]>([]);
-  const [sampleOpen, setSampleOpen] = useState(false);
+const draft = useMemo(
+  () => loadPdpDraft(product.id),
+  [product.id]
+);
+const [sizeQty, setSizeQty] = useState<Record<string, number>>(
+    () => draft?.sizeQty ?? emptySizes(product.categorySlug)
+);  const [unitQty, setUnitQty] = useState(
+    draft?.unitQty ?? 1
+);
+const [printSel, setPrintSel] =
+    useState<PrintSelection>(
+        draft?.printSel ?? emptyPrint()
+    );
+    const [artwork, setArtwork] = useState<ArtworkFile[]>(
+    () => draft?.artwork ?? []
+);  const [sampleOpen, setSampleOpen] = useState(false);
   const [successOrder, setSuccessOrder] = useState<{ id: string; amount: number } | null>(null);
   // Welcome-kit config
-  const [kitItems, setKitItems] = useState<string[]>(["tshirt"]);
-  const [kitQtyManual, setKitQtyManual] = useState<number>(20);
-  // Named accessory color (Cap/Umbrella/Lanyard) + lanyard print color
-  const [namedColor, setNamedColor] = useState<string>("");
-  const [printColor, setPrintColor] = useState<string>("");
+const [kitItems, setKitItems] =
+    useState(
+        draft?.kitItems ?? ["tshirt"]
+    );
+const [kitQtyManual, setKitQtyManual] =
+    useState(
+        draft?.kitQtyManual ?? 20
+    );
+      // Named accessory color (Cap/Umbrella/Lanyard) + lanyard print color
+const [namedColor, setNamedColor] =
+    useState(
+        draft?.namedColor ?? ""
+    );
+const [printColor, setPrintColor] =
+    useState(
+        draft?.printColor ?? ""
+    );
+
+
+    useEffect(() => {
+  savePdpDraft({
+    productId: product.id,
+    sizeQty,
+    unitQty,
+    printSel,
+    kitItems,
+    kitQtyManual,
+    namedColor,
+    printColor,
+    artwork,
+  });
+}, [
+  product.id,
+  sizeQty,
+  unitQty,
+  printSel,
+  kitItems,
+  kitQtyManual,
+  namedColor,
+  printColor,
+  artwork,
+]);
+useEffect(() => {
+  const saved = loadPdpDraft(product.id);
+
+  if (!saved) return;
+
+  setSizeQty(saved.sizeQty);
+  setUnitQty(saved.unitQty);
+  setPrintSel(saved.printSel);
+  setKitItems(saved.kitItems);
+  setKitQtyManual(saved.kitQtyManual);
+  setNamedColor(saved.namedColor);
+  setPrintColor(saved.printColor);
+  setArtwork(saved.artwork ?? []);
+}, [product.id]);
+
 
   const cat = findCategory(product.categorySlug);
   const subcat = cat ? findSubcategory(cat, product.tier, product.subSlug) : undefined;
@@ -266,11 +362,28 @@ const handlePay = useCallback(() => {
     if (!canOrder|| isPaying) return;
       setIsPaying(true);           // ← add
     const user = getSession();
-    if (!user) {
-      setIsPaying(false);   
-      navigate(`/auth?next=${encodeURIComponent(location.pathname)}`);
-      return;
-    }
+   if (!user) {
+
+    savePdpDraft({
+        productId: product.id,
+        sizeQty,
+        unitQty,
+        printSel,
+        kitItems,
+        kitQtyManual,
+        namedColor,
+        printColor,
+        artwork,
+    });
+
+    setIsPaying(false);
+
+    navigate(
+      `/auth?next=${encodeURIComponent(location.pathname)}`
+    );
+
+    return;
+}
 
     // Require a saved address before checkout — no manual typing needed after first time.
     const defaultAddr = getDefaultAddress(user.id);
@@ -322,6 +435,7 @@ const handlePay = useCallback(() => {
           toast({ title: "Payment successful", description: `Order #${o.id.slice(0, 8).toUpperCase()} placed.` });
           window.open(waLink(orderMessage()), "_blank", "noreferrer");
           setSuccessOrder({ id: o.id, amount: grandTotal });
+          clearPdpDraft(product.id);
         } catch {
           toast({ title: "Order failed", description: "Payment received but order could not be saved. Contact support.", variant: "destructive" });
         }finally {
