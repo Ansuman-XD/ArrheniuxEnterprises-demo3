@@ -12,6 +12,7 @@ import {
 } from "@/lib/authStore";
 import { getSession } from "@/lib/session";
 import { toast } from "@/hooks/use-toast";
+import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 
 const empty = () => ({
   name: "",
@@ -34,6 +35,7 @@ const MyAddresses = () => {
   const [editing, setEditing] = useState<Address | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [draft, setDraft] = useState(empty());
+  useLockBodyScroll(showForm);   // ← add this line
 
   useEffect(() => {
     const u = getSession();

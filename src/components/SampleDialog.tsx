@@ -4,6 +4,8 @@ import { PrintPicker } from "@/components/PrintPicker";
 import { ArtworkUpload, artworkSummary, type ArtworkFile } from "@/components/ArtworkUpload";
 import { SuccessDialog } from "@/components/SuccessDialog";
 import { getDefaultAddress, formatAddress } from "@/lib/authStore";
+import { Loader2 } from "lucide-react";
+import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
 import {
   type CatalogProduct,
   getAccessoryRules,
@@ -50,7 +52,8 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
   const [printColor, setPrintColor] = useState<string>(rule?.printColors?.[0] || "");
   const [swatchColor, setSwatchColor] = useState<string>(product.colors[0] || "");
   const [successOrder, setSuccessOrder] = useState<{ id: string; amount: number } | null>(null);
-
+const [isPaying, setIsPaying] = useState(false);
+useLockBodyScroll(open || !!successOrder); 
   const restrictedMethods: PrintMethod[] | undefined = rule?.print.kind === "custom"
     ? rule.print.methods.map((m) => ({
         id: m.id,
@@ -108,13 +111,15 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
   if (!open && !successOrder) return null;
 
   const handlePay = () => {
-    const user = getSession();
-    if (!user) {
+    if (isPaying) return;
+  setIsPaying(true);
+  const user = getSession();
+    if (!user) { setIsPaying(false);
       navigate(`/auth?next=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
     const defaultAddr = getDefaultAddress(user.id);
-    if (!defaultAddr) {
+    if (!defaultAddr) { setIsPaying(false);
       toast({ title: "Add a delivery address", description: "Please save an address before ordering a sample." });
       navigate(`/my-addresses?next=${encodeURIComponent(window.location.pathname)}`);
       return;
@@ -144,6 +149,7 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
             sizes: isGarment ? ({ [size]: qty } as Record<string, number>) : undefined,
             qty,
             unitPrice,
+            printingPrice: printCharge,
             gstPct: Math.round(gstRate * 100),
             shipping: courier,
             total,
@@ -156,8 +162,8 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
           setSuccessOrder({ id: o.id, amount: total });
         } catch {
           toast({ title: "Order failed", description: "Payment received but sample order could not be saved.", variant: "destructive" });
-        }
-      },
+        }finally { setIsPaying(false); }
+      },onDismiss: () => setIsPaying(false),
     });
   };
 
@@ -279,9 +285,9 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
         </div>
 
         <div className="px-5 py-3 border-t border-border sticky bottom-0 bg-cream">
-          <button onClick={handlePay} className="btn-bold w-full justify-center !py-3">
-            <CreditCard className="h-4 w-4" /> Pay ₹{total} & Order Sample
-          </button>
+          <button onClick={handlePay} disabled={isPaying} className="btn-bold w-full justify-center !py-3 disabled:opacity-50">
+  {isPaying ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing…</> : <><CreditCard className="h-4 w-4" /> Pay ₹{total} & Order Sample</>}
+</button>
           <p className="text-[11px] text-muted-foreground mt-2 text-center">
             Payment first · WhatsApp opens with full sample details · order saved to My Orders.
           </p>

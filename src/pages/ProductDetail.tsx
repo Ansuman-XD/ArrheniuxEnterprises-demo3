@@ -9,6 +9,7 @@ import { ArtworkUpload, artworkSummary, type ArtworkFile } from "@/components/Ar
 import { SampleDialog } from "@/components/SampleDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getDefaultAddress, formatAddress } from "@/lib/authStore";
+import { Loader2 } from "lucide-react";
 import {
   ARR_SIZE_MAX,
   findCategory,
@@ -96,7 +97,7 @@ const ProductDetailView = ({
   type Size = string;
 
   const [activeImg, setActiveImg] = useState(0);
-
+const [isPaying, setIsPaying] = useState(false);
   const [sizeQty, setSizeQty] = useState<Record<string, number>>(() => emptySizes(product?.categorySlug ?? ""));
   const [unitQty, setUnitQty] = useState(1);
   const [printSel, setPrintSel] = useState<PrintSelection>(emptyPrint());
@@ -262,9 +263,11 @@ const handlePay = useCallback(() => {
       navigate(bulkRedirectHref());
       return;
     }
-    if (!canOrder) return;
+    if (!canOrder|| isPaying) return;
+      setIsPaying(true);           // ← add
     const user = getSession();
     if (!user) {
+      setIsPaying(false);   
       navigate(`/auth?next=${encodeURIComponent(location.pathname)}`);
       return;
     }
@@ -272,6 +275,7 @@ const handlePay = useCallback(() => {
     // Require a saved address before checkout — no manual typing needed after first time.
     const defaultAddr = getDefaultAddress(user.id);
     if (!defaultAddr) {
+       setIsPaying(false);
       toast({
         title: "Add a delivery address",
         description: "Please save an address before placing your order.",
@@ -305,6 +309,7 @@ const handlePay = useCallback(() => {
             sizes: isGarment ? sizeQty : undefined,
             qty: total,
             unitPrice,
+            printingPrice: printCharge,
             gstPct: gstPctLabel,
             shipping: courier,
             total: grandTotal,
@@ -319,10 +324,14 @@ const handlePay = useCallback(() => {
           setSuccessOrder({ id: o.id, amount: grandTotal });
         } catch {
           toast({ title: "Order failed", description: "Payment received but order could not be saved. Contact support.", variant: "destructive" });
-        }
+        }finally {
+        setIsPaying(false);     // ← add
+      }
       },
+          onDismiss: () => setIsPaying(false),   // ← add this option (see razorpay.ts note below)
+
     });
-  }, [isBulk, canOrder, grandTotal, product, total, code, unitPrice, subtotal, discountPct, discountAmt, printTypeText, printCharge, courier, gst, isGarment, sizeQty, navigate, location.pathname, cat, subcat, createOrderMut, gstPctLabel]);
+  }, [isBulk, canOrder, grandTotal, product, total, code, unitPrice, subtotal, discountPct, discountAmt, printTypeText, printCharge, courier, gst, isGarment, sizeQty, navigate, location.pathname, cat, subcat, createOrderMut, gstPctLabel, isPaying]);
 
   const handleSample = useCallback(() => setSampleOpen(true), []);
 
@@ -693,10 +702,14 @@ const handlePay = useCallback(() => {
             ) : (
               <button
                 onClick={handlePay}
-                disabled={!canOrder}
-                className={`btn-bold mt-6 w-full justify-center text-sm !py-3.5 ${!canOrder ? "opacity-40 cursor-not-allowed" : ""}`}
+                disabled={!canOrder || isPaying}
+                className={`btn-bold mt-6 w-full justify-center text-sm !py-3.5 ${(!canOrder || isPaying) ? "opacity-40 cursor-not-allowed" : ""}`}
               >
-                <CreditCard className="h-4 w-4" /> Pay Now (Razorpay)
+                 {isPaying ? (
+    <><Loader2 className="h-4 w-4 animate-spin" /> Processing…</>
+  ) : (
+    <><CreditCard className="h-4 w-4" /> Pay Now (Razorpay)</>
+  )}
               </button>
             )}
             <p className="text-xs text-muted-foreground mt-2 text-center">

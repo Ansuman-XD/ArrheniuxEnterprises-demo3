@@ -4,6 +4,9 @@ import { Minus, Plus, CreditCard, ChevronLeft, Package, LogOut } from "lucide-re
 import { Layout } from "@/components/Layout";
 import { PrintPicker } from "@/components/PrintPicker";
 import { SampleDialog } from "@/components/SampleDialog";
+import { Loader2 } from "lucide-react";
+import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
+
 import {
   B2B_SUBCATEGORIES,
   getB2BProducts,        // ← add this
@@ -61,6 +64,7 @@ const B2BShop = () => {
   const [agentForm, setAgentForm] = useState<AgentForm>(EMPTY_AGENT);
   const [gateError, setGateError] = useState("");
   const [sampleOpen, setSampleOpen] = useState(false);
+const [isPaying, setIsPaying] = useState(false);
 
   // Restore verified agent session on mount (survives refresh, expires after 1hr,
   // and clears automatically when the tab/browser is closed).
@@ -138,7 +142,8 @@ const B2BShop = () => {
   };
 
   const verified = agent !== null;
-
+useLockBodyScroll(!verified && !restoringSession);   // ← add this line
+  // locks scroll while the verification gate is shown
  const activeSub = view.step !== "subs" ? B2B_SUBCATEGORIES.find((s) => s.slug === view.subSlug) : null;
 const { products: b2bProductsForSub, refetch: refetchB2B, isFetching: refreshingB2B } = useB2BProducts(activeSub?.name);
 const products = view.step !== "subs" ? b2bProductsForSub : [];
@@ -199,8 +204,9 @@ const products = view.step !== "subs" ? b2bProductsForSub : [];
   };
 
   const handlePay = () => {
-    if (!product || !agent) return;
+    if (!product || !agent || isPaying) return;
     if (total < B2B_MOQ) return;
+     setIsPaying(true);
     openRazorpay({
       amountInr: grandTotal,
       name: "Arrheniux — B2B",
@@ -224,6 +230,7 @@ const products = view.step !== "subs" ? b2bProductsForSub : [];
             sizes: sizeQty,
             qty: total,
             unitPrice,
+            printingPrice: printCharge,
             gstPct: 5,
             shipping: courier,
             total: grandTotal,
@@ -235,8 +242,10 @@ const products = view.step !== "subs" ? b2bProductsForSub : [];
           navigate("/");
         } catch {
           toast({ title: "Order failed", description: "Payment received but order could not be saved.", variant: "destructive" });
-        }
-      },
+        }      finally { setIsPaying(false); }
+
+      },    onDismiss: () => setIsPaying(false),
+
     });
   };
 
@@ -472,13 +481,9 @@ const products = view.step !== "subs" ? b2bProductsForSub : [];
                   <p className="text-xs text-destructive mt-2">Minimum {B2B_MOQ} pcs required for B2B orders.</p>
                 )}
 
-                <button
-                  onClick={handlePay}
-                  disabled={total < B2B_MOQ}
-                  className={`btn-bold mt-5 w-full justify-center !py-3.5 ${total < B2B_MOQ ? "opacity-40 cursor-not-allowed" : ""}`}
-                >
-                  <CreditCard className="h-4 w-4" /> Pay Now (Razorpay)
-                </button>
+                <button onClick={handlePay} disabled={total < B2B_MOQ || isPaying} className={`btn-bold mt-5 w-full justify-center !py-3.5 ${(total < B2B_MOQ || isPaying) ? "opacity-40 cursor-not-allowed" : ""}`}>
+  {isPaying ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing…</> : <><CreditCard className="h-4 w-4" /> Pay Now (Razorpay)</>}
+</button>
                 <button
                   onClick={() => setSampleOpen(true)}
                   className="mt-3 w-full inline-flex items-center justify-center gap-2 border border-ink py-3 text-xs uppercase tracking-widest font-semibold hover:bg-ink hover:text-cream transition"

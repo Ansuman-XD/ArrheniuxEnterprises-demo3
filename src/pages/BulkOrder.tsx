@@ -4,6 +4,8 @@ import { Minus, Plus, CreditCard } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { PrintPicker } from "@/components/PrintPicker";
 import { ArtworkUpload, artworkSummary, type ArtworkFile } from "@/components/ArtworkUpload";
+import { Loader2 } from "lucide-react";
+
 import {
   catalog,
   findCategory,
@@ -133,6 +135,7 @@ const BulkOrder = () => {
   const [kitQtyManual, setKitQtyManual] = useState<number>(WELCOME_KIT_MIN);
   const SIZES = getSizesFor(catSlug);
   const [error, setError] = useState("");
+const [payingMode, setPayingMode] = useState<"full" | "advance-50" | null>(null);
 
   useEffect(() => {
     if (!urlProduct) return;
@@ -321,6 +324,7 @@ const BulkOrder = () => {
       sizes: isGarment ? sizeQty : undefined,
       qty: total,
       unitPrice,
+      printingPrice: printCharge,
       gstPct: gstPctLabel,
       shipping: courier,
       total: grandTotal,
@@ -333,7 +337,7 @@ const BulkOrder = () => {
     
   };
 
-  const handlePay = (mode: "full" | "advance-50") => {
+  const handlePay = (mode: "full" | "advance-50") => {   if (payingMode) return;
     const err = validate();
     if (err) { setError(err); return; }
     setError("");
@@ -342,6 +346,7 @@ const BulkOrder = () => {
       navigate(`/auth?next=${encodeURIComponent("/bulk-order")}`);
       return;
     }
+      setPayingMode(mode);
     const amount = mode === "full" ? grandTotal : Math.round(grandTotal / 2);
     openRazorpay({
       amountInr: amount,
@@ -358,8 +363,11 @@ const BulkOrder = () => {
           }
         } catch {
           toast({ title: "Order failed", description: "Payment received but order could not be saved.", variant: "destructive" });
-        }
+        } finally { setPayingMode(null); }
+
       },
+          onDismiss: () => setPayingMode(null),
+
     });
   };
 
@@ -670,12 +678,12 @@ const BulkOrder = () => {
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <div className="grid sm:grid-cols-2 gap-2">
-            <button type="button" onClick={() => handlePay("advance-50")} className="btn-bold justify-center !py-3.5 text-sm">
-              <CreditCard className="h-4 w-4" /> Pay 50% Advance
-            </button>
-            <button type="button" onClick={() => handlePay("full")} className="btn-bold justify-center !py-3.5 text-sm">
-              <CreditCard className="h-4 w-4" /> Pay in Full
-            </button>
+           <button type="button" onClick={() => handlePay("advance-50")} disabled={!!payingMode} className="btn-bold justify-center !py-3.5 text-sm disabled:opacity-50">
+  {payingMode === "advance-50" ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing…</> : <><CreditCard className="h-4 w-4" /> Pay 50% Advance</>}
+</button>
+<button type="button" onClick={() => handlePay("full")} disabled={!!payingMode} className="btn-bold justify-center !py-3.5 text-sm disabled:opacity-50">
+  {payingMode === "full" ? <><Loader2 className="h-4 w-4 animate-spin" /> Processing…</> : <><CreditCard className="h-4 w-4" /> Pay in Full</>}
+</button>
           </div>
           <p className="text-xs text-muted-foreground text-center">
             Login required before payment. WhatsApp will open with your order after successful payment.
