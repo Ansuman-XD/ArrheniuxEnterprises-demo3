@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useReveal } from "@/hooks/useReveal";
 import {
   Package,
   Check,
@@ -55,6 +56,7 @@ const MyOrders = () => {
   const [reviewText, setReviewText] = useState("");
   const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
   useLockBodyScroll(!!reviewFor);
+    const headerRef = useReveal<HTMLDivElement>();
 
   useEffect(() => {
     if (!user) navigate("/auth?next=/my-orders");
@@ -142,11 +144,12 @@ const MyOrders = () => {
   return (
     <Layout>
       <section className="container-x py-12">
+        <div ref={headerRef} className="reveal reveal-up">
         <span className="text-xs font-bold uppercase tracking-widest text-primary">
           Your Account
         </span>
         <h1 className="font-display text-5xl md:text-6xl mt-2">MY ORDERS</h1>
-
+        </div>
         {isLoading ? (
           <div className="mt-8 space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -172,8 +175,7 @@ const MyOrders = () => {
               const delivered = o.status === "Delivered";
               const reviewed = reviewedIds.has(o.id);
               return (
-                <div key={o.id} className="border border-border bg-card p-5">
-                  <div className="flex flex-col md:flex-row gap-4">
+<div key={o.id} className="glow-hover border border-border bg-card p-5 transition hover:border-primary/40">                  <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1">
                       <div className="flex items-start justify-between flex-wrap gap-3">
                         <div>
@@ -229,21 +231,28 @@ const MyOrders = () => {
                     </div>
                   </div>
 
-                  <div className="mt-5 grid grid-cols-5 gap-1">
+                  {/* <div className="mt-5 grid grid-cols-5 gap-1"> */}
+                    <div
+                    className="mt-5 grid grid-cols-5 gap-1 timeline-progress-line"
+                    style={{
+                      "--progress": `${(ORDER_STATUSES.indexOf(o.status) / (ORDER_STATUSES.length - 1)) * 100}%`,
+                    } as React.CSSProperties}
+                  >
                     {ORDER_STATUSES.map((s, i) => {
                       const currentIdx = ORDER_STATUSES.indexOf(o.status);
                       const reached = i <= currentIdx;
+                      const isCurrent = i === currentIdx;
                       return (
                         <div
                           key={s}
-                          className="flex flex-col items-center text-center gap-1.5"
+                          className="relative z-10 flex flex-col items-center text-center gap-1.5"
                         >
                           <div
-                            className={`h-8 w-8 rounded-full flex items-center justify-center border-2 ${
+                            className={`h-8 w-8 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${
                               reached
                                 ? "bg-primary border-primary text-cream"
                                 : "border-border text-muted-foreground bg-background"
-                            }`}
+                            } ${isCurrent ? "timeline-dot-active" : ""}`}
                           >
                             {reached ? (
                               <Check className="h-4 w-4" />
@@ -265,7 +274,7 @@ const MyOrders = () => {
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => downloadInvoice(o)}
-                        className="text-[11px] uppercase tracking-widest border border-border px-3 py-1.5 hover:border-ink inline-flex items-center gap-1"
+                        className="btn-magnetic text-[11px] uppercase tracking-widest border border-border px-3 py-1.5 hover:border-ink inline-flex items-center gap-1"
                       >
                         <Download className="h-3.5 w-3.5" /> Download Invoice
                       </button>
@@ -273,7 +282,7 @@ const MyOrders = () => {
                         <button
                           onClick={() => payRemaining(o)}
                           disabled={payingOrderId === o.id}
-                          className="text-[11px] uppercase tracking-widest bg-primary text-cream px-3 py-1.5 inline-flex items-center gap-1 disabled:opacity-50"
+                          className="btn-magnetic text-[11px] uppercase tracking-widest bg-primary text-cream px-3 py-1.5 inline-flex items-center gap-1 disabled:opacity-50"
                         >
                           {payingOrderId === o.id ? (
                             <>

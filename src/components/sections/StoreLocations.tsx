@@ -1,5 +1,5 @@
 import { MapPin, Phone, ExternalLink } from "lucide-react";
-
+import { useReveal } from "@/hooks/useReveal";
 type Store = {
   name: string;
   address: string;
@@ -29,9 +29,11 @@ const STORES: Store[] = [
   },
 ];
 
-export const StoreLocations = () => (
+export const StoreLocations = () => {
+  const headerRef = useReveal<HTMLDivElement>();
+  return (
   <section className="container-x py-20">
-    <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
+    <div ref={headerRef} className="reveal flex items-end justify-between mb-10 flex-wrap gap-4">
       <div>
         <span className="text-xs font-bold uppercase tracking-widest text-primary">09 — Our Store Locations</span>
         <h2 className="font-display text-5xl md:text-6xl mt-2">FIND US NEAR YOU.</h2>
@@ -43,9 +45,9 @@ export const StoreLocations = () => (
 
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {STORES.map((s) => (
+        <div key={s.name} className="tilt-card">
         <div
-          key={s.name}
-          className="group border border-border bg-card p-6 hover:border-ink hover:-translate-y-0.5 transition flex flex-col"
+          className="tilt-card-inner group border border-border bg-card p-6 hover:border-ink transition flex flex-col h-full"
         >
           <div className="flex items-start gap-3">
             <span className="h-10 w-10 inline-flex items-center justify-center bg-secondary border border-border group-hover:bg-ink group-hover:text-cream transition shrink-0">
@@ -74,8 +76,10 @@ export const StoreLocations = () => (
               </a>
             )}
           </div>
+       </div>
         </div>
       ))}
     </div>
   </section>
-);
+  );
+};

@@ -1,9 +1,13 @@
 import { Factory, Scissors, Truck, ShieldCheck, BadgeIndianRupee, Headphones, Sparkles, Boxes } from "lucide-react";
-
-export const WhyWhatWho = () => (
+import { useReveal } from "@/hooks/useReveal";
+export const WhyWhatWho = () => {
+  const introRef = useReveal<HTMLDivElement>();
+  const whatRef = useReveal<HTMLDivElement>();
+  const whyRef = useReveal<HTMLDivElement>();
+  return (
   <>
     <section className="container-x py-20">
-      <div className="grid lg:grid-cols-2 gap-10 items-start">
+      <div ref={introRef} className="reveal grid lg:grid-cols-2 gap-10 items-start">
         <div>
           <span className="text-xs font-bold uppercase tracking-widest text-primary">06 — Who We Are</span>
           <h2 className="font-display text-5xl md:text-6xl mt-2 leading-none">
@@ -18,7 +22,7 @@ export const WhyWhatWho = () => (
 
     <section className="bg-secondary py-20">
       <div className="container-x">
-        <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
+        <div ref={whatRef} className="reveal flex items-end justify-between mb-10 flex-wrap gap-4">
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-primary">07 — What We Do</span>
             <h2 className="font-display text-5xl md:text-6xl mt-2">END-TO-END APPAREL.</h2>
@@ -31,8 +35,8 @@ export const WhyWhatWho = () => (
             { icon: Scissors, title: "Branding & Print", text: "Screen, DTF, sublimation, embroidery and neck labels." },
             { icon: Boxes, title: "Bulk Production", text: "20 to 50,000 pcs — same QC, same timeline discipline." },
           ].map((s) => (
-            <div key={s.title} className="bg-background border border-border p-6 hover:border-ink hover:-translate-y-0.5 transition">
-              <s.icon className="h-7 w-7 text-primary" />
+            <div key={s.title} className="glow-hover bg-background border border-border p-6 hover:border-ink hover:-translate-y-0.5 transition">
+              <s.icon className="h-7 w-7 text-primary float-3d" />
               <h3 className="font-condensed text-2xl mt-4 tracking-wide">{s.title.toUpperCase()}</h3>
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{s.text}</p>
             </div>
@@ -42,7 +46,7 @@ export const WhyWhatWho = () => (
     </section>
 
     <section className="container-x py-20">
-      <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
+      <div ref={whyRef} className="reveal flex items-end justify-between mb-10 flex-wrap gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-widest text-primary">08 — Why We Are Different</span>
           <h2 className="font-display text-5xl md:text-6xl mt-2">OUR ADVANTAGE.</h2>
@@ -57,13 +61,17 @@ export const WhyWhatWho = () => (
           { icon: ShieldCheck, title: "Quality Inspection", text: "Multi-stage QC on every piece before it ships." },
           { icon: Headphones, title: "Dedicated Support", text: "One account manager from sample to delivery." },
         ].map((s) => (
-          <div key={s.title} className="border border-border p-6 bg-card hover:border-primary hover:-translate-y-0.5 transition">
-            <s.icon className="h-7 w-7 text-primary" />
+          <div key={s.title} className="tilt-card">
+          <div className="tilt-card-inner border border-border p-6 bg-card hover:border-primary transition h-full">
+            <s.icon className="h-7 w-7 text-primary float-3d" />
             <h3 className="font-condensed text-2xl mt-4 tracking-wide">{s.title.toUpperCase()}</h3>
             <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{s.text}</p>
+          </div>
           </div>
         ))}
       </div>
     </section>
   </>
-);
+  );
+};
+  

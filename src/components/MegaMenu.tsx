@@ -32,11 +32,11 @@ export const MegaMenu = () => {
   return (
     <div className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
       <button
-        className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink inline-flex items-center gap-1"
+        className="nav-link-underline text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink inline-flex items-center gap-1"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
       >
-        <LayoutGrid className="h-3.5 w-3.5" /> Categories <ChevronDown className="h-3.5 w-3.5" />
+        <LayoutGrid className="h-3.5 w-3.5" /> Categories <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (

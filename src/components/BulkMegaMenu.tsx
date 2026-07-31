@@ -35,7 +35,7 @@ export const BulkMegaMenu = () => {
   return (
     <div className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
       <button
-        className="text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink inline-flex items-center gap-1"
+        className="nav-link-underline text-sm font-medium uppercase tracking-wide transition hover:text-primary text-ink inline-flex items-center gap-1"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
       >
@@ -43,8 +43,8 @@ export const BulkMegaMenu = () => {
       </button>
 
       {open && (
-        <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3 z-50">
-          <div className="bg-cream border border-border shadow-xl w-[860px] max-w-[90vw] grid grid-cols-[240px_180px_1fr]">
+        <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3 z-50 animate-fade-in">
+          <div className="navbar-glass bg-cream/95 border border-border shadow-2xl w-[860px] max-w-[90vw] grid grid-cols-[240px_180px_1fr] rounded-lg overflow-hidden">
             <ul className="border-r border-border py-2 max-h-[420px] overflow-y-auto">
               {catalog.map((c) => (
                 <li key={c.slug}>
