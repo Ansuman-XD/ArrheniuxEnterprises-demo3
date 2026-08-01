@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { MapPin, Plus, Trash2, Star, Edit2, X } from "lucide-react";
+import { createPortal } from "react-dom";
 import { Layout } from "@/components/Layout";
 import {
   getAddresses,
@@ -75,7 +76,7 @@ const MyAddresses = () => {
 
     // First address just saved while coming from checkout — send them back to finish the order.
     if (next && wasEmpty && !editing) {
-      navigate(next);
+     navigate(next || "/my-addresses");
     }
   };
 
@@ -86,7 +87,7 @@ const MyAddresses = () => {
     if (next) navigate(next);
   };
 
-  return (
+  return createPortal(
     <Layout>
       <section className="container-x py-10 min-h-[70vh] animate-fade-in">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
@@ -177,7 +178,8 @@ const MyAddresses = () => {
           </div>
         )}
       </section>
-    </Layout>
+    </Layout>,
+        document.body
   );
 };
 

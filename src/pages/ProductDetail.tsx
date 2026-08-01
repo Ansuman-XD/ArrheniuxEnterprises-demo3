@@ -184,42 +184,13 @@ const ProductDetailView = ({
   const [printColor, setPrintColor] = useState(draft?.printColor ?? "");
   const [savingOrder, setSavingOrder] = useState(false);
 
+  // Consume the saved draft exactly once. It's only ever written to storage
+  // right before redirecting to /auth or /my-addresses (see handlePay below),
+  // so this restores it after that specific round-trip — then wipes it so
+  // simply leaving the page and coming back later does NOT bring old input back.
   useEffect(() => {
-    savePdpDraft({
-      productId: product.id,
-      sizeQty,
-      unitQty,
-      printSel,
-      kitItems,
-      kitQtyManual,
-      namedColor,
-      printColor,
-      artwork,
-    });
-  }, [
-    product.id,
-    sizeQty,
-    unitQty,
-    printSel,
-    kitItems,
-    kitQtyManual,
-    namedColor,
-    printColor,
-    artwork,
-  ]);
-  useEffect(() => {
-    const saved = loadPdpDraft(product.id);
-
-    if (!saved) return;
-
-    setSizeQty(saved.sizeQty);
-    setUnitQty(saved.unitQty);
-    setPrintSel(saved.printSel);
-    setKitItems(saved.kitItems);
-    setKitQtyManual(saved.kitQtyManual);
-    setNamedColor(saved.namedColor);
-    setPrintColor(saved.printColor);
-    setArtwork(saved.artwork ?? []);
+    if (draft) clearPdpDraft(product.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
 
   const cat = findCategory(product.categorySlug);
@@ -453,7 +424,19 @@ const ProductDetailView = ({
     // Require a saved address before checkout — no manual typing needed after first time.
     const defaultAddr = getDefaultAddress(user.id);
     if (!defaultAddr) {
-      setIsPaying(false);
+      savePdpDraft({
+      productId: product.id,
+    sizeQty,
+    unitQty,
+    printSel,
+    kitItems,
+    kitQtyManual,
+    namedColor,
+    printColor,
+    artwork,
+  });
+
+  setIsPaying(false);
       toast({
         title: "Add a delivery address",
         description: "Please save an address before placing your order.",

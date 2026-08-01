@@ -124,7 +124,7 @@ const [selected, setSelected] = useState<
          <div className="flex gap-3 mt-6">
   {/* Instagram */}
   <a
-    href="https://www.instagram.com/arrheniuxofficial"
+    href="https://www.instagram.com/arrheniuxofficial/"
     target="_blank"
     rel="noopener noreferrer"
     aria-label="Instagram"
