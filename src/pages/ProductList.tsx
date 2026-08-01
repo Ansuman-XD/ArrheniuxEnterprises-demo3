@@ -5,6 +5,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { findCategory, findSubcategory } from "@/data/catalog";
 import { useCatalogProducts } from "@/hooks/api";
+import { useReveal, staggerDelay } from "@/hooks/useReveal";
 
 const PAGE_SIZE = 12;
 
@@ -61,8 +62,24 @@ const ProductList = () => {
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {shown.map((p) => (
-                <ProductCard key={p.id} p={p as any} />
+              {shown.map((p, i) => (
+                <div
+                  key={p.id}
+                  className="reveal reveal-up"
+                  style={{ transitionDelay: `${staggerDelay(i % 12)}ms` }}
+                  ref={(el) => {
+                    if (!el) return;
+                    const obs = new IntersectionObserver(([entry]) => {
+                      if (entry.isIntersecting) {
+                        el.classList.add("is-visible");
+                        obs.unobserve(el);
+                      }
+                    }, { threshold: 0.1 });
+                    obs.observe(el);
+                  }}
+                >
+                  <ProductCard p={p as any} />
+                </div>
               ))}
             </div>
             {hasMore && (

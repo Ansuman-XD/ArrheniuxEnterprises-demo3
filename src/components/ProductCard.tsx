@@ -4,6 +4,8 @@ import { MessageCircle } from "lucide-react";
 import { Product, waLink } from "@/data/site";
 
 export const ProductCard = memo(({ p }: { p: Product }) => (
+  <div className="tilt-card">
+  <div className="tilt-card-inner group flex flex-col bg-card border border-border">
   <div className="group flex flex-col bg-card border border-border">
     <Link to={`/product/${p.id}`} className="relative block overflow-hidden bg-secondary">
       <img
@@ -45,6 +47,8 @@ export const ProductCard = memo(({ p }: { p: Product }) => (
       </div>
     </div>
   </div>
+   </div>
+</div>
 ));
 ProductCard.displayName = "ProductCard";
 

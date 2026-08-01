@@ -3,6 +3,7 @@ import { Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { reviews as seedReviews } from "@/data/site";
 import { useReviews } from "@/hooks/api";
+import { useReveal } from "@/hooks/useReveal";
 
 type Item = { name: string; role?: string; rating: number; text: string };
 
@@ -21,10 +22,12 @@ export const Reviews = () => {
 
   const marquee = [...items, ...items];
 
+const headerRef = useReveal<HTMLDivElement>();
+
   return (
     <section id="reviews" className="bg-ink text-cream py-20 overflow-hidden">
       <div className="container-x">
-        <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
+        <div ref={headerRef} className="reveal flex items-end justify-between mb-10 flex-wrap gap-4">
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-accent">10 — Reactions</span>
             <h2 className="font-display text-5xl md:text-6xl mt-2">CLIENT REACTIONS</h2>

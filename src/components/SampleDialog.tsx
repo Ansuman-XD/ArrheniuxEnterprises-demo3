@@ -6,6 +6,7 @@ import { SuccessDialog } from "@/components/SuccessDialog";
 import { getDefaultAddress, formatAddress } from "@/lib/authStore";
 import { Loader2 } from "lucide-react";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
+import { BrandLoader } from "@/components/BrandLoader";
 import {
   type CatalogProduct,
   getAccessoryRules,
@@ -53,6 +54,8 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
   const [swatchColor, setSwatchColor] = useState<string>(product.colors[0] || "");
   const [successOrder, setSuccessOrder] = useState<{ id: string; amount: number } | null>(null);
 const [isPaying, setIsPaying] = useState(false);
+// near other state
+const [savingOrder, setSavingOrder] = useState(false);
 useLockBodyScroll(open || !!successOrder); 
   const restrictedMethods: PrintMethod[] | undefined = rule?.print.kind === "custom"
     ? rule.print.methods.map((m) => ({
@@ -130,6 +133,7 @@ useLockBodyScroll(open || !!successOrder);
       description: `Sample: ${product.name}`,
       prefill: { name: user.name, email: user.email, contact: defaultAddr.mobile || user.phone },
       onSuccess: async () => {
+        setSavingOrder(true);
         try {
           const o = await createOrderMut.mutateAsync({
             kind: "retail",
@@ -162,7 +166,7 @@ useLockBodyScroll(open || !!successOrder);
           setSuccessOrder({ id: o.id, amount: total });
         } catch {
           toast({ title: "Order failed", description: "Payment received but sample order could not be saved.", variant: "destructive" });
-        }finally { setIsPaying(false); }
+        }finally { setIsPaying(false); setSavingOrder(false); }
       },onDismiss: () => setIsPaying(false),
     });
   };
@@ -302,6 +306,7 @@ useLockBodyScroll(open || !!successOrder);
         amount={successOrder?.amount}
         title="Sample Order Placed!"
       />
+      {savingOrder && <BrandLoader fullscreen label="Confirming your order" />}
     </>
   );
 };

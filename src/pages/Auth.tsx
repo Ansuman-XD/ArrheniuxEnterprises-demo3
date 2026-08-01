@@ -69,22 +69,23 @@ const Auth = () => {
   const pending = signupMut.isPending || loginMut.isPending;
 
   return (
-    <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-border p-8">
-        <div className="flex justify-center mb-6">
+   <div className="min-h-screen bg-cream flex items-center justify-center p-4 relative overflow-hidden">
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-ambient opacity-60" />
+      <div className="auth-card-enter relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-border p-8">
+        <div className="flex justify-center mb-6 logo-glow">
           <Link to="/"><Logo /></Link>
         </div>
 
         <div className="flex bg-muted rounded-lg p-1 mb-6">
           <button
             onClick={() => { setTab("login"); setError(""); }}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition ${tab === "login" ? "bg-white shadow text-ink" : "text-muted-foreground"}`}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-300 ${tab === "login" ? "bg-white shadow text-ink auth-tab-active" : "text-muted-foreground"}`}
           >
             Log In
           </button>
           <button
             onClick={() => { setTab("signup"); setError(""); }}
-            className={`flex-1 py-2 text-sm font-medium rounded-md transition ${tab === "signup" ? "bg-white shadow text-ink" : "text-muted-foreground"}`}
+            className={`flex-1 py-2 text-sm font-medium rounded-md transition-all duration-300 ${tab === "signup" ? "bg-white shadow text-ink auth-tab-active" : "text-muted-foreground"}`}
           >
             Sign Up
           </button>
@@ -95,7 +96,7 @@ const Auth = () => {
             <Field label="Email" type="email" value={email} onChange={setEmail} />
             <Field label="Password" type="password" value={password} onChange={setPassword} />
             {error && <p className="text-sm text-red-600">{error}</p>}
-            <button disabled={pending} className="w-full bg-ink hover:bg-ink/90 text-cream font-medium py-2.5 rounded-md transition disabled:opacity-60">
+            <button disabled={pending} className="btn-magnetic w-full bg-ink hover:bg-ink/90 text-cream font-medium py-2.5 rounded-md transition disabled:opacity-60">
               {pending ? "Logging in…" : "Log In"}
             </button>
           </form>
@@ -107,7 +108,7 @@ const Auth = () => {
             <Field label="Company (optional)" value={s.company} onChange={(v) => setS({ ...s, company: v })} />
             <Field label="Password" type="password" value={s.password} onChange={(v) => setS({ ...s, password: v })} />
             {error && <p className="text-sm text-red-600">{error}</p>}
-            <button disabled={pending} className="w-full bg-ink hover:bg-ink/90 text-cream font-medium py-2.5 rounded-md transition disabled:opacity-60">
+            <button disabled={pending} className="btn-magnetic w-full bg-ink hover:bg-ink/90 text-cream font-medium py-2.5 rounded-md transition disabled:opacity-60">
               {pending ? "Creating account…" : "Create Account"}
             </button>
           </form>
@@ -122,13 +123,13 @@ const Auth = () => {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => handleSocial("google")}
-            className="flex items-center justify-center gap-2 border border-border rounded-md py-2.5 text-sm font-medium hover:bg-muted transition"
+            className="social-btn-lift flex items-center justify-center gap-2 border border-border rounded-md py-2.5 text-sm font-medium hover:bg-muted hover:border-primary/40 transition"
           >
             <GoogleIcon /> Google
           </button>
           <button
             onClick={() => handleSocial("facebook")}
-            className="flex items-center justify-center gap-2 border border-border rounded-md py-2.5 text-sm font-medium hover:bg-muted transition"
+            className="social-btn-lift flex items-center justify-center gap-2 border border-border rounded-md py-2.5 text-sm font-medium hover:bg-muted hover:border-primary/40 transition"
           >
             <FacebookIcon /> Facebook
           </button>

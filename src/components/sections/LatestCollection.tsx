@@ -1,14 +1,16 @@
 import { ProductCard } from "../ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNewCollectionProducts } from "@/hooks/api";
+import { useReveal } from "@/hooks/useReveal";
 
 export const LatestCollection = () => {
   const { products: items, isLoading, isError } = useNewCollectionProducts(9);
+  const headerRef = useReveal<HTMLDivElement>();
 
   return (
     <section className="bg-secondary py-20">
       <div className="container-x">
-        <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
+        <div ref={headerRef} className="reveal flex items-end justify-between mb-10 flex-wrap gap-4">
           <div>
             <span className="text-xs font-bold uppercase tracking-widest text-primary">02 — New Collection</span>
             <h2 className="font-display text-5xl md:text-6xl mt-2">NEW COLLECTION</h2>

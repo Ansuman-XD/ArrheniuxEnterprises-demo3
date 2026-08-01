@@ -4,6 +4,7 @@ import g3 from "@/assets/gallery-3.jpg";
 import g4 from "@/assets/gallery-4.jpg";
 import g5 from "@/assets/gallery-5.jpg";
 import g6 from "@/assets/gallery-6.jpg";
+import { useReveal } from "@/hooks/useReveal";
 
 const items = [
   { img: g1, tag: "Education", client: "SCAL Institute" },
@@ -14,10 +15,12 @@ const items = [
   { img: g6, tag: "Tech", client: "Pearl Reef" },
 ];
 
-export const Gallery = () => (
+export const Gallery = () => {
+  const headerRef = useReveal<HTMLDivElement>();
+  return (
   <section className="bg-secondary py-20">
     <div className="container-x">
-      <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
+      <div ref={headerRef} className="reveal flex items-end justify-between mb-10 flex-wrap gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-widest text-primary">03 — Clients</span>
           <h2 className="font-display text-5xl md:text-6xl mt-2">CLIENTS WITH WORK</h2>
@@ -28,15 +31,18 @@ export const Gallery = () => (
       </div>
       <div className="columns-2 md:columns-3 gap-3 space-y-3">
         {items.map((it, i) => (
-          <figure key={i} className="break-inside-avoid relative group overflow-hidden bg-background">
+          <div key={i} className="tilt-card break-inside-avoid">
+          <figure className="tilt-card-inner relative group overflow-hidden bg-background">
             <img src={it.img} alt={it.client} loading="lazy" className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105" />
             <figcaption className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-ink/90 to-transparent text-cream">
               <span className="text-[10px] uppercase tracking-widest text-accent">{it.tag}</span>
               <p className="font-condensed text-lg leading-tight">{it.client}</p>
             </figcaption>
           </figure>
+          </div>
         ))}
       </div>
     </div>
   </section>
-);
+  );
+};

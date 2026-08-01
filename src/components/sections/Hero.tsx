@@ -10,9 +10,10 @@ export const Hero = () => (
         {/* <span className="inline-flex items-center gap-2 bg-cream text-ink text-xs font-bold uppercase tracking-widest px-3 py-1.5 w-fit">
           <Package className="h-3.5 w-3.5" /> Min order 20 pieces
         </span> */}
-        <h1 className="font-display text-[14vw] sm:text-[10vw] lg:text-[7.5vw] leading-[0.9] mt-6 tracking-tighter">
-          CUSTOM<br />APPAREL<br />FOR YOUR<br /><span className="text-cream/60">BRAND.</span>
-        </h1>
+       <h1 className="font-display text-[14vw] sm:text-[10vw] lg:text-[7.5vw] leading-[0.9] mt-6 tracking-tighter">
+  CUSTOM<br />APPAREL<br />FOR YOUR<br />
+  <span className="text-gradient-anim">BRAND.</span>
+</h1>
         <p className="mt-6 max-w-md text-cream/80 text-base md:text-lg">
           Factory-direct t-shirts, hoodies, uniforms & merch — printed, embroidered and shipped from our Bhubaneswar facility.
         </p>
@@ -20,7 +21,7 @@ export const Hero = () => (
           {/* <Link to="/category/t-shirts" className="btn-bold !bg-cream !text-ink hover:!bg-accent hover:!text-cream">
             Browse Catalog <ArrowRight className="h-4 w-4" />
           </Link> */}
-          <a href={waLink()} target="_blank" rel="noreferrer" className="btn-wa">
+          <a href={waLink()} target="_blank" rel="noreferrer" className="btn-wa btn-magnetic">
             <MessageCircle className="h-4 w-4" /> Order on WhatsApp
           </a>
         </div>
