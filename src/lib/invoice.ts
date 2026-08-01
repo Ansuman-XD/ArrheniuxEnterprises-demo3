@@ -179,7 +179,10 @@ function loadImageEl(src: string): Promise<HTMLImageElement> {
   });
 }
 
+let cachedLogoData: { dataUrl: string; ratio: number } | null = null;
+
 async function getLogoData(): Promise<{ dataUrl: string; ratio: number } | null> {
+  if (cachedLogoData) return cachedLogoData;
   try {
     const img = await loadImageEl(logoUrl);
     const canvas = document.createElement("canvas");
@@ -188,7 +191,8 @@ async function getLogoData(): Promise<{ dataUrl: string; ratio: number } | null>
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    return { dataUrl: canvas.toDataURL("image/png"), ratio: canvas.width / canvas.height };
+    cachedLogoData = { dataUrl: canvas.toDataURL("image/png"), ratio: canvas.width / canvas.height };
+    return cachedLogoData;
   } catch {
     return null;
   }

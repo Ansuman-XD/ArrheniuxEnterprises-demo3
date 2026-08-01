@@ -55,6 +55,7 @@ const MyOrders = () => {
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
   const [payingOrderId, setPayingOrderId] = useState<string | null>(null);
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
   useLockBodyScroll(!!reviewFor);
     const headerRef = useReveal<HTMLDivElement>();
 
@@ -99,6 +100,22 @@ const MyOrders = () => {
       },
       onDismiss: () => setPayingOrderId(null),
     });
+  };
+
+  const handleDownloadInvoice = async (o: StorefrontOrder) => {
+    if (downloadingInvoiceId) return;
+    try {
+      setDownloadingInvoiceId(o.id);
+      await downloadInvoice(o);
+    } catch (err) {
+      toast({
+        title: "Download failed",
+        description: "Could not generate invoice.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
   };
 
   const submitReview = async () => {
@@ -273,10 +290,15 @@ const MyOrders = () => {
                   <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap gap-2">
                       <button
-                        onClick={() => downloadInvoice(o)}
-                        className="btn-magnetic text-[11px] uppercase tracking-widest border border-border px-3 py-1.5 hover:border-ink inline-flex items-center gap-1"
+                        onClick={() => handleDownloadInvoice(o)}
+                        disabled={downloadingInvoiceId === o.id}
+                        className="btn-magnetic text-[11px] uppercase tracking-widest border border-border px-3 py-1.5 hover:border-ink inline-flex items-center gap-1 disabled:opacity-50"
                       >
-                        <Download className="h-3.5 w-3.5" /> Download Invoice
+                        {downloadingInvoiceId === o.id ? (
+                          <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating…</>
+                        ) : (
+                          <><Download className="h-3.5 w-3.5" /> Download Invoice</>
+                        )}
                       </button>
                       {!paymentPaid && (
                         <button

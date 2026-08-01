@@ -1,4 +1,4 @@
-const BASE = (import.meta.env.VITE_API_URL ?? "http://localhost:3000/api").replace(/\/$/, "");
+export const BASE = (import.meta.env.VITE_API_URL ?? "http://localhost:3000/api").replace(/\/$/, "");
 
 export class ApiError extends Error {
   status: number;
@@ -26,7 +26,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   }
 
   if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
+  const data = await res.json();
+  if (data && typeof data === "object" && !Array.isArray(data) && Array.isArray((data as any).data)) {
+    return (data as any).data as T;
+  }
+  return data as T;
 }
 
 // ---------------------------------------------------------------------------

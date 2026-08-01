@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchProducts, type ProductFilters } from "@/lib/api";
-import { filterProductsForSubcategory, filterBulkProducts } from "@/lib/productMappers";
+import { apiTypeFromTier, filterProductsForSubcategory, filterBulkProducts } from "@/lib/productMappers";
+import { findCategory } from "@/data/catalog";
 import { queryKeys } from "./queryKeys";
 
 export function useProducts(filters: ProductFilters = { status: "Active" }) {
@@ -15,7 +16,14 @@ export function useCatalogProducts(
   tier: string | undefined,
   subSlug: string | undefined,
 ) {
-  const query = useProducts({ status: "Active" });
+  const catName = catSlug ? findCategory(catSlug)?.name : undefined;
+  const apiType = apiTypeFromTier(tier);
+  
+  const query = useProducts({ 
+    status: "Active", 
+    category: catName, 
+    type: apiType 
+  });
 
   const products =
     catSlug && subSlug

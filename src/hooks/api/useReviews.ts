@@ -16,13 +16,12 @@ export function useReviews(status?: string) {
 
 export function useProductReviews(productId: string | undefined) {
   return useQuery({
-    queryKey: queryKeys.productReviews(productId ?? ""),
-    queryFn: async (): Promise<StorefrontReview[]> => {
-      const rows = await fetchReviews();
-      return rows
+    queryKey: queryKeys.reviews("Approved"),
+    queryFn: () => fetchReviews("Approved"),
+    select: (rows) =>
+      rows
         .filter((r) => r.productId === productId && r.status === "Approved")
-        .map((r) => apiReviewToStorefront(r));
-    },
+        .map((r) => apiReviewToStorefront(r)),
     enabled: !!productId,
   });
 }

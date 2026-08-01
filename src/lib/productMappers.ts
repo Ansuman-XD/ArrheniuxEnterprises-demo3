@@ -8,7 +8,15 @@ import type {
   ApiB2BProduct,
   ApiNewCollectionProduct,
   ApiProduct,
+  BASE,
 } from "@/lib/api";
+
+function resolveImage(url: string | undefined, fallback = ""): string {
+  if (!url) return fallback;
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) return url;
+  const base = BASE.replace(/\/api\/?$/, ""); // strip /api suffix for uploads
+  return `${base}${url.startsWith("/") ? "" : "/"}${url}`;
+}
 
 const slugify = (s: string) =>
   s
@@ -48,8 +56,8 @@ export function mapApiProductToCatalog(
 ): CatalogProduct {
   const categorySlug = resolveCategorySlug(p.category);
   const subSlug = slugify(p.subCategory || p.name);
-  const image = p.image || fallbackImage || "";
-  const gallery = p.images?.length ? p.images : image ? [image] : [];
+  const image = resolveImage(p.image, fallbackImage);
+  const gallery = p.images?.length ? p.images.map(i => resolveImage(i)) : image ? [image] : [];
 
   return {
     id: p.id,
@@ -79,8 +87,8 @@ washCare: p.washCare,
 
 export function mapB2BProductToCatalog(p: ApiB2BProduct, catSlug = "b2b"): CatalogProduct {
   const subSlug = slugify(p.subCategory || "b2b");
-  const image = p.image || "";
-  const gallery = p.images?.length ? p.images : image ? [image] : [];
+  const image = resolveImage(p.image);
+  const gallery = p.images?.length ? p.images.map(i => resolveImage(i)) : image ? [image] : [];
 
   return {
     id: p.id,
@@ -108,8 +116,8 @@ washCare: p.washCare,
 }
 
 export function mapNewCollectionToCatalog(p: ApiNewCollectionProduct): CatalogProduct {
-  const image = p.image || "";
-  const gallery = p.images?.length ? p.images : image ? [image] : [];
+  const image = resolveImage(p.image);
+  const gallery = p.images?.length ? p.images.map(i => resolveImage(i)) : image ? [image] : [];
 
   return {
     id: p.id,
