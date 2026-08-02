@@ -1,7 +1,4 @@
-/**
- * Simple, smooth brand loader — dual-arc spinner.
- * Used for full-page loads and inline content loads.
- */
+import { createPortal } from "react-dom";
 import { DualArc } from "@/components/ui/dual-arc";
 
 export const BrandLoader = ({
@@ -25,14 +22,12 @@ export const BrandLoader = ({
 
   if (!fullscreen) return content;
 
-  return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-background/85 backdrop-blur-md animate-fade-in">
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-ambient opacity-70" />
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-grain opacity-[0.04]" />
+  return createPortal(
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-background/85 backdrop-blur-md">
       <div className="relative">{content}</div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
 export default BrandLoader;
-

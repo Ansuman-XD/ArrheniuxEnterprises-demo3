@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { CheckCircle2, Package, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLockBodyScroll } from "@/hooks/useLockBodyScroll";
@@ -22,7 +23,7 @@ export const SuccessDialog = ({
     useLockBodyScroll(open);   // ← add this line
 
   if (!open) return null;
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[70] bg-ink/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
       <div className="bg-cream w-full max-w-md border border-border shadow-2xl animate-scale-in relative overflow-hidden">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-accent to-primary animate-shimmer" />
@@ -51,6 +52,8 @@ export const SuccessDialog = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+        document.body
+
   );
 };

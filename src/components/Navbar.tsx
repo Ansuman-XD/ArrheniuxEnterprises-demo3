@@ -15,6 +15,7 @@ import {
   Shield,
   LayoutGrid,
   Package,
+  MapPin
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { MegaMenu } from "./MegaMenu";
@@ -185,15 +186,24 @@ export const Navbar = () => {
               </div>
             )}
             {user && (
-              <Link
-                to="/my-orders"
-                onClick={() => setOpen(false)}
-                className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"
-              >
-                <ClipboardList className="h-3.5 w-3.5" aria-hidden="true" /> My
-                Orders
-              </Link>
-            )}
+  <>
+    <Link
+      to="/my-orders"
+      onClick={() => setOpen(false)}
+      className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"
+    >
+      <ClipboardList className="h-3.5 w-3.5" aria-hidden="true" /> My
+      Orders
+    </Link>
+    <Link
+      to="/my-addresses"
+      onClick={() => setOpen(false)}
+      className="py-2 uppercase text-sm tracking-wide font-medium inline-flex items-center gap-1.5"
+    >
+      <MapPin className="h-3.5 w-3.5" aria-hidden="true" /> My Address
+    </Link>
+  </>
+)}
             {user?.role === "admin" && (
               <Link
                 to="/admin"

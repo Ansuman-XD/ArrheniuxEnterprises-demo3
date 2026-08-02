@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, CreditCard, Package } from "lucide-react";
 import { PrintPicker } from "@/components/PrintPicker";
 import { ArtworkUpload, artworkSummary, type ArtworkFile } from "@/components/ArtworkUpload";
@@ -171,7 +172,7 @@ useLockBodyScroll(open || !!successOrder);
     });
   };
 
-  return (
+  return createPortal(
     <>
       {open && (
         <div className="fixed inset-0 z-[60] bg-ink/70 flex items-center justify-center p-3 overflow-y-auto animate-fade-in">
@@ -307,7 +308,9 @@ useLockBodyScroll(open || !!successOrder);
         title="Sample Order Placed!"
       />
       {savingOrder && <BrandLoader fullscreen label="Confirming your order" />}
-    </>
+    </>,
+        document.body
+
   );
 };
 

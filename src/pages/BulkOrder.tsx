@@ -298,29 +298,15 @@ const BulkOrder = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [productId]);
 
+  // Consume the saved draft exactly once (mirrors ProductDetail.tsx). The
+  // draft is only ever written right before redirecting to /auth (see
+  // handlePay below), so this restores it after that specific round-trip —
+  // then wipes it so simply leaving the page and coming back later does NOT
+  // bring old input back.
   useEffect(() => {
-    saveDraft({
-      catSlug,
-      tier,
-      subSlug,
-      productId,
-      color,
-      unitQty,
-      sizeQty,
-      customer,
-      print: printSel,
-    });
-  }, [
-    catSlug,
-    tier,
-    subSlug,
-    productId,
-    color,
-    unitQty,
-    sizeQty,
-    customer,
-    printSel,
-  ]);
+    localStorage.removeItem(DRAFT_KEY);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const kitIncludesTshirt = kitItems.includes("tshirt");
   const kitSizeTotal = Object.values(sizeQty).reduce((a, b) => a + b, 0);
@@ -507,6 +493,17 @@ const BulkOrder = () => {
     setError("");
     const user = getSession();
     if (!user) {
+      saveDraft({
+        catSlug,
+        tier,
+        subSlug,
+        productId,
+        color,
+        unitQty,
+        sizeQty,
+        customer,
+        print: printSel,
+      });
       navigate(`/auth?next=${encodeURIComponent("/bulk-order")}`);
       return;
     }
