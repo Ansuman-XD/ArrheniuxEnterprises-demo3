@@ -672,27 +672,27 @@ const BulkOrder = () => {
                 {product.description}
               </p>
 
-              <div className="mt-4 grid grid-cols-2 gap-px bg-border">
-                <div className="bg-background p-3">
-                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Material
-                  </div>
-                  <div className="font-medium mt-1 text-sm">
-                    {product.material}
-                  </div>
-                </div>
-                <div className="bg-background p-3">
-                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Unit Price
-                  </div>
-                  <div className="font-display text-xl mt-1">
-                    {product.price}
-                    <span className="text-xs font-sans text-muted-foreground">
-                      /pc
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <div className={`mt-5 grid gap-px bg-border ${isKit ? "grid-cols-1" : "grid-cols-2"}`}>
+  {!isKit && (
+    <div className="bg-background p-3">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+        Material
+      </div>
+      <div className="font-medium mt-1 text-sm">
+        {product.material}
+      </div>
+    </div>
+  )}
+  {!isKit && (<div className="bg-background p-3 accent-glow">
+    <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+      Price
+    </div>
+    <div className="font-display text-xl mt-1">
+      {product.price}
+      <span className="text-xs font-sans text-muted-foreground">/pc</span>
+    </div>
+  </div>)}
+</div>
 
               {rule?.namedColors && (
                 <div className="mt-5">
@@ -773,16 +773,18 @@ const BulkOrder = () => {
 
               {isKit ? (
                 <div className="mt-6 space-y-5">
-                  <div>
-                    <h4 className="text-xs uppercase tracking-widest font-bold mb-2">
-                      Customize Combined Product
-                    </h4>
-                    <p className="text-[11px] text-muted-foreground mb-3">
-                      T-Shirt is mandatory. Select at least{" "}
-                      {WELCOME_KIT_MIN_ITEMS} products in total (T-Shirt + 2
-                      more). Kit price is the sum of chosen items.
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+  <div className="border-2 border-primary/60 bg-gradient-to-br from-primary/5 via-background to-accent/5 p-5 rounded-lg shadow-[0_8px_30px_-15px_hsl(var(--primary)/0.4)]">
+    <div className="flex items-center gap-2 mb-1">
+      <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+      <h4 className="text-sm uppercase tracking-widest font-bold text-primary">
+        Customize Combined Product
+      </h4>
+    </div>
+    <p className="text-xs text-muted-foreground mb-4">
+      Build your own welcome kit. Select at least{" "}
+      {WELCOME_KIT_MIN_ITEMS} products.
+    </p>
+    <div className="grid grid-cols-2 gap-3">
                       {WELCOME_KIT_ITEMS.map((it) => {
                         const checked = kitItems.includes(it.id);
                         const isTshirt = it.id === "tshirt";
