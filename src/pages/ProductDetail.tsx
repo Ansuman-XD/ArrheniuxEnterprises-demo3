@@ -425,18 +425,18 @@ const ProductDetailView = ({
     const defaultAddr = getDefaultAddress(user.id);
     if (!defaultAddr) {
       savePdpDraft({
-      productId: product.id,
-    sizeQty,
-    unitQty,
-    printSel,
-    kitItems,
-    kitQtyManual,
-    namedColor,
-    printColor,
-    artwork,
-  });
+        productId: product.id,
+        sizeQty,
+        unitQty,
+        printSel,
+        kitItems,
+        kitQtyManual,
+        namedColor,
+        printColor,
+        artwork,
+      });
 
-  setIsPaying(false);
+      setIsPaying(false);
       toast({
         title: "Add a delivery address",
         description: "Please save an address before placing your order.",
@@ -680,26 +680,32 @@ const ProductDetailView = ({
 
             <p className="mt-4 text-muted-foreground">{product.description}</p>
 
-            <div className="mt-5 grid grid-cols-2 gap-px bg-border">
-              <div className="bg-background p-3">
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                  Material
+            <div
+              className={`mt-5 grid gap-px bg-border ${isKit ? "grid-cols-1" : "grid-cols-2"}`}
+            >
+              {!isKit && (
+                <div className="bg-background p-3">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Material
+                  </div>
+                  <div className="font-medium mt-1 text-sm">
+                    {product.material}
+                  </div>
                 </div>
-                <div className="font-medium mt-1 text-sm">
-                  {product.material}
+              )}
+              {!isKit && (
+                <div className="bg-background p-3 accent-glow">
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Price
+                  </div>
+                  <div className="font-display text-xl mt-1">
+                    {product.price}
+                    <span className="text-xs font-sans text-muted-foreground">
+                      /pc
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="bg-background p-3 accent-glow">
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                  Price
-                </div>
-                <div className="font-display text-xl mt-1">
-                  {product.price}
-                  <span className="text-xs font-sans text-muted-foreground">
-                    /pc
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Discount notice / Free tote banner for Welcome Kits */}
@@ -823,22 +829,25 @@ const ProductDetailView = ({
             {/* Quantity / Kit builder */}
             {isKit ? (
               <div className="mt-6 space-y-5">
-                <div>
-                  <h4 className="text-xs uppercase tracking-widest font-bold mb-2">
-                    Customize Combined Product
-                  </h4>
-                  <p className="text-[11px] text-muted-foreground mb-3">
+                <div className="border-2 border-primary/60 bg-gradient-to-br from-primary/5 via-background to-accent/5 p-5 rounded-lg shadow-[0_8px_30px_-15px_hsl(var(--primary)/0.4)]">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                    <h4 className="text-sm uppercase tracking-widest font-bold text-primary">
+                      Customize Combined Product
+                    </h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-4">
                     Build your own welcome kit. Select at least{" "}
                     {WELCOME_KIT_MIN_ITEMS} products.
                   </p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-3">
                     {WELCOME_KIT_ITEMS.map((it) => {
                       const checked = kitItems.includes(it.id);
                       const isTshirt = it.id === "tshirt";
                       return (
                         <label
                           key={it.id}
-                          className={`flex items-center justify-between gap-2 border px-3 py-2 text-sm transition ${checked ? "border-ink bg-secondary" : "border-border"} ${isTshirt ? "opacity-100" : "cursor-pointer"}`}
+                          className={`flex items-center justify-between gap-2 border-2 px-4 py-3 text-sm rounded-md transition-all duration-200 ${checked ? "border-primary bg-primary/10 shadow-sm scale-[1.02]" : "border-border hover:border-primary/40 hover:bg-secondary/50"} ${isTshirt ? "opacity-100" : "cursor-pointer"}`}
                         >
                           <span className="flex items-center gap-2">
                             <input
@@ -873,6 +882,17 @@ const ProductDetailView = ({
                       Please select at least {WELCOME_KIT_MIN_ITEMS} products.
                     </p>
                   )}
+                  <div className="mt-3 flex items-center justify-between border border-border px-3 py-2 bg-secondary/50">
+                    <span className="text-[11px] uppercase tracking-widest text-muted-foreground">
+                      Kit Unit Price (sum of items)
+                    </span>
+                    <div>
+                      <span className="font-display text-lg">₹{kitUnit}</span>
+                      <span className="text-xs font-sans text-muted-foreground">
+                        /pc
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 {kitIncludesTshirt ? (
@@ -1141,7 +1161,7 @@ const ProductDetailView = ({
               <button
                 onClick={handlePay}
                 disabled={!canOrder || isPaying}
-                className={`btn-bold btn-magnetic mt-6 w-full justify-center text-sm !py-3.5 ${(!canOrder || isPaying) ? "opacity-40 cursor-not-allowed" : ""}`}
+                className={`btn-bold btn-magnetic mt-6 w-full justify-center text-sm !py-3.5 ${!canOrder || isPaying ? "opacity-40 cursor-not-allowed" : ""}`}
               >
                 {isPaying ? (
                   <>
@@ -1206,26 +1226,30 @@ const ProductDetailView = ({
               ))}
             </ul>
           </InfoBlock>
-          <InfoBlock title="Design Guidelines">
-            <ul className="space-y-1 list-disc pl-4">
-              {(product.designGuidelines?.length
-                ? product.designGuidelines
-                : ["Submit artwork in vector or 300 DPI PNG."]
-              ).map((s, i) => (
-                <li key={i}>{s}</li>
-              ))}
-            </ul>
-          </InfoBlock>
-          <InfoBlock title="Wash Care Instructions">
-            <ul className="space-y-1 list-disc pl-4">
-              {(product.washCare?.length
-                ? product.washCare
-                : ["Machine wash cold. Do not bleach."]
-              ).map((s, i) => (
-                <li key={i}>{s}</li>
-              ))}
-            </ul>
-          </InfoBlock>
+          {!isKit && (
+            <>
+              <InfoBlock title="Design Guidelines">
+                <ul className="space-y-1 list-disc pl-4">
+                  {(product.designGuidelines?.length
+                    ? product.designGuidelines
+                    : ["Submit artwork in vector or 300 DPI PNG."]
+                  ).map((s, i) => (
+                    <li key={i}>{s}</li>
+                  ))}
+                </ul>
+              </InfoBlock>
+              <InfoBlock title="Wash Care Instructions">
+                <ul className="space-y-1 list-disc pl-4">
+                  {(product.washCare?.length
+                    ? product.washCare
+                    : ["Machine wash cold. Do not bleach."]
+                  ).map((s, i) => (
+                    <li key={i}>{s}</li>
+                  ))}
+                </ul>
+              </InfoBlock>
+            </>
+          )}
         </div>
       </section>
 
