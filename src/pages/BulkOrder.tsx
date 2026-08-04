@@ -186,6 +186,7 @@ const BulkOrder = () => {
   const [artwork, setArtwork] = useState<ArtworkFile[]>([]);
   const [namedColor, setNamedColor] = useState<string>("");
   const [printColor, setPrintColor] = useState<string>("");
+  const [activeImg, setActiveImg] = useState(0);
   const [successOrder, setSuccessOrder] = useState<{
     id: string;
     amount: number;
@@ -217,7 +218,9 @@ const BulkOrder = () => {
     setSizeQty(hasUrlSizes ? urlSizes : emptySizes(urlProduct.categorySlug));
     if (urlPrint.method) setPrintSel(urlPrint);
   }, [urlProduct, params]);
-
+useEffect(() => {
+  setActiveImg(0);
+}, [productId]);
   const cat = findCategory(catSlug)!;
   const showsTierStep = cat.hasTiers;
   const subs = cat.hasTiers
@@ -468,8 +471,16 @@ const BulkOrder = () => {
             : "",
       subCategory: subcat?.name ?? "",
       material: product.material,
+      description: isKit
+  ? `Kit Items: ${kitItems
+      .map((id) => {
+        const it = WELCOME_KIT_ITEMS.find((d) => d.id === id);
+        return it ? `${it.label} (₹${it.price})` : id;
+      })
+      .join(", ")}`
+  : product.description,
       printType: printText,
-      sizes: isGarment ? sizeQty : undefined,
+      sizes: (isGarment || (isKit && kitIncludesTshirt)) ? sizeQty : undefined,
       qty: total,
       unitPrice,
       printingPrice: printCharge,
@@ -1077,20 +1088,29 @@ const BulkOrder = () => {
         </div>
 
         <div className="space-y-8">
-          {product ? (
-            <div className="tilt-card">
-            <div className="tilt-card-inner bg-secondary overflow-hidden">
-              <div className="aspect-square">
-                <img src={product.gallery[0] || product.image} alt={product.name} className="w-full h-full object-cover" />
-              </div>
-              <div className="grid grid-cols-4 gap-1 p-1">
-                {product.gallery.slice(0, 4).map((src, i) => (
-                  <img key={i} src={src} alt="" className="aspect-square w-full h-full object-cover" />
-                ))}
-              </div>
-            </div>
-            </div>
-          ) : (
+         {product ? (
+  <div className="tilt-card">
+  <div className="tilt-card-inner bg-secondary overflow-hidden">
+    <div className="aspect-square">
+      <img src={product.gallery[activeImg] || product.image} alt={product.name} className="w-full h-full object-cover" />
+    </div>
+    <div className="grid grid-cols-4 gap-1 p-1">
+      {product.gallery.slice(0, 4).map((src, i) => (
+        <button
+          key={i}
+          type="button"
+          onClick={() => setActiveImg(i)}
+          className={`aspect-square overflow-hidden border-2 transition ${
+            activeImg === i ? "border-ink" : "border-transparent hover:border-border"
+          }`}
+        >
+          <img src={src} alt="" className="w-full h-full object-cover" />
+        </button>
+      ))}
+    </div>
+  </div>
+  </div>
+) : (
             <div className="bg-secondary aspect-square flex items-center justify-center text-muted-foreground text-sm uppercase tracking-widest">
               Choose a product to preview
             </div>

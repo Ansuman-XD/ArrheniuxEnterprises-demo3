@@ -505,13 +505,12 @@ const ACCESSORY_RULES: Record<string, AccessoryRule> = {
     ]}]},
   },
   "pen": {
-    moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true, courierPerPc: 0,
-    print: { kind: "custom", methods: [
-      { id: "dtf", label: "DTF Print", options: [{ id: "pen-dtf-logo", label: "Company Logo", pricePerPc: 20 }] },
-      { id: "laser", label: "Laser Print", options: [{ id: "pen-laser-logo", label: "Company Logo", pricePerPc: 20 }] },
-      { id: "sublimation", label: "Sublimation Print", options: [{ id: "pen-sub-logo", label: "Company Logo", pricePerPc: 20 }] },
-    ]},
-  },
+  moq: 50, max: 80, gstPct: 18, discountEnabled: false, oem: true, courierPerPc: 0,
+  print: { kind: "custom", methods: [
+    { id: "laser", label: "Laser Print", options: [{ id: "pen-laser-logo", label: "Company Logo", pricePerPc: 20 }] },
+    { id: "sublimation", label: "Sublimation Print", options: [{ id: "pen-sub-logo", label: "Company Logo", pricePerPc: 20 }] },
+  ]},
+},
   "badge": {
     moq: 50, max: 80, gstPct: 18, discountEnabled: false, courierPerPc: 0,
     print: { kind: "custom", methods: [{ id: "digital", label: "Digital Print", options: [
@@ -532,21 +531,19 @@ const ACCESSORY_RULES: Record<string, AccessoryRule> = {
     print: { kind: "custom", methods: [{ id: "dtf", label: "DTF Print", options: [
       { id: "cap-logo", label: "Company Logo", pricePerPc: 20 },
     ]}]},
-    namedColors: ["Black", "White"],
   },
   "umbrella": {
     moq: 50, max: 80, gstPct: 5, discountEnabled: false, courierPerPc: 0,
     print: { kind: "custom", methods: [{ id: "dtf", label: "DTF Print", options: [
       { id: "umb-logo", label: "Company Logo", pricePerPc: 10 },
     ]}]},
-    namedColors: ["Red & White", "Blue & White", "Black"],
   },
   "event-lanyard": {
     moq: 50, max: 80, gstPct: 5, discountEnabled: false, courierPerPc: 0,
     print: { kind: "custom", methods: [{ id: "sublimation", label: "Sublimation Print", options: [
       { id: "lan-logo", label: "Company Logo", pricePerPc: 20 },
     ]}]},
-    namedColors: ["Black", "White", "Red", "Royal Blue", "Multicolor"],
+    // namedColors: ["Black", "White", "Red", "Royal Blue", "Multicolor"],
     printColors: ["White", "Black"],
   },
 };
