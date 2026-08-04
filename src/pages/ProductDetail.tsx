@@ -478,9 +478,16 @@ const ProductDetailView = ({
                   : "",
             subCategory: subcat?.name ?? "",
             material: product.material,
+            description: isKit
+  ? `Kit Items: ${kitItems
+      .map((id) => {
+        const it = WELCOME_KIT_ITEMS.find((d) => d.id === id);
+        return it ? `${it.label} (₹${it.price})` : id;
+      })
+      .join(", ")}`
+  : product.description,
             printType: printTypeText,
-            sizes: isGarment ? sizeQty : undefined,
-            qty: total,
+sizes: (isGarment || (isKit && kitIncludesTshirt)) ? sizeQty : undefined,            qty: total,
             unitPrice,
             printingPrice: printCharge,
             gstPct: gstPctLabel,

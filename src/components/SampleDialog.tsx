@@ -237,6 +237,14 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
             category: cat?.name ?? "",
             subCategory: subcat?.name ?? "",
             material: product.material,
+            description: isKit
+  ? `Kit Items: ${kitItems
+      .map((id) => {
+        const it = WELCOME_KIT_ITEMS.find((d) => d.id === id);
+        return it ? `${it.label} (₹${it.price})` : id;
+      })
+      .join(", ")}`
+  : product.description,
             printType: printText,
             sizes: (isGarment || isKit) ? ({ [size]: qty } as Record<string, number>) : undefined,
             qty,
