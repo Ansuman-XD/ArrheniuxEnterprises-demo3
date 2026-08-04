@@ -9,7 +9,7 @@ import {
   type ArtworkFile,
 } from "@/components/ArtworkUpload";
 import { Loader2 } from "lucide-react";
-
+import { getKitItemDefs, kitUnitPrice } from "@/data/welcomeKit";
 import {
   catalog,
   findCategory,
@@ -238,6 +238,7 @@ const BulkOrder = () => {
     [apiProducts, catSlug, tier, subSlug],
   );
   const product = products.find((p) => p.id === productId);
+  const kitDefs = useMemo(() => (product ? getKitItemDefs(product) : []), [product]);
   const isKit = isWelcomeKitCategory(catSlug);
   const isGarment = product
     ? !isNonGarmentCategory(product.categorySlug)
@@ -312,7 +313,7 @@ const BulkOrder = () => {
   const kitSizeTotal = Object.values(sizeQty).reduce((a, b) => a + b, 0);
   const kitQty = isKit ? (kitIncludesTshirt ? kitSizeTotal : kitQtyManual) : 0;
   const kitEnoughItems = kitItems.length >= WELCOME_KIT_MIN_ITEMS;
-  const kitUnit = isKit ? welcomeKitUnitPrice(kitItems) : 0;
+  const kitUnit = isKit ? kitUnitPrice(kitItems, kitDefs) : 0;
 
   const total = isKit ? kitQty : isGarment ? kitSizeTotal : unitQty;
   const unitPrice = isKit ? kitUnit : product ? priceValue(product) : 0;
@@ -785,7 +786,7 @@ const BulkOrder = () => {
       {WELCOME_KIT_MIN_ITEMS} products.
     </p>
     <div className="grid grid-cols-2 gap-3">
-                      {WELCOME_KIT_ITEMS.map((it) => {
+                      {kitDefs.map((it)  => {
                         const checked = kitItems.includes(it.id);
                         const isTshirt = it.id === "tshirt";
                         return (

@@ -36,6 +36,7 @@ export type CatalogProduct = {
   specifications?: string[];
   designGuidelines?: string[];
   washCare?: string[];
+   kitItems?: { name: string; price: number }[]; // ADD THIS
 };
 
 export type Subcategory = {

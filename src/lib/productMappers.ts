@@ -82,6 +82,7 @@ export function mapApiProductToCatalog(
 specifications: p.specifications,
 designGuidelines: p.designGuidelines,
 washCare: p.washCare,
+kitItems: p.kitItems ?? [],
   };
 }
 

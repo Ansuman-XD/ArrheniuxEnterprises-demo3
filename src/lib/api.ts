@@ -61,6 +61,7 @@ export type ApiProduct = {
   visibility: "Category" | "Bulk" | "Both";
   colors: Array<string | { name: string; hex: string }>;
   createdAt: string;
+  kitItems?: Array<{ name: string; price: number }>; // ADD THIS
 };
 
 export type ApiB2BProduct = {

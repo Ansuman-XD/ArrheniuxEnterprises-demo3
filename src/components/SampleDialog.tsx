@@ -43,6 +43,7 @@ import { waLink } from "@/data/site";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useCreateOrder } from "@/hooks/api";
+import { getKitItemDefs, kitUnitPrice } from "@/data/welcomeKit";
 
 const SAMPLE_QTY = 1;
 
@@ -60,9 +61,10 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
   const isArr = isArrheniuxCategory(product.categorySlug);
   const isNonGarment = isNonGarmentCategory(product.categorySlug);
   const isKit = isWelcomeKitCategory(product.categorySlug);
+  const kitDefs = useMemo(() => getKitItemDefs(product), [product]);
   const [kitItems, setKitItems] = useState<string[]>(["tshirt"]);
   const kitEnoughItems = kitItems.length >= WELCOME_KIT_MIN_ITEMS;
-  const kitUnit = isKit ? welcomeKitUnitPrice(kitItems) : 0;
+  const kitUnit = isKit ? kitUnitPrice(kitItems, kitDefs) : 0;
   const canPrint =
     supportsPrint(product.categorySlug) && rule?.print.kind !== "none";
   const cat = findCategory(product.categorySlug);
@@ -436,7 +438,7 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
                     sample kit.
                   </p>
                   <div className="grid grid-cols-2 gap-3">
-                    {WELCOME_KIT_ITEMS.map((it) => {
+                    {kitDefs.map((it)  => {
                       const checked = kitItems.includes(it.id);
                       const isTshirt = it.id === "tshirt";
                       return (

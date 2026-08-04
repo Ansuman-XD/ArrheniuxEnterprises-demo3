@@ -25,6 +25,7 @@ import { getDefaultAddress, formatAddress } from "@/lib/authStore";
 import { Loader2 } from "lucide-react";
 import { BrandLoader } from "@/components/BrandLoader";
 import { useReveal } from "@/hooks/useReveal";
+import { getKitItemDefs, kitUnitPrice } from "@/data/welcomeKit";
 import {
   ARR_SIZE_MAX,
   findCategory,
@@ -199,6 +200,7 @@ const ProductDetailView = ({
     : undefined;
   const isGarment = !isNonGarmentCategory(product.categorySlug);
   const isKit = isWelcomeKitCategory(product.categorySlug);
+  const kitDefs = useMemo(() => getKitItemDefs(product), [product]); // ADD THIS  
   const ruleForPrint = getAccessoryRules(product.subSlug);
   const canPrint =
     supportsPrint(product.categorySlug) ||
@@ -252,7 +254,7 @@ const ProductDetailView = ({
     return isGarment ? kitSizeTotal : unitQty;
   }, [isKit, kitQty, isGarment, kitSizeTotal, unitQty]);
 
-  const kitUnit = isKit ? welcomeKitUnitPrice(kitItems) : 0;
+  const kitUnit = isKit ? kitUnitPrice(kitItems, kitDefs) : 0;
   const unitPrice = isKit ? kitUnit : priceValue(product);
   const printPerPc = canPrint
     ? printPricePerPc(printSel, restrictedMethods)
@@ -841,7 +843,7 @@ const ProductDetailView = ({
                     {WELCOME_KIT_MIN_ITEMS} products.
                   </p>
                   <div className="grid grid-cols-2 gap-3">
-                    {WELCOME_KIT_ITEMS.map((it) => {
+                    {kitDefs.map((it)  => {
                       const checked = kitItems.includes(it.id);
                       const isTshirt = it.id === "tshirt";
                       return (
