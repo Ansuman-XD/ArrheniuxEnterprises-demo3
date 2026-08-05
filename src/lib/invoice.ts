@@ -379,10 +379,13 @@ export const downloadInvoice = async (order: InvoiceOrder) => {
 
   const detailLines: string[] = [];
   if (order.productCode) detailLines.push(`Code: ${order.productCode}`);
+  if (order.description && order.description.toLowerCase().includes("kit items"))
+  detailLines.push(order.description.replace(/₹/g, "Rs "));
   if (order.category) detailLines.push(`Category: ${order.category}${order.subCategory ? ` — ${order.subCategory}` : ""}`);
   if (order.material) detailLines.push(`Material: ${order.material}`);
   if (order.printType && order.printType !== "N/A") detailLines.push(`Print: ${order.printType}`);
   if (sizesLine) detailLines.push(`Sizes: ${sizesLine}`);
+  
 
   const wrappedDetails = detailLines.flatMap((l) => doc.splitTextToSize(l, 100));
   const rowH = Math.max(16, 8 + wrappedDetails.length * 4.2);

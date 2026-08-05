@@ -122,6 +122,7 @@ export type StorefrontOrder = {
   category?: string;             // ← NEW
   subCategory?: string;          // ← NEW
   material?: string;    
+    description?: string;  
 };
 
 export function apiOrderToStorefront(o: ApiOrder, userId: string): StorefrontOrder {
@@ -178,6 +179,7 @@ export function apiOrderToStorefront(o: ApiOrder, userId: string): StorefrontOrd
     category: o.category,         // ← NEW
     subCategory: o.subCategory,   // ← NEW
     material: o.material,  
+    description: o.description,
   };
 }
 

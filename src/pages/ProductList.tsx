@@ -61,27 +61,27 @@ const ProductList = () => {
           <p className="text-muted-foreground">No products yet in this subcategory.</p>
         ) : (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {shown.map((p, i) => (
-                <div
-                  key={p.id}
-                  className="reveal reveal-up"
-                  style={{ transitionDelay: `${staggerDelay(i % 12)}ms` }}
-                  ref={(el) => {
-                    if (!el) return;
-                    const obs = new IntersectionObserver(([entry]) => {
-                      if (entry.isIntersecting) {
-                        el.classList.add("is-visible");
-                        obs.unobserve(el);
-                      }
-                    }, { threshold: 0.1 });
-                    obs.observe(el);
-                  }}
-                >
-                  <ProductCard p={p as any} />
-                </div>
-              ))}
-            </div>
+           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+  {shown.map((p, i) => (
+    <div
+      key={p.id}
+      className="reveal reveal-up"
+      style={{ transitionDelay: `${staggerDelay(i % 12)}ms` }}
+      ref={(el) => {
+        if (!el) return;
+        const obs = new IntersectionObserver(([entry]) => {
+          if (entry.isIntersecting) {
+            el.classList.add("is-visible");
+            obs.unobserve(el);
+          }
+        }, { threshold: 0.1 });
+        obs.observe(el);
+      }}
+    >
+      <ProductCard p={p as any} hidePrice={cat.slug === "corporate-welcome-kit"} />
+    </div>
+  ))}
+</div>
             {hasMore && (
               <div className="mt-10 flex justify-center">
                 <button

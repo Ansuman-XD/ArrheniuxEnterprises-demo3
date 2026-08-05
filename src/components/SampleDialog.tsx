@@ -66,7 +66,9 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
   const kitEnoughItems = kitItems.length >= WELCOME_KIT_MIN_ITEMS;
   const kitUnit = isKit ? kitUnitPrice(kitItems, kitDefs) : 0;
   const canPrint =
-    supportsPrint(product.categorySlug) && rule?.print.kind !== "none";
+  supportsPrint(product.categorySlug) ||
+  rule?.print.kind === "custom" ||
+  rule?.print.kind === "free";
   const cat = findCategory(product.categorySlug);
   const subcat = cat
     ? findSubcategory(cat, product.tier, product.subSlug)
@@ -240,7 +242,7 @@ export const SampleDialog = ({ product, open, onClose, isGarment }: Props) => {
             description: isKit
   ? `Kit Items: ${kitItems
       .map((id) => {
-        const it = WELCOME_KIT_ITEMS.find((d) => d.id === id);
+        const it = kitDefs.find((d) => d.id === id);
         return it ? `${it.label} (₹${it.price})` : id;
       })
       .join(", ")}`
