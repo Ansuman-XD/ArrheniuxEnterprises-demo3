@@ -72,6 +72,7 @@ import {
   useProducts,
 } from "@/hooks/api";
 const PDP_DRAFT_KEY = (id: string) => `arr_pdp_draft_${id}`;
+const BULK_REDIRECT_DRAFT_KEY = "arr_bulk_redirect_draft"; //
 type ProductDraft = {
   productId: string;
   sizeQty: Record<string, number>;
@@ -335,7 +336,7 @@ const ProductDetailView = ({
     if (isKit) {
       const kitList = kitItems
         .map((id) => {
-          const it = WELCOME_KIT_ITEMS.find((k) => k.id === id);
+          const it = kitDefs.find((k) => k.id === id);
           return it ? `${it.label} (₹${it.price})` : null;
         })
         .filter(Boolean)
@@ -380,26 +381,47 @@ const ProductDetailView = ({
 
   // Build ?...=... payload for Bulk Order with full state preserved
   const bulkRedirectHref = () => {
-    const p = new URLSearchParams();
-    p.set("product", product.id);
-    p.set("qty", String(total));
-    if (selectedColor) p.set("color", selectedColor);
-    if (isGarment) {
-      const sz = SIZES.filter((s) => sizeQty[s] > 0)
-        .map((s) => `${s}:${sizeQty[s]}`)
-        .join(",");
-      if (sz) p.set("sizes", sz);
-    }
-    const pr = encodePrint(printSel);
-    if (pr) p.set("print", pr);
-    return `/bulk-order?${p.toString()}`;
-  };
+  const p = new URLSearchParams();
+  p.set("product", product.id);
+  p.set("cat", product.categorySlug);
+  if (product.tier) p.set("tier", product.tier);
+  p.set("sub", product.subSlug);
+  p.set("qty", String(total));
+  if (selectedColor) p.set("color", selectedColor);
+  if (isGarment) {
+    const sz = SIZES.filter((s) => sizeQty[s] > 0)
+      .map((s) => `${s}:${sizeQty[s]}`)
+      .join(",");
+    if (sz) p.set("sizes", sz);
+  }
+  const pr = encodePrint(printSel);
+  if (pr) p.set("print", pr);
+  return `/bulk-order?${p.toString()}`;
+};
 
   const handlePay = useCallback(() => {
-    if (isBulk) {
-      navigate(bulkRedirectHref());
-      return;
+   if (isBulk) {
+    try {
+      localStorage.setItem(
+        BULK_REDIRECT_DRAFT_KEY,
+        JSON.stringify({
+          productId: product.id,
+          sizeQty,
+          unitQty,
+          printSel,
+          artwork,
+          kitItems,
+          kitQtyManual,
+          namedColor,
+          printColor,
+        }),
+      );
+    } catch {
+      // storage full/unavailable — URL params still cover the basics
     }
+    navigate(bulkRedirectHref());
+    return;
+  }
     if (!canOrder || isPaying) return;
     setIsPaying(true); // ← add
     const user = getSession();
@@ -481,7 +503,7 @@ const ProductDetailView = ({
             description: isKit
   ? `Kit Items: ${kitItems
       .map((id) => {
-        const it = WELCOME_KIT_ITEMS.find((d) => d.id === id);
+        const it = kitDefs.find((d) => d.id === id);
         return it ? `${it.label} (₹${it.price})` : id;
       })
       .join(", ")}`

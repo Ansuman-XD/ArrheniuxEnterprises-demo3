@@ -56,6 +56,7 @@ import { BrandLoader } from "@/components/BrandLoader";
 const SIZE_STEP = 2;
 
 const PDP_DRAFT_KEY = "arr_pdp_draft";
+const BULK_REDIRECT_DRAFT_KEY = "arr_bulk_redirect_draft"; // ← add this, must match ProductDetail.tsx
 
 const loadPdpDraft = (productId: string) => {
   try {
@@ -131,7 +132,7 @@ const BulkOrder = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const createOrderMut = useCreateOrder();
-  const { data: apiProducts = [] } = useProducts({ status: "Active" });
+const { data: apiProducts = [], isLoading: productsLoading } = useProducts({ status: "Active" });
   const urlPid = params.get("product");
   const { data: urlProduct } = useProduct(urlPid ?? undefined);
 
@@ -217,7 +218,30 @@ const BulkOrder = () => {
     setUnitQty(seedQty);
     setSizeQty(hasUrlSizes ? urlSizes : emptySizes(urlProduct.categorySlug));
     if (urlPrint.method) setPrintSel(urlPrint);
-  }, [urlProduct, params]);
+   // Restore the full draft saved on the product page (sizes, uploaded
+  // artwork, print selection, welcome-kit items) — URL params alone can't
+  // carry file uploads, so this fills in what the URL-based seeding above
+  // couldn't.
+  try {
+    const raw = localStorage.getItem(BULK_REDIRECT_DRAFT_KEY);
+    if (raw) {
+      const draft = JSON.parse(raw);
+      if (draft.productId === urlProduct.id) {
+        if (draft.sizeQty) setSizeQty(draft.sizeQty);
+        if (typeof draft.unitQty === "number") setUnitQty(Math.max(BULK_THRESHOLD, draft.unitQty));
+        if (draft.printSel) setPrintSel(draft.printSel);
+        if (draft.artwork) setArtwork(draft.artwork);
+        if (draft.kitItems) setKitItems(draft.kitItems);
+        if (typeof draft.kitQtyManual === "number") setKitQtyManual(draft.kitQtyManual);
+        if (draft.namedColor) setNamedColor(draft.namedColor);
+        if (draft.printColor) setPrintColor(draft.printColor);
+      }
+      localStorage.removeItem(BULK_REDIRECT_DRAFT_KEY);
+    }
+  } catch {
+    // corrupted/unavailable draft — the URL-seeded values above still apply
+  }
+}, [urlProduct, params]);
 useEffect(() => {
   setActiveImg(0);
 }, [productId]);
@@ -293,9 +317,10 @@ useEffect(() => {
   }, [catSlug, tier]);
 
   useEffect(() => {
-    setProductId((prev) => (products.find((p) => p.id === prev) ? prev : ""));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subSlug]);
+  if (productsLoading) return; // don't clear productId while product list is still loading
+  setProductId((prev) => (products.find((p) => p.id === prev) ? prev : ""));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [subSlug, productsLoading]);
 
   useEffect(() => {
     if (product && !color) setColor(product.colors[0] || "");
@@ -389,7 +414,7 @@ useEffect(() => {
     if (isKit) {
       const list = kitItems
         .map((id) => {
-          const it = WELCOME_KIT_ITEMS.find((k) => k.id === id);
+          const it = kitDefs.find((k) => k.id === id);
           return it ? `${it.label} (₹${it.price})` : id;
         })
         .join(", ");
@@ -474,7 +499,7 @@ useEffect(() => {
       description: isKit
   ? `Kit Items: ${kitItems
       .map((id) => {
-        const it = WELCOME_KIT_ITEMS.find((d) => d.id === id);
+        const it = kitDefs.find((d) => d.id === id);
         return it ? `${it.label} (₹${it.price})` : id;
       })
       .join(", ")}`

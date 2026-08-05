@@ -423,7 +423,7 @@ export const priceValue = (p: Pick<CatalogProduct, "price">) =>
 
 // Per-piece courier
 export const COURIER_PER_PC = 30;
-export const GST_RATE = 0.05; // default 5%
+export const GST_RATE = 0.05; // default 5% 
 export const BULK_DISCOUNT_PCT = 40;
 export const BULK_THRESHOLD = 80;
 export const B2B_MOQ = 14;
