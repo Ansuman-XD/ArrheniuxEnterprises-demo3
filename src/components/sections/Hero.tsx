@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, MessageCircle, Truck, Factory, Package } from "lucide-react";
-import heroModel from "@/assets/hero-model.jpg";
+import heroModel from "@/assets/hero-model.avif";
 import { waLink } from "@/data/site";
 
 export const Hero = () => (

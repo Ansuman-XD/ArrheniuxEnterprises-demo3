@@ -1,16 +1,19 @@
-import tshirts from "@/assets/cat-tshirts.jpg";
-import hoodies from "@/assets/cat-hoodies.jpg";
-import polos from "@/assets/cat-polos.jpg";
+import tshirts from "@/assets/over-shirt-arr .avif";
+import hoodies from "@/assets/hoodiearr.avif";
+import roundneck from "@/assets/round-nake-2.avif"
+import jersy from "@/assets/jersy.avif"
+import polos from "@/assets/polo.avif";
+import Aprons from "@/assets/approns (1).avif";
 import sweatshirts from "@/assets/cat-sweatshirts.jpg";
 import jeans from "@/assets/cat-jeans.jpg";
 import joggers from "@/assets/cat-joggers.jpg";
 import caps from "@/assets/cat-caps.jpg";
 import shorts from "@/assets/cat-shorts.jpg";
 import jackets from "@/assets/cat-jackets.jpg";
-import totes from "@/assets/cat-totes.jpg";
-import uniforms from "@/assets/cat-uniforms.jpg";
-import corporate from "@/assets/cat-corporate.jpg";
-
+import totes from "@/assets/custom-accessories (1).avif";
+import uniforms from "@/assets/uniform.avif";
+import corporate from "@/assets/corporate.avif";
+import corporatewelcoome from "@/assets/corpo-welcome-kit (1).avif";
 export type Tier = "regular" | "premium";
 
 export type CatalogProduct = {
@@ -158,7 +161,7 @@ export const catalog: CatalogCategory[] = [
   {
     slug: "jersey",
     name: "Jersey",
-    image: sweatshirts,
+    image: jersy,
     hasTiers: true,
     blurb: "Sublimation-ready jerseys for sports, events and teams.",
     regular: makeSubs("jersey", sweatshirts, "regular", [
@@ -239,7 +242,7 @@ export const catalog: CatalogCategory[] = [
   {
     slug: "custom-round-neck-t-shirts",
     name: "Custom Round Neck T-Shirts",
-    image: tshirts,
+    image: roundneck,
     hasTiers: true,
     blurb: "Classic crew tees across every common fabric build.",
     regular: makeSubs("custom-round-neck-t-shirts", tshirts, "regular", [
@@ -259,7 +262,7 @@ export const catalog: CatalogCategory[] = [
   {
     slug: "aprons",
     name: "Aprons",
-    image: uniforms,
+    image: Aprons,
     hasTiers: true,
     blurb: "Functional aprons for hospitals, kitchens and universities.",
     regular: makeSubs("aprons", uniforms, "regular", [
@@ -308,7 +311,7 @@ export const catalog: CatalogCategory[] = [
   {
     slug: "corporate-welcome-kit",
     name: "Corporate Welcome Kit",
-    image: corporate,
+    image: corporatewelcoome,
     hasTiers: false,
     blurb: "Ready-to-ship welcome kits for new hires, events, colleges and teams.",
     items: [
