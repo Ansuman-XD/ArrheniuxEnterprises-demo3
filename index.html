@@ -3,7 +3,6 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
     <title>Arrheniux — Custom Apparel Manufacturer | Bhubaneswar</title>
     <meta name="description" content="Factory-direct custom t-shirts, hoodies, uniforms & merch. pan-India delivery." />
     <meta name="author" content="Arrheniux" />
@@ -11,11 +10,6 @@
     <meta property="og:title" content="Arrheniux — Custom Apparel Manufacturer" />
     <meta property="og:description" content="Factory-direct custom apparel. Min 20 pieces. Pan-India delivery." />
     <meta property="og:type" content="website" />
-    <!-- <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" /> -->
-
-    <!-- <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" /> -->
 
     <!-- Non-blocking font loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -25,8 +19,18 @@
       href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap"
     />
 
-    <!-- Hero image preload (dev path; Vite fingerprints in prod) -->
-    <link rel="preload" as="image" href="/src/assets/hero-model.jpg" fetchpriority="high" />
+    <!--
+      LCP preload: stable public URL (must match Hero img src).
+      Copy src/assets/hero-model.avif → public/hero-model.avif
+      Do NOT preload /src/assets/*.jpg — that path is invalid in production and wastes bandwidth.
+    -->
+    <link
+      rel="preload"
+      as="image"
+      href="/hero-model.avif"
+      type="image/avif"
+      fetchpriority="high"
+    />
   </head>
 
   <body>

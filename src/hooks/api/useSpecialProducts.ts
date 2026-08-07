@@ -13,10 +13,16 @@ export function useB2BProducts(subCategoryName?: string) {
   return { ...query, products };
 }
 
-export function useNewCollectionProducts(limit = 9) {
+export function useNewCollectionProducts(
+  limit = 9,
+  options?: { enabled?: boolean },
+) {
+  const enabled = options?.enabled ?? true;
+
   const query = useQuery({
     queryKey: queryKeys.newCollection,
     queryFn: fetchNewCollectionProducts,
+    enabled,
   });
 
   const products = (query.data ?? [])
