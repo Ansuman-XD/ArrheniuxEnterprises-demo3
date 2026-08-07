@@ -3,10 +3,13 @@ import { createReview, fetchReviews } from "@/lib/api";
 import { apiReviewToStorefront, type StorefrontReview } from "@/lib/orderMappers";
 import { queryKeys } from "./queryKeys";
 
-export function useReviews(status?: string) {
+export function useReviews(status?: string, options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? true;
+
   return useQuery({
     queryKey: queryKeys.reviews(status),
     queryFn: () => fetchReviews(status),
+    enabled,
     select: (rows) =>
       rows
         .filter((r) => !status || r.status === status)

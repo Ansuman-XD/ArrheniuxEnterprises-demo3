@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Star } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { reviews as seedReviews } from "@/data/site";
@@ -7,8 +7,46 @@ import { useReveal } from "@/hooks/useReveal";
 
 type Item = { name: string; role?: string; rating: number; text: string };
 
+/**
+ * Defer /api/reviews until the section is near the viewport so it does not
+ * compete with LCP / first paint on the homepage critical path.
+ */
+function useNearViewport<T extends HTMLElement>(rootMargin = "200px") {
+  const ref = useRef<T>(null);
+  const [near, setNear] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || near) return;
+
+    // Fallback if IntersectionObserver is unavailable
+    if (typeof IntersectionObserver === "undefined") {
+      setNear(true);
+      return;
+    }
+
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setNear(true);
+          obs.disconnect();
+        }
+      },
+      { root: null, rootMargin, threshold: 0 },
+    );
+
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [near, rootMargin]);
+
+  return { ref, near };
+}
+
 export const Reviews = () => {
-  const { data: userReviews = [], isLoading } = useReviews("Approved");
+  const { ref: sectionRef, near } = useNearViewport<HTMLElement>("300px");
+  const { data: userReviews = [], isLoading, isFetching } = useReviews("Approved", {
+    enabled: near,
+  });
 
   const items: Item[] = useMemo(() => {
     const fromUsers: Item[] = userReviews.map((r) => ({
@@ -17,19 +55,32 @@ export const Reviews = () => {
       rating: r.rating,
       text: r.text,
     }));
+    // Seed reviews always available so the section is never blank before API
     return [...fromUsers, ...seedReviews];
   }, [userReviews]);
 
   const marquee = [...items, ...items];
+  const headerRef = useReveal<HTMLDivElement>();
 
-const headerRef = useReveal<HTMLDivElement>();
+  // Only show skeletons when we've entered view and are still loading API data
+  // with no user reviews yet (seed still shows if we prefer — here we wait briefly)
+  const showSkeleton = near && (isLoading || isFetching) && userReviews.length === 0;
 
   return (
-    <section id="reviews" className="bg-ink text-cream py-20 overflow-hidden">
+    <section
+      id="reviews"
+      ref={sectionRef}
+      className="bg-ink text-cream py-20 overflow-hidden"
+    >
       <div className="container-x">
-        <div ref={headerRef} className="reveal flex items-end justify-between mb-10 flex-wrap gap-4">
+        <div
+          ref={headerRef}
+          className="reveal flex items-end justify-between mb-10 flex-wrap gap-4"
+        >
           <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-accent">10 — Reactions</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-accent">
+              10 — Reactions
+            </span>
             <h2 className="font-display text-5xl md:text-6xl mt-2">CLIENT REACTIONS</h2>
           </div>
           <div className="flex items-center gap-3">
@@ -41,14 +92,14 @@ const headerRef = useReveal<HTMLDivElement>();
             <div>
               <div className="font-display text-2xl">4.9 / 5</div>
               <div className="text-xs text-cream/60 uppercase tracking-wide">
-                {isLoading ? "…" : `${items.length}+`} reactions
+                {showSkeleton ? "…" : `${items.length}+`} reactions
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {isLoading ? (
+      {showSkeleton ? (
         <div className="container-x flex gap-4 overflow-hidden">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="w-[320px] h-40 shrink-0 bg-cream/10" />
@@ -78,7 +129,9 @@ const headerRef = useReveal<HTMLDivElement>();
                   </div>
                   <p className="text-cream/85 text-sm leading-relaxed line-clamp-5">"{r.text}"</p>
                   <div className="mt-auto pt-3 border-t border-cream/10">
-                    <div className="font-condensed text-lg tracking-wide">{r.name.toUpperCase()}</div>
+                    <div className="font-condensed text-lg tracking-wide">
+                      {r.name.toUpperCase()}
+                    </div>
                     {r.role && <div className="text-xs text-cream/50">{r.role}</div>}
                   </div>
                 </div>
