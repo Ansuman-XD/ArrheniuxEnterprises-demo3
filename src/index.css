@@ -518,7 +518,10 @@
     }
   }
   .page-enter {
-    animation: page-enter 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation: none;
+  opacity: 1;
+  filter: none;
+  transform: none;
   }
 
   html {
