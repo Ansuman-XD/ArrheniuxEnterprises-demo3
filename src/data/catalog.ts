@@ -14,6 +14,17 @@ import totes from "@/assets/custom-accessories (1).avif";
 import uniforms from "@/assets/uniform.avif";
 import corporate from "@/assets/corporate.avif";
 import corporatewelcoome from "@/assets/corpo-welcome-kit (1).avif";
+import canvasTote from "@/assets/canvasTote.avif";
+import mug from "@/assets/mugs.avif";
+import safetyGoggle from "@/assets/safetyGoggle.avif";
+import cap from "@/assets/caps (1).avif";
+import premiumBackpack from  "@/assets/premiumBackpack.avif";
+import umbrella from "@/assets/umbrella (1).avif";
+import pen from "@/assets/pen (1).avif";
+import badge from "@/assets/badge (1).avif";
+import eventLanyard from "@/assets/eventLanyard (1).avif";
+import bottle from "@/assets/bottle (1).avif";
+
 export type Tier = "regular" | "premium";
 
 export type CatalogProduct = {
@@ -112,15 +123,26 @@ const makeProducts = (
   return out;
 };
 
+type SubInput =
+  | string
+  | {
+      name: string;
+      image: string;
+    };
+
 const makeSubs = (
   catSlug: string,
-  image: string,
+  defaultImage: string,
   tier: Tier | undefined,
-  names: string[],
+  names: SubInput[],
   perSub = 3
 ): Subcategory[] =>
-  names.map((name) => {
+  names.map((item) => {
+    const name = typeof item === "string" ? item : item.name;
+    const image = typeof item === "string" ? defaultImage : item.image;
+
     const slug = slugify(name);
+
     return {
       slug,
       name,
@@ -295,18 +317,19 @@ export const catalog: CatalogCategory[] = [
     image: totes,
     hasTiers: false,
     blurb: "Branded merch and add-ons to round out your kit.",
-    items: makeSubs("custom-accessories", totes, undefined, [
-      "Canvas Tote",
-      "Mug",
-      "Safety Goggle",
-      "Cap",
-      "Premium Backpack",
-      "Umbrella",
-      "Pen",
-      "Badge",
-      "Event Lanyard",
-      "Bottle",
-    ], 2),
+    items: makeSubs("custom-accessories", undefined, undefined, [
+  { name: "Canvas Tote", image: canvasTote },
+  { name: "Mug", image: mug },
+  { name: "Safety Goggle", image: safetyGoggle },
+  { name: "Cap", image: cap },
+  { name: "Premium Backpack", image: premiumBackpack },
+  { name: "Umbrella", image: umbrella },
+  { name: "Pen", image: pen },
+  { name: "Badge", image: badge },
+  { name: "Event Lanyard", image: eventLanyard },
+  { name: "Bottle", image: bottle },
+], 2),
+    
   },
   {
     slug: "corporate-welcome-kit",

@@ -1,8 +1,7 @@
-import { Link } from "react-router-dom";
-import { ArrowRight, MessageCircle, Truck, Factory, Package } from "lucide-react";
+import { MessageCircle, Truck, Factory, Package } from "lucide-react";
 import { waLink } from "@/data/site";
 
-// Public path — must match <link rel="preload"> in index.html so LCP starts before JS.
+// Public path — must match <link rel="preload"> in index.html
 const HERO_SRC = "/hero-model.avif";
 
 export const Hero = () => (

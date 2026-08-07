@@ -41,7 +41,7 @@ export const LatestCollection = () => {
     useNewCollectionProducts(9, { enabled: near });
   const headerRef = useReveal<HTMLDivElement>();
 
-  const showSkeleton = near && (isLoading || isFetching) && items.length === 0;
+  const showSkeleton = !near || ((isLoading || isFetching) && items.length === 0);
 
   return (
     <section ref={sectionRef} className="bg-secondary py-20">
@@ -74,18 +74,6 @@ export const LatestCollection = () => {
           </div>
         ) : isError ? (
           <p className="text-muted-foreground text-sm">Could not load new collection items.</p>
-        ) : !near ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="flex flex-col bg-card border border-border">
-                <Skeleton className="w-full aspect-square" />
-                <div className="p-4 space-y-2">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-3 w-1/2" />
-                </div>
-              </div>
-            ))}
-          </div>
         ) : items.length === 0 ? (
           <p className="text-muted-foreground text-sm">No new collection items yet.</p>
         ) : (

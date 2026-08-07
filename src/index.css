@@ -90,9 +90,9 @@
   section[id] {
     scroll-margin-top: 96px;
   }
-  body {
+   body {
     @apply bg-background text-foreground;
-    font-family: "Inter", sans-serif;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   h1,
@@ -100,12 +100,15 @@
   h3,
   h4,
   .font-display {
-    font-family: "Archivo Black", sans-serif;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 800;
     letter-spacing: -0.02em;
   }
   .font-condensed {
-    font-family: "Bebas Neue", sans-serif;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-weight: 700;
     letter-spacing: 0.02em;
+    text-transform: uppercase;
   }
 }
 

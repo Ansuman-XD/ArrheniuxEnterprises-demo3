@@ -7,11 +7,8 @@ import { useReveal } from "@/hooks/useReveal";
 
 type Item = { name: string; role?: string; rating: number; text: string };
 
-/**
- * Defer /api/reviews until the section is near the viewport so it does not
- * compete with LCP / first paint on the homepage critical path.
- */
-function useNearViewport<T extends HTMLElement>(rootMargin = "200px") {
+/** Defer /api/reviews until the section is near the viewport (off critical path). */
+function useNearViewport<T extends HTMLElement>(rootMargin = "300px") {
   const ref = useRef<T>(null);
   const [near, setNear] = useState(false);
 
@@ -19,7 +16,6 @@ function useNearViewport<T extends HTMLElement>(rootMargin = "200px") {
     const el = ref.current;
     if (!el || near) return;
 
-    // Fallback if IntersectionObserver is unavailable
     if (typeof IntersectionObserver === "undefined") {
       setNear(true);
       return;
@@ -55,15 +51,12 @@ export const Reviews = () => {
       rating: r.rating,
       text: r.text,
     }));
-    // Seed reviews always available so the section is never blank before API
     return [...fromUsers, ...seedReviews];
   }, [userReviews]);
 
   const marquee = [...items, ...items];
   const headerRef = useReveal<HTMLDivElement>();
 
-  // Only show skeletons when we've entered view and are still loading API data
-  // with no user reviews yet (seed still shows if we prefer — here we wait briefly)
   const showSkeleton = near && (isLoading || isFetching) && userReviews.length === 0;
 
   return (
