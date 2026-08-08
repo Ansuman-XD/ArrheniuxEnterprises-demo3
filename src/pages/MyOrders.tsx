@@ -185,11 +185,12 @@ const MyOrders = () => {
           <div className="mt-8 space-y-6">
             {orders.map((o) => {
               const expected = o.expectedDelivery
-                ? new Date(o.expectedDelivery)
-                : new Date(new Date(o.createdAt).getTime() + 10 * 86400000);
+  ? new Date(o.expectedDelivery)
+  : new Date(new Date(o.createdAt).getTime() + 10 * 86400000);
               const due = Math.max(0, o.total - o.paid);
               const paymentPaid = due === 0;
               const delivered = o.status === "Delivered";
+              const deliveredDate = o.deliveredAt ? new Date(o.deliveredAt) : null;
               const reviewed = reviewedIds.has(o.id);
               return (
 <div key={o.id} className="glow-hover border border-border bg-card p-5 transition hover:border-primary/40">                  <div className="flex flex-col md:flex-row gap-4">
@@ -197,7 +198,7 @@ const MyOrders = () => {
                       <div className="flex items-start justify-between flex-wrap gap-3">
                         <div>
                           <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                            Order #{o.id.slice(0, 8).toUpperCase()}
+                            Order Id: #{o.id.toUpperCase()}
                           </div>
                           <div className="font-condensed text-2xl tracking-wide mt-1">
                             {o.productName.toUpperCase()}
@@ -217,7 +218,9 @@ const MyOrders = () => {
                               {new Date(o.createdAt).toLocaleDateString()}
                             </span>
                             <span>
-                              Expected: {expected.toLocaleDateString()}
+                               {delivered && deliveredDate
+    ? `Delivered: ${deliveredDate.toLocaleDateString()}`
+    : `Expected: ${expected.toLocaleDateString()}`}
                             </span>
                             <span className="uppercase">{o.kind}</span>
                           </div>

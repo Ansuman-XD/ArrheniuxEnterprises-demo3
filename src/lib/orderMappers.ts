@@ -113,6 +113,7 @@ export type StorefrontOrder = {
   createdAt: string;
   updatedAt: string;
   expectedDelivery?: string;
+  deliveredAt?: string;          
   kind: StorefrontOrderKind;
   sizes?: Record<string, number>;
   customerName?: string;        // ← NEW
@@ -131,7 +132,7 @@ export function apiOrderToStorefront(o: ApiOrder, userId: string): StorefrontOrd
   const total = o.totalAmount > 0 ? o.totalAmount : subtotal - o.discountAmt + o.shipping + gst;
   const kind: StorefrontOrderKind =
     o.type === "Bulk" ? "bulk" : o.type === "B2B" ? "b2b" : "retail";
-
+ const deliveredAt = o.timeline?.find((t) => t.status === "Delivered")?.at;
   let paymentMode: StorefrontOrder["paymentMode"] = "full";
   if (o.paymentMethod === "COD") paymentMode = "cod";
   else if (o.paymentStatus === "Partial") paymentMode = "advance-50";
@@ -170,6 +171,7 @@ export function apiOrderToStorefront(o: ApiOrder, userId: string): StorefrontOrd
     createdAt: o.date,
     updatedAt: o.date,
     expectedDelivery: new Date(Date.parse(o.date) + 10 * 86400000).toISOString(),
+    deliveredAt,
     kind,
     sizes: o.sizes,
      customerName: o.customer,     // ← NEW
