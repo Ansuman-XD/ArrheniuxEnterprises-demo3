@@ -9,7 +9,7 @@ export const WhyWhatWho = () => {
     <section className="container-x py-20">
       <div ref={introRef} className="reveal grid lg:grid-cols-2 gap-10 items-start">
         <div>
-          <span className="text-xs font-bold uppercase tracking-widest text-primary">06 — Who We Are</span>
+          <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-cream bg-gradient-to-r from-primary to-accent px-3 py-1.5 rounded-full shadow-sm">06 — Who We Are</span>
           <h2 className="font-display text-5xl md:text-6xl mt-2 leading-none">
             BUILT FOR <span className="text-primary">BULK.</span><br/>OBSESSED WITH FIT.
           </h2>
@@ -36,7 +36,9 @@ export const WhyWhatWho = () => {
             { icon: Boxes, title: "Bulk Production", text: "20 to 50,000 pcs — same QC, same timeline discipline." },
           ].map((s) => (
             <div key={s.title} className="glow-hover bg-background border border-border p-6 hover:border-ink hover:-translate-y-0.5 transition">
-              <s.icon className="h-7 w-7 text-primary float-3d" />
+             <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
+  <s.icon className="h-6 w-6 text-cream float-3d" />
+</div>
               <h3 className="font-condensed text-2xl mt-4 tracking-wide">{s.title.toUpperCase()}</h3>
               <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{s.text}</p>
             </div>
@@ -63,7 +65,9 @@ export const WhyWhatWho = () => {
         ].map((s) => (
           <div key={s.title} className="tilt-card">
           <div className="tilt-card-inner border border-border p-6 bg-card hover:border-primary transition h-full">
-            <s.icon className="h-7 w-7 text-primary float-3d" />
+<div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
+  <s.icon className="h-6 w-6 text-cream float-3d" />
+</div>
             <h3 className="font-condensed text-2xl mt-4 tracking-wide">{s.title.toUpperCase()}</h3>
             <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{s.text}</p>
           </div>

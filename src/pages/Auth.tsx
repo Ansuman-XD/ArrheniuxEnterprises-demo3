@@ -121,22 +121,12 @@ const Auth = () => {
           <div className="flex-1 h-px bg-border" />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => handleSocial("google")}
-            className="social-btn-lift flex items-center justify-center gap-2 border border-border rounded-md py-2.5 text-sm font-medium hover:bg-muted hover:border-primary/40 transition"
-          >
-            <GoogleIcon /> Google
-          </button>
-           {/* Facebook login disabled for now
-  <button
-    onClick={() => handleSocial("facebook")}
-    className="social-btn-lift flex items-center justify-center gap-2 border border-border rounded-md py-2.5 text-sm font-medium hover:bg-muted hover:border-primary/40 transition"
-  >
-    <FacebookIcon /> Facebook
-  </button>
-  */}
-        </div>
+        <button
+  onClick={() => handleSocial("google")}
+  className="social-btn-lift w-full flex items-center justify-center gap-3 border border-border rounded-md py-3 text-sm font-semibold bg-white hover:bg-muted hover:border-primary/40 hover:shadow-md transition"
+>
+  <GoogleIcon /> Continue with Google
+</button>
 
         <p className="text-xs text-muted-foreground text-center mt-5">
           Demo: social login creates a placeholder account. Real OAuth coming soon.

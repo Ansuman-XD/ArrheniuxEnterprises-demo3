@@ -136,11 +136,11 @@ export const Navbar = () => {
             </div>
           ) : (
             <Link
-              to="/auth"
-              className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide border border-ink text-ink px-3 py-2 rounded-md hover:bg-ink hover:text-cream transition"
-            >
-              <UserIcon className="h-3.5 w-3.5" aria-hidden="true" /> Log In
-            </Link>
+  to="/auth"
+  className="shine-sweep btn-magnetic hidden md:inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-cream px-4 py-2.5 rounded-full bg-gradient-to-r from-primary via-primary to-accent bg-[length:200%_auto] hover:bg-[position:100%_0] transition-[background-position,transform] duration-500 shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.5)]"
+>
+  <UserIcon className="h-3.5 w-3.5" aria-hidden="true" /> Log In
+</Link>
           )}
           <button
             className="xl:hidden p-2"
@@ -156,14 +156,13 @@ export const Navbar = () => {
         <div className="mobile-menu-enter xl:hidden border-t border-border navbar-glass bg-cream/95">
           <div className="container-x py-4 flex flex-col gap-3">
             {!user ? (
-              <Link
-                to="/auth"
-                onClick={() => setOpen(false)}
-                className="btn-magnetic hidden md:inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide border border-ink text-ink px-3 py-2 rounded-md hover:bg-ink hover:text-cream transition"
-              >
-                <UserIcon className="h-4 w-4" aria-hidden="true" /> Log In /
-                Sign Up
-              </Link>
+             <Link
+  to="/auth"
+  onClick={() => setOpen(false)}
+  className="shine-sweep btn-magnetic inline-flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-wide text-cream px-4 py-2.5 rounded-full bg-gradient-to-r from-primary via-primary to-accent"
+>
+  <UserIcon className="h-4 w-4" aria-hidden="true" /> Log In / Sign Up
+</Link>
             ) : (
               <div className="flex items-center justify-between py-2 gap-2">
                 <div className="min-w-0">

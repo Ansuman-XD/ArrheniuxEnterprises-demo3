@@ -528,10 +528,10 @@ sizes: (isGarment || (isKit && kitIncludesTshirt)) ? sizeQty : undefined,       
             title: "Payment successful",
             description: `Order #${o.id.slice(0, 8).toUpperCase()} placed.`,
           });
-          window.open(waLink(orderMessage()), "_blank", "noreferrer");
+          // window.open(waLink(orderMessage()), "_blank", "noreferrer");
           setSuccessOrder({ id: o.id, amount: grandTotal });
           clearPdpDraft(product.id);
-          setSuccessOrder({ id: o.id, amount: grandTotal });
+          // setSuccessOrder({ id: o.id, amount: grandTotal });
         } catch {
           toast({
             title: "Order failed",
@@ -756,7 +756,7 @@ sizes: (isGarment || (isKit && kitIncludesTshirt)) ? sizeQty : undefined,       
                   kits, order through Bulk Order.
                 </p>
               </div>
-            ) : (
+            ) : !isArr ? (
               <div className="mt-5 border border-border bg-secondary/60 p-4">
                 <div className="text-[11px] uppercase tracking-widest font-bold text-primary mb-2">
                   Quantity Discount Policy
@@ -782,7 +782,7 @@ sizes: (isGarment || (isKit && kitIncludesTshirt)) ? sizeQty : undefined,       
                   through the Bulk Order section.
                 </div>
               </div>
-            )}
+            ) : null }
 
             {/* Named color choice (Cap / Umbrella / Event Lanyard) */}
             {rule?.namedColors && (
@@ -1312,7 +1312,7 @@ sizes: (isGarment || (isKit && kitIncludesTshirt)) ? sizeQty : undefined,       
         open={!!successOrder}
         onClose={() => {
           setSuccessOrder(null);
-          navigate("/my-orders");
+          navigate("/");
         }}
         orderId={successOrder?.id}
         amount={successOrder?.amount}

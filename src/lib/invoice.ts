@@ -208,7 +208,7 @@ export const downloadInvoice = async (order: InvoiceOrder) => {
   const M = 14; // page margin
   const contentW = W - M * 2;
 
-  const invoiceNo = `ARR-${order.id.slice(0, 8).toUpperCase()}`;
+  const invoiceNo = `ARR-${order.id.toUpperCase()}`;
   const orderDate = new Date(order.createdAt);
   const expected = order.expectedDelivery
     ? new Date(order.expectedDelivery)
@@ -328,11 +328,17 @@ export const downloadInvoice = async (order: InvoiceOrder) => {
   y += boxH + 8;
 
   // ---- Order meta strip ---------------------------------------------------
+  const isDelivered = order.status === "Delivered";
+const deliveryDateLabel = isDelivered ? "DELIVERED ON" : "EXPECTED DELIVERY";
+const deliveryDateValue = isDelivered && order.deliveredAt
+  ? new Date(order.deliveredAt).toLocaleDateString("en-IN")
+  : expected.toLocaleDateString("en-IN");
   const metaItems = [
-    { label: "ORDER ID", value: order.id.slice(0, 8).toUpperCase() },
+    { label: "ORDER ID", value: order.id.toUpperCase() },
     { label: "ORDER TYPE", value: KIND_LABEL[order.kind] || order.kind.toUpperCase() },
     { label: "PAYMENT MODE", value: PAYMENT_LABEL[order.paymentMode] || order.paymentMode },
     { label: "DELIVERY STATUS", value: order.status },
+     { label: deliveryDateLabel, value: deliveryDateValue },
   ];
   const metaW = contentW / metaItems.length;
   metaItems.forEach((m, i) => {
@@ -502,7 +508,7 @@ addRow(`GST (${gstRate}%)`, fmt(gstAmount));
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.setTextColor(...INK);
-  doc.text("Thank you for choosing Arrheniux!", W - M, footerY + 6, { align: "right" });
+  doc.text("Thank you for choosing Arrheniux Enterprises", W - M, footerY + 6, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(...GRAY_TEXT);
@@ -513,5 +519,5 @@ addRow(`GST (${gstRate}%)`, fmt(gstAmount));
   doc.setTextColor(...GRAY_LINE);
   doc.text("Page 1 of 1", W / 2, H - 8, { align: "center" });
 
-  doc.save(`invoice-${order.id.slice(0, 8).toUpperCase()}.pdf`);
+  doc.save(`invoice-${order.id.toUpperCase()}.pdf`);
 };

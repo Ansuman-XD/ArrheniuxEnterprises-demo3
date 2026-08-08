@@ -71,7 +71,7 @@ export const Reviews = () => {
           className="reveal flex items-end justify-between mb-10 flex-wrap gap-4"
         >
           <div>
-            <span className="text-xs font-bold uppercase tracking-widest text-accent">
+            <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-cream bg-gradient-to-r from-primary to-accent px-3 py-1.5 rounded-full shadow-sm">
               10 — Reactions
             </span>
             <h2 className="font-display text-5xl md:text-6xl mt-2">CLIENT REACTIONS</h2>
