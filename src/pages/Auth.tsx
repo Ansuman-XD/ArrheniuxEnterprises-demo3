@@ -53,6 +53,7 @@ const Auth = () => {
         name: s.name,
         email: s.email,
         phone: s.phone,
+        password: s.password,   // ← add this line
       });
       if (r.ok && r.user) afterAuth(r.user.role);
       else setError(r.error || "Signup failed");
@@ -127,12 +128,14 @@ const Auth = () => {
           >
             <GoogleIcon /> Google
           </button>
-          <button
-            onClick={() => handleSocial("facebook")}
-            className="social-btn-lift flex items-center justify-center gap-2 border border-border rounded-md py-2.5 text-sm font-medium hover:bg-muted hover:border-primary/40 transition"
-          >
-            <FacebookIcon /> Facebook
-          </button>
+           {/* Facebook login disabled for now
+  <button
+    onClick={() => handleSocial("facebook")}
+    className="social-btn-lift flex items-center justify-center gap-2 border border-border rounded-md py-2.5 text-sm font-medium hover:bg-muted hover:border-primary/40 transition"
+  >
+    <FacebookIcon /> Facebook
+  </button>
+  */}
         </div>
 
         <p className="text-xs text-muted-foreground text-center mt-5">

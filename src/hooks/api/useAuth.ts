@@ -6,6 +6,8 @@ import {
   createSampleOrder,
   fetchCustomers,
   fetchCustomer,
+  loginCustomer,
+  ApiError,
   type CreateCustomerInput,
 } from "@/lib/api";
 import { toCreateOrderInput, type PlaceOrderPayload } from "@/lib/orderMappers";
@@ -24,22 +26,26 @@ export function useSignup() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (
-      data: CreateCustomerInput & { password?: string },
+      data: CreateCustomerInput & { password: string },
     ): Promise<AuthResult> => {
-      const existing = await fetchCustomers();
-      if (existing.some((c) => c.email.toLowerCase() === data.email.toLowerCase())) {
-        return { ok: false, error: "Email already registered" };
+      try {
+        const customer = await createCustomer({
+          name: data.name,
+          email: data.email,
+          phone: data.phone ?? "",
+          address: "",
+          password: data.password,
+        });
+        const user = customerToSessionUser(customer);
+        setSession(user);
+        await qc.invalidateQueries({ queryKey: queryKeys.customers });
+        return { ok: true, user };
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 409) {
+          return { ok: false, error: "Email already registered" };
+        }
+        return { ok: false, error: "Signup failed" };
       }
-      const customer = await createCustomer({
-        name: data.name,
-        email: data.email,
-        phone: data.phone ?? "",
-        address: "",
-      });
-      const user = customerToSessionUser(customer);
-      setSession(user);
-      await qc.invalidateQueries({ queryKey: queryKeys.customers });
-      return { ok: true, user };
     },
   });
 }
@@ -48,17 +54,22 @@ export function useLogin() {
   return useMutation({
     mutationFn: async ({
       email,
+      password,
     }: {
       email: string;
       password: string;
     }): Promise<AuthResult> => {
-      const customers = await fetchCustomers();
-      const customer = customers.find((c) => c.email.toLowerCase() === email.toLowerCase());
-      if (!customer) return { ok: false, error: "Invalid email or password" };
-      if (customer.status !== "Active") return { ok: false, error: "Account inactive" };
-      const user = customerToSessionUser(customer);
-      setSession(user);
-      return { ok: true, user };
+      try {
+        const customer = await loginCustomer(email, password);
+        const user = customerToSessionUser(customer);
+        setSession(user);
+        return { ok: true, user };
+      } catch (err) {
+        if (err instanceof ApiError) {
+          return { ok: false, error: err.message };
+        }
+        return { ok: false, error: "Login failed" };
+      }
     },
   });
 }
@@ -82,7 +93,6 @@ export function useCreateOrder() {
         });
       }
 
-      // Keep the customer's aggregate stats in sync
       if (payload.customerId) {
         try {
           const { fetchCustomer, patchCustomer } = await import("@/lib/api");

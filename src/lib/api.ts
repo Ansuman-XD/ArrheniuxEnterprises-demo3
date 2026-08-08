@@ -236,6 +236,7 @@ export type CreateCustomerInput = {
   phone?: string;
   email: string;
   address?: string;
+  password?: string;
 };
 
 export type CreateOrderInput = {
@@ -407,6 +408,12 @@ export function fetchCustomer(id: string) {
 
 export function createCustomer(body: CreateCustomerInput) {
   return request<ApiCustomer>("customers", { method: "POST", body: JSON.stringify(body) });
+}
+export function loginCustomer(email: string, password: string) {
+  return request<ApiCustomer>("customers/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
 }
 
 // ---------------------------------------------------------------------------
