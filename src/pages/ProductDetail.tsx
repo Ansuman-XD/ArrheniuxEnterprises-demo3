@@ -201,13 +201,16 @@ const ProductDetailView = ({
     : undefined;
   const isGarment = !isNonGarmentCategory(product.categorySlug);
   const isKit = isWelcomeKitCategory(product.categorySlug);
-  const kitDefs = useMemo(() => getKitItemDefs(product), [product]); // ADD THIS  
+  const kitDefs = useMemo(() => getKitItemDefs(product), [product]); // ADD THIS 
+  const isNewCollection = product.categorySlug === "new-collection";  // ← add this 
   const ruleForPrint = getAccessoryRules(product.subSlug);
   const canPrint =
+  !isNewCollection &&
     supportsPrint(product.categorySlug) ||
     ruleForPrint?.print.kind === "custom" ||
     ruleForPrint?.print.kind === "free";
   const isArr = isArrheniuxCategory(product.categorySlug);
+  
   const rule = getAccessoryRules(product.subSlug);
   const moq = isKit ? WELCOME_KIT_MIN : getMOQ(product);
   const maxQty = isKit ? 80 : getMaxQty(product);
@@ -828,7 +831,7 @@ sizes: (isGarment || (isKit && kitIncludesTshirt)) ? sizeQty : undefined,       
             )}
 
             {/* Print type — hidden for kits (kits show "Logo Printing FREE" implicit) */}
-            {canPrint && !isKit && (
+            {canPrint && !isKit && !isNewCollection && (
               <div className="mt-6">
                 <PrintPicker
                   value={printSel}
@@ -855,7 +858,7 @@ sizes: (isGarment || (isKit && kitIncludesTshirt)) ? sizeQty : undefined,       
             )}
 
             {/* Upload artwork — hidden for ARRHENIUX */}
-            {!isArr && <ArtworkUpload value={artwork} onChange={setArtwork} />}
+            {!isArr && !isNewCollection && <ArtworkUpload value={artwork} onChange={setArtwork} />}
 
             {/* Quantity / Kit builder */}
             {isKit ? (
@@ -1210,8 +1213,8 @@ sizes: (isGarment || (isKit && kitIncludesTshirt)) ? sizeQty : undefined,       
               attach logo, artwork or instructions there.
             </p>
 
-            {/* Sample — hidden for ARRHENIUX products */}
-            {!isArr && (
+            {/* Sample — hidden for ARRHENIUX products and new collection*/}
+            {!isArr && !isNewCollection && (
               <button
                 onClick={handleSample}
                 className="mt-3 w-full inline-flex items-center justify-center gap-2 border border-ink py-3 text-xs uppercase tracking-widest font-semibold hover:bg-ink hover:text-cream transition"
