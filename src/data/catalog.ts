@@ -24,6 +24,26 @@ import pen from "@/assets/pen (1).avif";
 import badge from "@/assets/badge (1).avif";
 import eventLanyard from "@/assets/eventLanyard (1).avif";
 import bottle from "@/assets/bottle (1).avif";
+import polytshirts from "@/assets/Polycotton Oversized T-Shirts sub.avif";
+import premiumover from "@/assets/premiumover (1).avif";
+import americanFleeceHoodie from "@/assets/americanFleeceHoodie (1).avif";
+import cottonHoodie from "@/assets/cotton-50kb.avif";
+import Loopnet from "@/assets/Loopnet (1).avif";
+import jerseyAllOverRegular  from "@/assets/jerseyAllOverRegular.avif";
+import jerseyFrontRegular from "@/assets/jerseyFrontRegular.avif";
+import jerseyFrontBackRegular from "@/assets/jerseyFrontBackRegular.avif";
+import spunRoundNeck from "@/assets/spunRoundNeck.avif";
+import corporatePolyesterRoundNeck from "@/assets/corporatePolyesterRoundNeck.avif";
+import dotnetWhiteRoundNeck from "@/assets/dotnetWhiteRoundNeck.avif";
+import gymRoundNeck from "@/assets/gymRoundNeck.avif";
+import universityApron from "@/assets/university-apron.avif";
+import nurseApron from "@/assets/nurse-apron.avif";
+import medicalApron from "@/assets/medical-apron.avif";
+import classicWelcomeKit from "@/assets/classic-welcome-kit.avif";
+//b2b images
+// import dryFitCollar from "@/assets/dry-fit-collar.avif";
+// import solidCollar from "@/assets/solid-collar.avif";
+// import dryFitSolidCollar from "@/assets/dry-fit-solid-collar.avif";
 
 export type Tier = "regular" | "premium";
 
@@ -159,12 +179,13 @@ export const catalog: CatalogCategory[] = [
     image: tshirts,
     hasTiers: true,
     blurb: "Drop-shoulder fits in heavy and lightweight builds.",
-    regular: makeSubs("oversized-t-shirts", tshirts, "regular", [
+    regular: makeSubs("oversized-t-shirts", polytshirts, "regular", [
       "Polycotton Oversized T-Shirts",
     ]),
-    premium: makeSubs("oversized-t-shirts", tshirts, "premium", [
+    premium: makeSubs("oversized-t-shirts", premiumover, "premium", [
       "Cotton Oversized T-Shirts",
-      "Terry / Loopnet Oversized T-Shirts",
+      { name: "Terry / Loopnet Oversized T-Shirts", image: Loopnet },
+      
     ]),
   },
   {
@@ -176,8 +197,8 @@ export const catalog: CatalogCategory[] = [
     regular: makeSubs("hoodies", hoodies, "regular", ["Spun Fleece Hoodies"]),
     premium: makeSubs("hoodies", hoodies, "premium", [
       "Polycotton Hoodies",
-      "American Fleece Hoodies",
-      "Cotton Hoodies",
+       { name: "American Fleece Hoodies", image: americanFleeceHoodie },
+      { name: "Cotton Hoodies", image: cottonHoodie },
     ]),
   },
   {
@@ -187,14 +208,17 @@ export const catalog: CatalogCategory[] = [
     hasTiers: true,
     blurb: "Sublimation-ready jerseys for sports, events and teams.",
     regular: makeSubs("jersey", sweatshirts, "regular", [
-      "All Over Printed Jersey",
-      "Front Printed Jersey",
-      "Front & Back Printed Jersey",
+      { name: "All Over Printed Jersey", image: jerseyAllOverRegular },
+      { name: "Front Printed Jersey", image: jerseyFrontRegular },
+      { name: "Front & Back Printed Jersey", image: jerseyFrontBackRegular }
     ]),
     premium: makeSubs("jersey", sweatshirts, "premium", [
-      "All Over Printed Jersey",
-      "Front Printed Jersey",
-      "Front & Back Printed Jersey",
+      // "All Over Printed Jersey",
+      // "Front Printed Jersey",
+      // "Front & Back Printed Jersey",
+      { name: "All Over Printed Jersey", image: jerseyAllOverRegular },
+      { name: "Front Printed Jersey", image: jerseyFrontRegular },
+      { name: "Front & Back Printed Jersey", image: jerseyFrontBackRegular }
     ]),
   },
   {
@@ -268,17 +292,27 @@ export const catalog: CatalogCategory[] = [
     hasTiers: true,
     blurb: "Classic crew tees across every common fabric build.",
     regular: makeSubs("custom-round-neck-t-shirts", tshirts, "regular", [
-      "Spun Round Neck T-Shirt",
-      "Corporate Polyester Round Neck T-Shirt",
-      "Dotnet White Round Neck T-Shirt",
-      "Gym Round Neck T-Shirt",
+      // "Spun Round Neck T-Shirt",
+      // "Corporate Polyester Round Neck T-Shirt",
+      // "Dotnet White Round Neck T-Shirt",
+      // "Gym Round Neck T-Shirt",
+{ name: "Spun Round Neck T-Shirt", image: spunRoundNeck },
+{ name: "Corporate Polyester Round Neck T-Shirt", image: corporatePolyesterRoundNeck },
+{ name: "Dotnet White Round Neck T-Shirt", image: dotnetWhiteRoundNeck },
+{ name: "Gym Round Neck T-Shirt", image: gymRoundNeck },
+
     ]),
     premium: makeSubs("custom-round-neck-t-shirts", tshirts, "premium", [
-      "Cotton Round Neck T-Shirt",
-      "Polycotton Round Neck T-Shirt",
-      "Corporate SAP Matty Round Neck T-Shirt",
-      "SAP Matty White Round Neck T-Shirt",
-      "Cotton Gym Round Neck T-Shirt",
+      // "Cotton Round Neck T-Shirt",
+      // "Polycotton Round Neck T-Shirt",
+      // "Corporate SAP Matty Round Neck T-Shirt",
+      // "SAP Matty White Round Neck T-Shirt",
+      // "Cotton Gym Round Neck T-Shirt",
+      { name: "Cotton Round Neck T-Shirt", image: spunRoundNeck  },
+{ name: "Polycotton Round Neck T-Shirt", image: tshirts },
+{ name: "Corporate SAP Matty Round Neck T-Shirt", image: corporatePolyesterRoundNeck },
+{ name: "SAP Matty White Round Neck T-Shirt", image: dotnetWhiteRoundNeck },
+{ name: "Cotton Gym Round Neck T-Shirt", image: gymRoundNeck },
     ]),
   },
   {
@@ -288,14 +322,20 @@ export const catalog: CatalogCategory[] = [
     hasTiers: true,
     blurb: "Functional aprons for hospitals, kitchens and universities.",
     regular: makeSubs("aprons", uniforms, "regular", [
-      "University Apron",
-      "Nurse Apron",
-      "Medical Apron",
+      // "University Apron",
+      // "Nurse Apron",
+      // "Medical Apron",
+      { name: "University Apron", image: universityApron },
+{ name: "Nurse Apron", image: nurseApron },
+{ name: "Medical Apron", image: medicalApron },
     ]),
     premium: makeSubs("aprons", uniforms, "premium", [
-      "University Apron",
-      "Nurse Apron",
-      "Medical Apron",
+      // "University Apron",
+      // "Nurse Apron",
+      // "Medical Apron",
+        { name: "University Apron", image: universityApron },
+{ name: "Nurse Apron", image: nurseApron },
+{ name: "Medical Apron", image: medicalApron },
     ]),
   },
   {
@@ -340,7 +380,7 @@ export const catalog: CatalogCategory[] = [
     items: [
       // Only Classic Welcome Kit remains — themed variants.
       ...makeSubs("corporate-welcome-kit", corporate, undefined, [
-        "Classic Welcome Kit",
+        { name: "Classic Welcome Kit", image: classicWelcomeKit },
       ], 1).map((s) => {
         const themed = ["Employee Welcome Kit", "Conference Welcome Kit", "College Welcome Kit", "Team Welcome Kit"];
         s.products = themed.map((n) => {
