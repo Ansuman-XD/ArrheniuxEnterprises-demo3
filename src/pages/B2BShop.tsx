@@ -386,7 +386,7 @@ const B2BShop = () => {
                 <input
                   value={codeInput}
                   onChange={(e) => setCodeInput(e.target.value)}
-                  placeholder="e.g. AGENT2024"
+                  placeholder=""
                   className="mt-1 w-full border border-border px-3 py-2.5 text-sm bg-background focus:outline-none focus:border-ink"
                 />
                 {gateError && (
