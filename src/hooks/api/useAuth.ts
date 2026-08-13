@@ -73,7 +73,22 @@ export function useLogin() {
     },
   });
 }
-
+export function useGoogleLogin() {
+  return useMutation({
+    mutationFn: async (idToken: string): Promise<AuthResult> => {
+      try {
+        const { loginWithGoogle } = await import("@/lib/api");
+        const customer = await loginWithGoogle(idToken);
+        const user = customerToSessionUser(customer);
+        setSession(user);
+        return { ok: true, user };
+      } catch (err) {
+        if (err instanceof ApiError) return { ok: false, error: err.message };
+        return { ok: false, error: "Google login failed" };
+      }
+    },
+  });
+}
 export function useCreateOrder() {
   const qc = useQueryClient();
   return useMutation({
