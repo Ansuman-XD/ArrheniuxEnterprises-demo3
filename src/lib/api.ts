@@ -12,7 +12,12 @@ export class ApiError extends Error {
 export function fetchSampleOrders() {
   return request<ApiOrder[]>("sample-orders");
 }
-
+export function loginWithGoogle(idToken: string) {
+  return request<ApiCustomer>("customers/google-login", {
+    method: "POST",
+    body: JSON.stringify({ idToken }),
+  });
+}
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const url = `${BASE}/${path.replace(/^\//, "")}`;
   const res = await fetch(url, {
